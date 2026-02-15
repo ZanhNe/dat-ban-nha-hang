@@ -1,7 +1,11 @@
 # Báo cáo Tuần 01
+
 **Tuần:** 01 (09/02/2026 - 15/02/2026)
+
 **Nhóm:** [2]
+
 **Đề tài:** [04] - [Hệ thống đặt bàn nhà hàng]
+
 **Nhóm trưởng:** [Diệp Bảo Doanh] - [2251050018]
 
 ---
@@ -20,7 +24,7 @@
 ## 2. Tiến độ tổng thể
 | Hạng mục | Trạng thái | % |
 |----------|------------|---|
-| Phân tích yêu cầu/Thiết kế Class Diagram | Done | 100% |
+| Phân tích yêu cầu/Thiết kế Class Diagram | Not yet | 40% |
 **Tổng tiến độ: 100%**
 
 ---
