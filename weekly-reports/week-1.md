@@ -25,7 +25,7 @@
 | Hạng mục | Trạng thái | % |
 |----------|------------|---|
 | Phân tích yêu cầu/Thiết kế Class Diagram | Not yet | 40% |
-**Tổng tiến độ: 100%**
+**Tổng tiến độ: 40%**
 
 ---
 
