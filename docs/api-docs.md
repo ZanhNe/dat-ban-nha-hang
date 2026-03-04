@@ -152,6 +152,7 @@ Authorization: Bearer <JWT_TOKEN>
 ---
 
 
+
 ### 1. Tìm kiếm nhà hàng 
 
 **`GET /api/v1/restaurants`**
@@ -181,18 +182,18 @@ Authorization: Bearer <JWT_TOKEN>
   "message": "Mô tả",
   "data": [ //Dữ liệu chính hoặc Array
     {
-    "id": 101,
-    "name": "Haidilao - Chi nhánh Hùng Vương Plaza",
-    "logo": "https://abc.com/logo.png",
+    "restaurantId": 101,
+    "restaurantName": "Haidilao - Chi nhánh Hùng Vương Plaza",
+    "restaurantLogo": "https://abc.com/logo.png",
     "cuisines": ["Lẩu", "Món Trung"],
     "avgRating": 4.8,
     "totalReviews": 1250,
-    "address": "126 Hùng Vương, Quận 5, TP.HCM",
+    "restaurantAddress": "126 Hùng Vương, Quận 5, TP.HCM",
     "distance": 1.2, // km (Được tính từ tọa độ của khách hàng so với tọa độ của nhà hàng)
-    "depositType": "Fixed",
-    "baseDeposit": 200000,
-    "isOpen": true, // (Tính toán giữa thời gian thực tế và thời gian mở cửa của nhà hàng)
-    "direction": {} // (Thông tin về chỉ đường và khoảng cách)
+    "restaurantDepositType": "Fixed",
+    "restaurantBaseDeposit": 200000,
+    "restaurantIsOpen": true, // (Tính toán giữa thời gian thực tế và thời gian mở cửa của nhà hàng)
+    "restaurantDirection": {} // (Thông tin về chỉ đường và khoảng cách)
     },
   ],      
   "meta": {
