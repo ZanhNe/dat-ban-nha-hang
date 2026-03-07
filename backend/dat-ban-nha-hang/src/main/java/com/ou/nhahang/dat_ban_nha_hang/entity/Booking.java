@@ -39,6 +39,14 @@ public class Booking extends PaymentSource {
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
 
+    @ManyToOne
+    @JoinColumn(name = "table_session_id", nullable = true)
+    private RestaurantTableSession tableSession;
+
+    @OneToOne
+    @JoinColumn(name = "booking_time_id", nullable = false)
+    private BookingTime bookingTime;
+
     public Booking() {
     }
 

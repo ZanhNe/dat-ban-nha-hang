@@ -22,7 +22,10 @@ public class FoodOption extends Base {
     @Column(name = "price", nullable = false)
     private Long price;
 
+    @ManyToOne
+    @JoinColumn(name = "option_group_id", nullable = false)
+    private FoodOptionGroup optionGroup;
+
     public FoodOption() {
     }
-
 }

@@ -23,6 +23,10 @@ public class FoodOrder extends PaymentSource {
     @Enumerated(EnumType.STRING)
     private FoodOrderStatus status;
 
+    @ManyToOne
+    @JoinColumn(name = "table_session_id", nullable = false)
+    private RestaurantTableSession tableSession;
+
     public FoodOrder() {
     }
 

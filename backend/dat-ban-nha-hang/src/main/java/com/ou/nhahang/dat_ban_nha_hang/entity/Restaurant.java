@@ -1,5 +1,9 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -38,7 +42,7 @@ public class Restaurant extends Base {
     private Double avgRating;
 
     @Column(name = "day_of_week", nullable = false)
-    private Long dayOfWeek;
+    private Integer dayOfWeek;
 
     @Column(name = "base_deposit_value", nullable = false)
     private Long baseDepositValue;
@@ -51,7 +55,7 @@ public class Restaurant extends Base {
 
     @Column(name = "deposit_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private DepositType depositType;
+    private DepositType depositPolicy;
 
     @Column(name = "address", length = 255, nullable = false)
     private String address;
@@ -76,6 +80,36 @@ public class Restaurant extends Base {
     @JoinColumn(name = "manager_id", nullable = false)
     private User manager;
 
+    @OneToMany(mappedBy = "restaurant")
+    private List<TableArea> tableAreas;
+
+    @OneToMany(mappedBy = "restaurant")
+    private List<Menu> menus;
+
+    @OneToMany(mappedBy = "restaurant")
+    private List<OperationTime> operationTimes;
+
+    @OneToMany(mappedBy = "restaurant")
+    private List<Booking> bookings;
+
+    // Restaurant – Cuisine (nhiều–nhiều)
+    @ManyToMany
+    @JoinTable(
+        name = "restaurant_cuisine",
+        joinColumns = @JoinColumn(name = "restaurant_id"), 
+        inverseJoinColumns = @JoinColumn(name = "cuisine_id")
+    )
+    private Set<Cuisine> cuisines = new HashSet<>();
+
+    // Restaurant – LegalDoc (nhiều–nhiều)
+    @ManyToMany
+    @JoinTable(name = "restaurant_legal_doc", 
+    joinColumns = @JoinColumn(name = "restaurant_id"), 
+    inverseJoinColumns = @JoinColumn(name = "legal_doc_id")
+)
+    private Set<LegalDoc> legalDocs = new HashSet<>();
+
     public Restaurant() {
+        
     }
 }

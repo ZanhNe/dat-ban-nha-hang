@@ -11,7 +11,10 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = true)
 public class BookingTime extends Time {
 
+    @ManyToOne
+    @JoinColumn(name = "restaurant_id", nullable = false)
+    private Restaurant restaurant;
+
     public BookingTime() {
     }
-
 }

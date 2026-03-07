@@ -1,5 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,6 +27,17 @@ public class RestaurantTable extends Base {
     @Column(name = "status", length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
     private TableStatus status;
+
+    @ManyToOne
+    @JoinColumn(name = "restaurant_id", nullable = false)
+    private Restaurant restaurant;
+
+    @ManyToOne
+    @JoinColumn(name = "table_area_id", nullable = false)
+    private TableArea tableArea;
+
+    @OneToMany(mappedBy = "table")
+    private List<RestaurantTableSession> sessions;
 
     public RestaurantTable() {
     }
