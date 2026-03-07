@@ -1,5 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,6 +26,13 @@ public class FoodDescription extends Base {
 
     @Column(name = "price", nullable = false)
     private Long price;
+
+    @ManyToOne
+    @JoinColumn(name = "food_group_id", nullable = false)
+    private FoodGroup foodGroup;
+
+    @OneToMany(mappedBy = "foodDescription")
+    private List<FoodOptionGroup> optionGroups;
 
     public FoodDescription() {
     }
