@@ -1,5 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,7 +24,18 @@ public class RestaurantTableSession extends Base {
     @JoinColumn(name = "waiter_id", nullable = false)
     private User waiter;
 
-    public RestaurantTableSession() {
-    }
+    @ManyToOne
+    @JoinColumn(name = "table_id", nullable = false)
+    private RestaurantTable table;
 
+    /** TableSession 1–1 Booking */
+    @OneToOne(mappedBy = "tableSession")
+    private Booking booking;
+
+    @OneToMany(mappedBy = "tableSession")
+    private List<FoodOrder> foodOrders;
+
+    public RestaurantTableSession() {
+        
+    }
 }

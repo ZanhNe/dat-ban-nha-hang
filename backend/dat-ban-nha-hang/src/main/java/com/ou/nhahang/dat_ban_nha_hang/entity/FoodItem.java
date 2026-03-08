@@ -26,6 +26,14 @@ public class FoodItem extends Base {
     @JoinColumn(name = "chef_id", nullable = true)
     private User chef;
 
+    @ManyToOne
+    @JoinColumn(name = "food_order_id", nullable = false)
+    private FoodOrder foodOrder;
+
+    @ManyToOne
+    @JoinColumn(name = "food_description_id", nullable = false)
+    private FoodDescription foodDescription;
+
     public FoodItem() {
     }
 

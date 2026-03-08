@@ -1,5 +1,9 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -38,7 +42,7 @@ public class Restaurant extends Base {
     private Double avgRating;
 
     @Column(name = "day_of_week", nullable = false)
-    private Long dayOfWeek;
+    private Integer dayOfWeek;
 
     @Column(name = "base_deposit_value", nullable = false)
     private Long baseDepositValue;
@@ -51,7 +55,7 @@ public class Restaurant extends Base {
 
     @Column(name = "deposit_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private DepositType depositType;
+    private DepositType depositPolicy;
 
     @Column(name = "address", length = 255, nullable = false)
     private String address;
@@ -68,14 +72,49 @@ public class Restaurant extends Base {
     @Column(name = "base_commission_value", nullable = false)
     private Long baseCommissionValue;
 
-    // @OneToMany(mappedBy = "workplace")
-    // // mappedBy phải trỏ chính xác vào tên biến 'workplace' ở class User
-    // private List<User> employees = new ArrayList<>();
+    // Restaurant – Nhân viên (1–N: 1 nhà hàng nhiều nhân viên, 1 nhân viên chỉ thuộc 1 nhà hàng)
+    @OneToMany(mappedBy = "workplace")
+    private List<User> employees;
 
+    // Restaurant – Manager (nhiều-một)
     @ManyToOne
     @JoinColumn(name = "manager_id", nullable = false)
     private User manager;
 
+    // Restaurant – TableArea (một-nhiều)
+    @OneToMany(mappedBy = "restaurant")
+    private List<TableArea> tableAreas;
+
+    // Restaurant – Menu (một-nhiều)
+    @OneToMany(mappedBy = "restaurant")
+    private List<Menu> menus;
+
+    // Restaurant – OperationTime (một-nhiều)
+    @OneToMany(mappedBy = "restaurant")
+    private List<OperationTime> operationTimes;
+
+    // Restaurant – Booking (một-nhiều)
+    @OneToMany(mappedBy = "restaurant")
+    private List<Booking> bookings;
+
+    // Restaurant – Cuisine (nhiều–nhiều)
+    @ManyToMany
+    @JoinTable(
+        name = "restaurant_cuisine",
+        joinColumns = @JoinColumn(name = "restaurant_id"), 
+        inverseJoinColumns = @JoinColumn(name = "cuisine_id")
+    )
+    private Set<Cuisine> cuisines = new HashSet<>();
+
+    // Restaurant – LegalDoc (một-nhiều)
+    @OneToMany(mappedBy = "restaurant")
+    private List<LegalDoc> legalDocs;
+
+    // Restaurant – Review (N–N qua association class: 1 nhà hàng nhiều review, 1 khách review nhiều nhà hàng)
+    @OneToMany(mappedBy = "restaurant")
+    private List<Review> reviews;
+
     public Restaurant() {
+        
     }
 }

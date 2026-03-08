@@ -31,13 +31,38 @@ public class Booking extends PaymentSource {
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
 
+
     @ManyToOne
     @JoinColumn(name = "booking_user_id", nullable = false)
     private User bookingUser;
 
+    
     @ManyToOne
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
+
+    // Booking – TableSession (một–một)
+    @OneToOne
+    @JoinColumn(name = "table_session_id", nullable = true)
+    private RestaurantTableSession tableSession;
+
+    // Booking – BookingTime (một–một)
+    @OneToOne
+    @JoinColumn(name = "booking_time_id", nullable = false)
+    private BookingTime bookingTime;
+
+    // Booking – Table (nhiều–nhiều)
+    @ManyToMany
+    @JoinTable(
+        name = "booking_table",
+        joinColumns = @JoinColumn(name = "booking_id"),
+        inverseJoinColumns = @JoinColumn(name = "table_id")
+    )
+    private java.util.Set<RestaurantTable> tables = new java.util.HashSet<>();
+
+    /** Ràng buộc review: chỉ khách từng booking và ăn tại nhà hàng mới được review. */
+    @OneToOne(mappedBy = "booking")
+    private Review review;
 
     public Booking() {
     }

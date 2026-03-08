@@ -1,5 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,6 +27,9 @@ public class TableArea extends Base {
     @ManyToOne
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
+
+    @OneToMany(mappedBy = "tableArea")
+    private List<RestaurantTable> tables;
 
     public TableArea() {
     }
