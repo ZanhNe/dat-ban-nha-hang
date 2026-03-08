@@ -31,7 +31,12 @@ public class FoodDescription extends Base {
     @JoinColumn(name = "food_group_id", nullable = false)
     private FoodGroup foodGroup;
 
-    @OneToMany(mappedBy = "foodDescription")
+    @ManyToMany
+    @JoinTable(
+        name = "food_description_option_group",
+        joinColumns = @JoinColumn(name = "food_description_id"),
+        inverseJoinColumns = @JoinColumn(name = "food_option_group_id")
+    )
     private List<FoodOptionGroup> optionGroups;
 
     public FoodDescription() {

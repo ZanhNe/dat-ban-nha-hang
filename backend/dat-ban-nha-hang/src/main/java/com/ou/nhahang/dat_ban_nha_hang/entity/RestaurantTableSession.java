@@ -28,12 +28,14 @@ public class RestaurantTableSession extends Base {
     @JoinColumn(name = "table_id", nullable = false)
     private RestaurantTable table;
 
-    @OneToMany(mappedBy = "tableSession")
-    private List<Booking> bookings;
+    /** TableSession 1–1 Booking */
+    @OneToOne(mappedBy = "tableSession")
+    private Booking booking;
 
     @OneToMany(mappedBy = "tableSession")
     private List<FoodOrder> foodOrders;
 
     public RestaurantTableSession() {
+        
     }
 }

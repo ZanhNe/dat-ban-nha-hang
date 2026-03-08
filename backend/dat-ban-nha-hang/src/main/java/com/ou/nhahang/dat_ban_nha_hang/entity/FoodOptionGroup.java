@@ -21,9 +21,8 @@ public class FoodOptionGroup extends Base {
     @Enumerated(EnumType.STRING)
     private DescriptionStatus status;
 
-    @ManyToOne
-    @JoinColumn(name = "food_description_id", nullable = false)
-    private FoodDescription foodDescription;
+    @ManyToMany(mappedBy = "optionGroups")
+    private List<FoodDescription> foodDescriptions;
 
     @OneToMany(mappedBy = "optionGroup")
     private List<FoodOption> options;

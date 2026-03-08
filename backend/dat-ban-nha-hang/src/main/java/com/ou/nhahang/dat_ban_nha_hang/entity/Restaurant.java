@@ -72,23 +72,28 @@ public class Restaurant extends Base {
     @Column(name = "base_commission_value", nullable = false)
     private Long baseCommissionValue;
 
-    // @OneToMany(mappedBy = "workplace")
-    // // mappedBy phải trỏ chính xác vào tên biến 'workplace' ở class User
-    // private List<User> employees = new ArrayList<>();
+    // Restaurant – Nhân viên (1–N: 1 nhà hàng nhiều nhân viên, 1 nhân viên chỉ thuộc 1 nhà hàng)
+    @OneToMany(mappedBy = "workplace")
+    private List<User> employees;
 
+    // Restaurant – Manager (nhiều-một)
     @ManyToOne
     @JoinColumn(name = "manager_id", nullable = false)
     private User manager;
 
+    // Restaurant – TableArea (một-nhiều)
     @OneToMany(mappedBy = "restaurant")
     private List<TableArea> tableAreas;
 
+    // Restaurant – Menu (một-nhiều)
     @OneToMany(mappedBy = "restaurant")
     private List<Menu> menus;
 
+    // Restaurant – OperationTime (một-nhiều)
     @OneToMany(mappedBy = "restaurant")
     private List<OperationTime> operationTimes;
 
+    // Restaurant – Booking (một-nhiều)
     @OneToMany(mappedBy = "restaurant")
     private List<Booking> bookings;
 
@@ -101,13 +106,13 @@ public class Restaurant extends Base {
     )
     private Set<Cuisine> cuisines = new HashSet<>();
 
-    // Restaurant – LegalDoc (nhiều–nhiều)
-    @ManyToMany
-    @JoinTable(name = "restaurant_legal_doc", 
-    joinColumns = @JoinColumn(name = "restaurant_id"), 
-    inverseJoinColumns = @JoinColumn(name = "legal_doc_id")
-)
-    private Set<LegalDoc> legalDocs = new HashSet<>();
+    // Restaurant – LegalDoc (một-nhiều)
+    @OneToMany(mappedBy = "restaurant")
+    private List<LegalDoc> legalDocs;
+
+    // Restaurant – Review (N–N qua association class: 1 nhà hàng nhiều review, 1 khách review nhiều nhà hàng)
+    @OneToMany(mappedBy = "restaurant")
+    private List<Review> reviews;
 
     public Restaurant() {
         

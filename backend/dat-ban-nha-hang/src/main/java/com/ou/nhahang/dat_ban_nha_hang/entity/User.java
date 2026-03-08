@@ -1,6 +1,5 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,6 +49,10 @@ public class User extends Base {
     @ManyToOne
     @JoinColumn(name = "workplace_restaurant_id", nullable = true)
     private Restaurant workplace;
+
+    // User – Review (N–N qua association class: 1 khách có thể review nhiều nhà hàng)
+    @OneToMany(mappedBy = "user")
+    private List<Review> reviews;
 
     // @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL)
     // // mappedBy phải trỏ chính xác vào tên biến 'manager' ở class Restaurant

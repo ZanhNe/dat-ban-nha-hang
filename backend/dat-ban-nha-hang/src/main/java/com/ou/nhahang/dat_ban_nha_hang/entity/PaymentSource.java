@@ -12,10 +12,6 @@ import lombok.*;
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
 public abstract class PaymentSource extends Base {
-
-    @OneToMany(mappedBy = "paymentSource")
-    private List<Payment> payments;
-
     @OneToMany(mappedBy = "paymentSource")
     private List<Transaction> transactions;
 }

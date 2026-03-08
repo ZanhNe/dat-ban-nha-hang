@@ -1,5 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,6 +28,9 @@ public class FoodOrder extends PaymentSource {
     @ManyToOne
     @JoinColumn(name = "table_session_id", nullable = false)
     private RestaurantTableSession tableSession;
+
+    @OneToMany(mappedBy = "foodOrder")
+    private List<FoodItem> foodItems;
 
     public FoodOrder() {
     }
