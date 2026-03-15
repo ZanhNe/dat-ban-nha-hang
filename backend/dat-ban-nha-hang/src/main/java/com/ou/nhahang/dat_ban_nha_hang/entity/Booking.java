@@ -6,6 +6,9 @@ import lombok.*;
 @Entity
 @Table(name = "booking")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @DiscriminatorValue("BOOKING")
 @PrimaryKeyJoinColumn(name = "booking_id")
 @EqualsAndHashCode(callSuper = true)
@@ -29,14 +32,13 @@ public class Booking extends PaymentSource {
 
     @Column(name = "status", length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
-    private BookingStatus status;
-
+    @Builder.Default
+    private BookingStatus status = BookingStatus.AWAITING_CONFIRMATION;
 
     @ManyToOne
     @JoinColumn(name = "booking_user_id", nullable = false)
     private User bookingUser;
 
-    
     @ManyToOne
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
@@ -53,18 +55,13 @@ public class Booking extends PaymentSource {
 
     // Booking – Table (nhiều–nhiều)
     @ManyToMany
-    @JoinTable(
-        name = "booking_table",
-        joinColumns = @JoinColumn(name = "booking_id"),
-        inverseJoinColumns = @JoinColumn(name = "table_id")
-    )
-    private java.util.Set<RestaurantTable> tables = new java.util.HashSet<>();
+    @JoinTable(name = "booking_table", joinColumns = @JoinColumn(name = "booking_id"), inverseJoinColumns = @JoinColumn(name = "table_id"))
+    private java.util.Set<RestaurantTable> tables;
 
-    /** Ràng buộc review: chỉ khách từng booking và ăn tại nhà hàng mới được review. */
+    /**
+     * Ràng buộc review: chỉ khách từng booking và ăn tại nhà hàng mới được review.
+     */
     @OneToOne(mappedBy = "booking")
     private Review review;
-
-    public Booking() {
-    }
 
 }

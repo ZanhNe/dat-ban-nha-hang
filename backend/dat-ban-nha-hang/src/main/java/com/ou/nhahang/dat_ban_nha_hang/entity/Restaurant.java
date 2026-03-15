@@ -1,5 +1,6 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +12,8 @@ import lombok.*;
 // import java.util.List;
 
 import org.locationtech.jts.geom.Point;
+
+import com.ou.nhahang.dat_ban_nha_hang.entity.Booking.BookingStatus;
 
 @Entity
 @Table(name = "restaurant")
@@ -72,7 +75,8 @@ public class Restaurant extends Base {
     @Column(name = "base_commission_value", nullable = false)
     private Long baseCommissionValue;
 
-    // Restaurant – Nhân viên (1–N: 1 nhà hàng nhiều nhân viên, 1 nhân viên chỉ thuộc 1 nhà hàng)
+    // Restaurant – Nhân viên (1–N: 1 nhà hàng nhiều nhân viên, 1 nhân viên chỉ
+    // thuộc 1 nhà hàng)
     @OneToMany(mappedBy = "workplace")
     private List<User> employees;
 
@@ -99,22 +103,32 @@ public class Restaurant extends Base {
 
     // Restaurant – Cuisine (nhiều–nhiều)
     @ManyToMany
-    @JoinTable(
-        name = "restaurant_cuisine",
-        joinColumns = @JoinColumn(name = "restaurant_id"), 
-        inverseJoinColumns = @JoinColumn(name = "cuisine_id")
-    )
+    @JoinTable(name = "restaurant_cuisine", joinColumns = @JoinColumn(name = "restaurant_id"), inverseJoinColumns = @JoinColumn(name = "cuisine_id"))
     private Set<Cuisine> cuisines = new HashSet<>();
 
     // Restaurant – LegalDoc (một-nhiều)
     @OneToMany(mappedBy = "restaurant")
     private List<LegalDoc> legalDocs;
 
-    // Restaurant – Review (N–N qua association class: 1 nhà hàng nhiều review, 1 khách review nhiều nhà hàng)
+    // Restaurant – Review (N–N qua association class: 1 nhà hàng nhiều review, 1
+    // khách review nhiều nhà hàng)
     @OneToMany(mappedBy = "restaurant")
     private List<Review> reviews;
 
     public Restaurant() {
-        
+
+    }
+
+    public Booking makeBooking(User user, Restaurant restaurant, Set<RestaurantTable> tables, LocalDateTime bookingTime,
+            Long numberOfPeople, String note) {
+        Booking booking = Booking.builder()
+                .bookingUser(user)
+                .restaurant(restaurant)
+                .bookingTime(new BookingTime(bookingTime, restaurant))
+                .numberOfPeople(numberOfPeople)
+                .note(note)
+                .tables(tables)
+                .build();
+        return booking;
     }
 }

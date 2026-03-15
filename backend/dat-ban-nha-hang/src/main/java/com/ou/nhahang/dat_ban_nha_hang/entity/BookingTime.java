@@ -1,5 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,5 +18,11 @@ public class BookingTime extends Time {
     private Restaurant restaurant;
 
     public BookingTime() {
+    }
+
+    public BookingTime(LocalDateTime bookingTime, Restaurant restaurant) {
+        this.setStartTime(bookingTime);
+        this.setEndTime(bookingTime.plusHours(2));
+        this.restaurant = restaurant;
     }
 }
