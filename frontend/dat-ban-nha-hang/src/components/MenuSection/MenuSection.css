@@ -1,0 +1,49 @@
+.menu-section {
+
+    border: solid red;
+
+    .menu-container {
+        display: flex;
+        gap: 40px;
+
+        .menu-categories {
+            width: 200px;
+
+            ul {
+                list-style: none;
+                padding: 0;
+            }
+
+            li {
+                padding: 10px;
+                cursor: pointer;
+            }
+
+            .active {
+                color: orange;
+                font-weight: bold;
+            }
+
+            .menu-items {
+                flex: 1;
+
+                .menu-item {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 15px 0;
+                    border-bottom: 1px solid #eee;
+                }
+
+                .menu-item h4 {
+                    margin: 0;
+                }
+
+                .menu-item p {
+                    margin: 5px 0 0 0;
+                    color: #666;
+                }
+            }
+        }
+
+    }
+}
