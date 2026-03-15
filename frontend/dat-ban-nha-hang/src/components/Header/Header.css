@@ -1,0 +1,61 @@
+.header {
+    background: white;
+
+    border-bottom: 1px solid #eee;
+
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1000;
+
+    .container {
+        max-width: 1200px;
+        margin: auto;
+        padding: 15px 20px;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .auth {
+            .login {
+                background: #f2f2f2;
+            }
+
+            .signup {
+                background: orange;
+                color: white;
+            }
+
+            button {
+                margin-left: 10px;
+                padding: 6px 14px;
+                border-radius: 6px;
+                border: none;
+                cursor: pointer;
+            }
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+
+            span {
+                color: orange;
+            }
+        }
+
+        .nav {
+            a {
+                margin: 0 15px;
+                text-decoration: none;
+                color: #333;
+            }
+
+            a:hover {
+                color: orange;
+            }
+        }
+    }
+}
