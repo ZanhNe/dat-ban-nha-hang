@@ -42,7 +42,8 @@ public class Restaurant extends Base {
     @Enumerated(EnumType.STRING)
     private RestaurantStatus status;
 
-    @Column(name = "location", columnDefinition = "POINT")
+    // Đã thêm SRID 4326 để đồng bộ với hàm ST_GeomFromText(, 4326) của hệ thống
+    @Column(name = "location", columnDefinition = "POINT SRID 4326")
     private Point location;
 
     @Column(name = "avg_rating", nullable = false, columnDefinition = "DECIMAL(3,2) DEFAULT 0.0")

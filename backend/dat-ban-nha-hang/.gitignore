@@ -10,6 +10,8 @@ application-dev.yml
 application-prod.yml
 
 
+resources/
+
 application.properties
 application-dev.properties
 application-prod.properties

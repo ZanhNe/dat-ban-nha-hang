@@ -12,13 +12,13 @@ import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
 @Repository
 public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 
-    @Query(value = """
-            SELECT * FROM restaurants r
-            WHERE ST_Distance_Sphere(r.location, ST_GeomFromText(:pointWkt, 4326)) <= :radiusInMeters
-            """, countQuery = """
-            SELECT count(*) FROM restaurants r
-            WHERE ST_Distance_Sphere(r.location, ST_GeomFromText(:pointWkt, 4326)) <= :radiusInMeters
-            """, nativeQuery = true)
-    Page<Restaurant> findNearByRestaurant(@Param("pointWkt") String pointWkt, @Param("radius") int radius,
-            Pageable pageable);
+        @Query(value = """
+                        SELECT * FROM restaurant r
+                        WHERE ST_Distance_Sphere(r.location, ST_GeomFromText(:pointWkt, 4326)) <= :radiusInMeters
+                        """, countQuery = """
+                        SELECT count(*) FROM restaurant r
+                        WHERE ST_Distance_Sphere(r.location, ST_GeomFromText(:pointWkt, 4326)) <= :radiusInMeters
+                        """, nativeQuery = true)
+        Page<Restaurant> findNearByRestaurant(@Param("pointWkt") String pointWkt, @Param("radiusInMeters") int radius,
+                        Pageable pageable);
 }

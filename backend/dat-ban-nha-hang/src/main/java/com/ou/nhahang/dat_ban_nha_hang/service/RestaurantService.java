@@ -61,7 +61,8 @@ public class RestaurantService implements IRestaurantService {
         public List<SearchRestaurantResponseDTO> searchRestaurantsExecute(SearchRestaurantRequestDTO requestDTO) {
                 Point userLocation = geolocationService.getPointFromAddress(requestDTO.address());
 
-                String pointWkt = String.format("POINT(%f %f)", userLocation.getX(), userLocation.getY());
+                // Gán Y (Latitude) đứng trước X (Longitude) để khớp với chuẩn MySQL SRID 4326
+                String pointWkt = String.format("POINT(%f %f)", userLocation.getY(), userLocation.getX());
 
                 Pageable pageable = PageRequest.of(requestDTO.page(), requestDTO.limit());
 
