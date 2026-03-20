@@ -1,0 +1,50 @@
+{
+  "results": [
+    {
+      "address_components": [
+        {
+          "long_name": "91 Trung Kính",
+          "short_name": "91 Trung Kính"
+        },
+        {
+          "long_name": "Yên Hòa",
+          "short_name": "Yên Hòa"
+        },
+        {
+          "long_name": "Hà Nội",
+          "short_name": "Hà Nội"
+        }
+      ],
+      "formatted_address": "91 Trung Kính, Yên Hòa, Hà Nội",
+      "geometry": {
+        "location": {
+          "lat": 21.013672808000024,
+          "lng": 105.79825090900005
+        },
+        "boundary": null
+      },
+      "place_id": "mSyZlrHISyhtoltUuEyJ-EG9ZhCvc6P6R4tiF7tjdOidiX40u1pvcG-iPyAolJEHcK1EmS1zXJR41bDJl3CN93WnRFWhXeTLvdZdHU5Fhkfh0i1S9pweBkXYHXKORBurR",
+      "reference": "mSyZlrHISyhtoltUuEyJ-EG9ZhCvc6P6R4tiF7tjdOidiX40u1pvcG-iPyAolJEHcK1EmS1zXJR41bDJl3CN93WnRFWhXeTLvdZdHU5Fhkfh0i1S9pweBkXYHXKORBurR",
+      "plus_code": {
+        "compound_code": "+6DW1G Trung Hòa, Cầu Giấy, Hà Nội",
+        "global_code": "LOC1+6DW1G"
+      },
+      "compound": {
+        "commune": "Yên Hòa",
+        "province": "Hà Nội"
+      },
+      "types": [
+        "house_number"
+      ],
+      "name": "91 Trung Kính",
+      "address": "Yên Hòa, Hà Nội",
+      "deprecated_description": "91 Trung Kính, Trung Hòa, Cầu Giấy, Hà Nội",
+      "deprecated_compound": {
+        "district": "Cầu Giấy",
+        "commune": "Trung Hòa",
+        "province": "Hà Nội"
+      }
+    }
+  ],
+  "status": "OK"
+}

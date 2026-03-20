@@ -20,6 +20,10 @@ import com.ou.nhahang.dat_ban_nha_hang.entity.Booking.BookingStatus;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Restaurant extends Base {
+
+    @Column(name = "name", length = 255, nullable = false)
+    private String name;
+
     @Column(name = "logo", length = 255, nullable = false)
     private String logo;
 
@@ -41,7 +45,7 @@ public class Restaurant extends Base {
     @Column(name = "location", columnDefinition = "POINT")
     private Point location;
 
-    @Column(name = "avg_rating", nullable = false)
+    @Column(name = "avg_rating", nullable = false, columnDefinition = "DECIMAL(3,2) DEFAULT 0.0")
     private Double avgRating;
 
     @Column(name = "day_of_week", nullable = false)
@@ -130,5 +134,39 @@ public class Restaurant extends Base {
                 .tables(tables)
                 .build();
         return booking;
+    }
+
+    public int getTotalReviews() {
+        return this.reviews.size();
+    }
+
+    public void calculateAvgRating() {
+        // Công thức nhanh: (Điểm cũ * Số lượng cũ + Điểm mới) / (Số lượng cũ + 1)
+        if (reviews == null || reviews.isEmpty()) {
+            this.avgRating = 0.0;
+            return;
+        }
+        this.avgRating = (this.avgRating * (this.reviews.size() - 1)
+                + this.reviews.get(this.reviews.size() - 1).getRating()) / this.reviews.size();
+    }
+
+    public double calculateRestaurantDistance(Point userLocation) {
+        double EARTH_RADIUS_METERS = 6371000;
+        double lat1Rad = Math.toRadians(this.location.getY());
+        double lon1Rad = Math.toRadians(this.location.getX());
+        double lat2Rad = Math.toRadians(userLocation.getY());
+        double lon2Rad = Math.toRadians(userLocation.getX());
+
+        double dLat = lat2Rad - lat1Rad;
+        double dLon = lon2Rad - lon1Rad;
+
+        // Công thức Haversine
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(lat1Rad) * Math.cos(lat2Rad)
+                        * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return EARTH_RADIUS_METERS * c;
     }
 }

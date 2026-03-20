@@ -1,0 +1,24 @@
+package com.ou.nhahang.dat_ban_nha_hang.dto.response;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record GeoCoordinateResponseDTO(
+        @JsonProperty("status") String status,
+        @JsonProperty("results") Result[] results) {
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Result(
+            @JsonProperty("geometry") Geometry geometry) {
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        public record Geometry(
+                @JsonProperty("location") Location location) {
+            @JsonIgnoreProperties(ignoreUnknown = true)
+            public record Location(
+                    @JsonProperty("lat") double lat,
+                    @JsonProperty("lng") double lng) {
+            }
+        }
+    }
+}

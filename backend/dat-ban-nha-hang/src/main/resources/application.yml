@@ -1,0 +1,5 @@
+spring:
+    application:
+        name: dat-ban-nha-hang
+    profiles:
+        active: dev
