@@ -16,10 +16,12 @@ import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.BookingRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetRestaurantDetailRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.SearchRestaurantRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.TableSearchRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ApiResponse;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.BookingResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.SearchRestaurantResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.TableSearchResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.service.RestaurantService;
@@ -73,5 +75,27 @@ public class RestaurantController {
                 .data(data)
                 .build();
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<GetRestaurantDetailResponseDTO>> getRestaurantDetail(
+            @PathVariable("id") Long id,
+            @ModelAttribute GetRestaurantDetailRequestDTO requestDTO) {
+        
+        GetRestaurantDetailRequestDTO finalRequestDTO;
+        if (requestDTO == null || requestDTO.restaurantId() == null) {
+            String origin = requestDTO != null ? requestDTO.origin() : null;
+            finalRequestDTO = new GetRestaurantDetailRequestDTO(origin, id);
+        } else {
+            finalRequestDTO = requestDTO;
+        }
+
+        GetRestaurantDetailResponseDTO data = restaurantService.getRestaurantDetailExecute(finalRequestDTO);
+        ApiResponse<GetRestaurantDetailResponseDTO> response = ApiResponse.<GetRestaurantDetailResponseDTO>builder()
+                .status(200)
+                .message("Lấy thông tin chi tiết nhà hàng thành công")
+                .data(data)
+                .build();
+        return ResponseEntity.ok(response);
     }
 }

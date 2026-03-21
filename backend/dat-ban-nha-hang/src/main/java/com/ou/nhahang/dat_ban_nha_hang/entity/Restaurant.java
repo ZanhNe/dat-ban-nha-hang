@@ -1,6 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -8,17 +9,13 @@ import java.util.Set;
 import jakarta.persistence.*;
 import lombok.*;
 
-// import java.util.ArrayList;
-// import java.util.List;
-
 import org.locationtech.jts.geom.Point;
-
-import com.ou.nhahang.dat_ban_nha_hang.entity.Booking.BookingStatus;
 
 @Entity
 @Table(name = "restaurant")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+
 public class Restaurant extends Base {
 
     @Column(name = "name", length = 255, nullable = false)
@@ -42,7 +39,6 @@ public class Restaurant extends Base {
     @Enumerated(EnumType.STRING)
     private RestaurantStatus status;
 
-    // Đã thêm SRID 4326 để đồng bộ với hàm ST_GeomFromText(, 4326) của hệ thống
     @Column(name = "location", columnDefinition = "POINT SRID 4326")
     private Point location;
 
@@ -80,45 +76,33 @@ public class Restaurant extends Base {
     @Column(name = "base_commission_value", nullable = false)
     private Long baseCommissionValue;
 
-    // Restaurant – Nhân viên (1–N: 1 nhà hàng nhiều nhân viên, 1 nhân viên chỉ
-    // thuộc 1 nhà hàng)
     @OneToMany(mappedBy = "workplace")
-    private List<User> employees;
+    private List<User> employees = new ArrayList<>();
 
-    // Restaurant – Manager (nhiều-một)
     @ManyToOne
     @JoinColumn(name = "manager_id", nullable = false)
     private User manager;
 
-    // Restaurant – TableArea (một-nhiều)
     @OneToMany(mappedBy = "restaurant")
-    private List<TableArea> tableAreas;
+    private List<TableArea> tableAreas = new ArrayList<>();
 
-    // Restaurant – Menu (một-nhiều)
     @OneToMany(mappedBy = "restaurant")
-    private List<Menu> menus;
+    private List<Menu> menus = new ArrayList<>();
 
-    // Restaurant – OperationTime (một-nhiều)
     @OneToMany(mappedBy = "restaurant")
-    private List<OperationTime> operationTimes;
+    private List<OperationTime> operationTimes = new ArrayList<>();
 
-    // Restaurant – Booking (một-nhiều)
     @OneToMany(mappedBy = "restaurant")
-    private List<Booking> bookings;
+    private List<Booking> bookings = new ArrayList<>();
 
-    // Restaurant – Cuisine (nhiều–nhiều)
     @ManyToMany
     @JoinTable(name = "restaurant_cuisine", joinColumns = @JoinColumn(name = "restaurant_id"), inverseJoinColumns = @JoinColumn(name = "cuisine_id"))
     private Set<Cuisine> cuisines = new HashSet<>();
-
-    // Restaurant – LegalDoc (một-nhiều)
     @OneToMany(mappedBy = "restaurant")
-    private List<LegalDoc> legalDocs;
+    private List<LegalDoc> legalDocs = new ArrayList<>();
 
-    // Restaurant – Review (N–N qua association class: 1 nhà hàng nhiều review, 1
-    // khách review nhiều nhà hàng)
     @OneToMany(mappedBy = "restaurant")
-    private List<Review> reviews;
+    private List<Review> reviews = new ArrayList<>();
 
     public Restaurant() {
 
@@ -142,7 +126,6 @@ public class Restaurant extends Base {
     }
 
     public void calculateAvgRating() {
-        // Công thức nhanh: (Điểm cũ * Số lượng cũ + Điểm mới) / (Số lượng cũ + 1)
         if (reviews == null || reviews.isEmpty()) {
             this.avgRating = 0.0;
             return;
@@ -161,7 +144,6 @@ public class Restaurant extends Base {
         double dLat = lat2Rad - lat1Rad;
         double dLon = lon2Rad - lon1Rad;
 
-        // Công thức Haversine
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
                 + Math.cos(lat1Rad) * Math.cos(lat2Rad)
                         * Math.sin(dLon / 2) * Math.sin(dLon / 2);

@@ -5,8 +5,9 @@ import lombok.*;
 
 @Entity
 @Table(name = "transaction")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+
 public class Transaction extends Base {
 
     @Column(name = "amount", nullable = false)

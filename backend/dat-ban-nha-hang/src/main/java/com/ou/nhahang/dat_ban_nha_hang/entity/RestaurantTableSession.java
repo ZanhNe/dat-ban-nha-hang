@@ -1,5 +1,6 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -7,8 +8,9 @@ import lombok.*;
 
 @Entity
 @Table(name = "restaurant_table_session")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+
 public class RestaurantTableSession extends Base {
 
     public enum TableSessionStatus {
@@ -28,14 +30,13 @@ public class RestaurantTableSession extends Base {
     @JoinColumn(name = "table_id", nullable = false)
     private RestaurantTable table;
 
-    /** TableSession 1–1 Booking */
     @OneToOne(mappedBy = "tableSession")
     private Booking booking;
 
     @OneToMany(mappedBy = "tableSession")
-    private List<FoodOrder> foodOrders;
+    private List<FoodOrder> foodOrders = new ArrayList<>();
 
     public RestaurantTableSession() {
-        
+
     }
 }

@@ -8,34 +8,33 @@ import lombok.Builder;
 
 @Builder
 public record GetRestaurantDetailResponseDTO(
-        Long restaurantId,
-        String restaurantName,
-        String restaurantImage,
-        String restaurantLogo,
-        String restaurantDescription,
-        String restaurantAddress,
-        Location restaurantLocation,
-        List<String> restaurantCuisines,
-        Double restaurantAvgRating,
-        Integer restaurantTotalReviews,
-        String restaurantDepositPolicy,
-        Long restaurantBaseDeposit,
-        List<OperationTimeDTO> restaurantOperationTimes,
-        List<TableAreaDTO> restaurantTableAreas,
-        GeoDirectionResponseDTO restaurantDirections) {
+                Long restaurantId,
+                String restaurantName,
+                String restaurantImage,
+                String restaurantLogo,
+                String restaurantDescription,
+                String restaurantAddress,
+                Location restaurantLocation,
+                List<String> restaurantCuisines,
+                Double restaurantAvgRating,
+                Integer restaurantTotalReviews,
+                String restaurantDepositPolicy,
+                Long restaurantBaseDeposit,
+                List<OperationTimeDTO> restaurantOperationTimes,
+                List<TableAreaDTO> restaurantTableAreas,
+                GeoDirectionResponseDTO restaurantDirections) {
 
+        @Builder
+        public record OperationTimeDTO(
+                        String day,
+                        String open,
+                        String close) {
+        }
 
-    @Builder
-    public record OperationTimeDTO(
-            String day,
-            String open,
-            String close) {
-    }
-
-    @Builder
-    public record TableAreaDTO(
-            String areaName,
-            int availableTables,
-            int maxCapacity) {
-    }
+        @Builder
+        public record TableAreaDTO(
+                        String areaName,
+                        int availableTables,
+                        int maxCapacity) {
+        }
 }

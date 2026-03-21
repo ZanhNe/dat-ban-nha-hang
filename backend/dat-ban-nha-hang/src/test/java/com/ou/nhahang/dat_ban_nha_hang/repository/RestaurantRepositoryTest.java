@@ -25,22 +25,36 @@ public class RestaurantRepositoryTest {
     @Test
     public void givenValidPointAndRadius_whenFindNearByRestaurant_thenReturnPagedRestaurants() {
         // 1. Arrange
-        // Tạo User (Manager) trước vì manager_id trên Restaurant không được phép null
-        // (Ràng buộc toàn vẹn)
         User manager = TestDataMother.createUser(null, "manager1");
         userRepository.save(manager);
 
-        // Tạo Restaurant và gán manager vừa tạo
         Restaurant restaurant = TestDataMother.createRestaurant(null, "Test Res MySQL", manager);
         restaurantRepository.save(restaurant);
 
         // 2. Act
-        // MySQL SRID 4326 expects Latitude first, then Longitude. (Lat, Lon)
         String pointWkt = "POINT(10.76 106.68)";
         Page<Restaurant> result = restaurantRepository.findNearByRestaurant(pointWkt, 5000, PageRequest.of(0, 10));
 
         // 3. Assert
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
+    }
+
+    @Test
+    public void givenSavedRestaurant_whenFindById_thenReturnRestaurant() {
+        // 1. Arrange
+        User manager = TestDataMother.createUser(null, "manager_find_by_id");
+        userRepository.save(manager);
+
+        Restaurant restaurant = TestDataMother.createRestaurant(null, "Test Fetch By Id", manager);
+        Restaurant savedRestaurant = restaurantRepository.save(restaurant);
+
+        // 2. Act
+        java.util.Optional<Restaurant> result = restaurantRepository.findById(savedRestaurant.getId());
+
+        // 3. Assert
+        assertThat(result).isPresent();
+        assertThat(result.get().getName()).isEqualTo("Test Fetch By Id");
+        assertThat(result.get().getManager().getUsername()).isEqualTo("manager_find_by_id");
     }
 }

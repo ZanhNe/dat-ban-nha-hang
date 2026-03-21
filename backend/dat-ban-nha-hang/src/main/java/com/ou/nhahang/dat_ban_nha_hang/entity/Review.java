@@ -7,8 +7,9 @@ import lombok.*;
 
 @Entity
 @Table(name = "review")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+
 public class Review extends Base {
 
     @Min(1)
@@ -29,7 +30,6 @@ public class Review extends Base {
     @ToString.Exclude
     private User user;
 
-    /** Ràng buộc: chỉ khách từng booking và ăn tại nhà hàng mới được review. */
     @OneToOne
     @JoinColumn(name = "booking_id", nullable = false, unique = true)
     @ToString.Exclude

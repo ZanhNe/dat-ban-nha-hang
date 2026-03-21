@@ -1,5 +1,6 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -7,8 +8,9 @@ import lombok.*;
 
 @Entity
 @Table(name = "menu")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+
 public class Menu extends Base {
     @Column(name = "name", length = 255, unique = true, nullable = false)
     private String name;
@@ -21,7 +23,7 @@ public class Menu extends Base {
     private Restaurant restaurant;
 
     @OneToMany(mappedBy = "menu")
-    private List<FoodGroup> foodGroups;
+    private List<FoodGroup> foodGroups = new ArrayList<>();
 
     public Menu() {
     }

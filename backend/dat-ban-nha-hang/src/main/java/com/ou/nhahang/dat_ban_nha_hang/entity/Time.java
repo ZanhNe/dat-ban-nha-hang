@@ -7,8 +7,9 @@ import lombok.*;
 
 @Entity
 @Table(name = "time")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
 public abstract class Time extends Base {
@@ -26,7 +27,7 @@ public abstract class Time extends Base {
 
     @Column(name = "status", length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
-    private TimeStatus status;
+    private TimeStatus status = TimeStatus.OPEN;
 
     public Time() {
     }

@@ -9,6 +9,8 @@ import org.locationtech.jts.geom.Point;
 
 import com.ou.nhahang.dat_ban_nha_hang.entity.Booking;
 import com.ou.nhahang.dat_ban_nha_hang.entity.BookingTime;
+import com.ou.nhahang.dat_ban_nha_hang.entity.Cuisine;
+import com.ou.nhahang.dat_ban_nha_hang.entity.OperationTime;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
 import com.ou.nhahang.dat_ban_nha_hang.entity.RestaurantTable;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Review;
@@ -38,7 +40,8 @@ public class TestDataMother {
         user.setPassword("password123");
         user.setFullName("Test User " + username);
         user.setEmail(username + "@test.com");
-        user.setPhone("01234567" + id);
+        String suffix = (id != null) ? id.toString() : username;
+        user.setPhone("0" + (Math.abs(suffix.hashCode()) % 100000000));
         user.setAddress("Test Address");
         user.setStatus(User.UserStatus.ACTIVE);
         return user;
@@ -59,6 +62,7 @@ public class TestDataMother {
         restaurant.setCommissionType(Restaurant.CommissionType.PERCENTAGE);
         restaurant.setBaseCommissionValue(10L);
         restaurant.setManager(manager);
+        restaurant.setReviews(new java.util.ArrayList<>());
 
         Point point = geometryFactory.createPoint(new Coordinate(106.68, 10.76)); // arbitrary coord
         restaurant.setLocation(point);
@@ -99,5 +103,21 @@ public class TestDataMother {
         review.setRating(rating);
         review.setComment(comment);
         return review;
+    }
+
+    public static OperationTime createOperationTime(Long id, Long day, LocalDateTime startTime, LocalDateTime endTime) {
+        OperationTime ot = new OperationTime();
+        ot.setId(id);
+        ot.setDay(day);
+        ot.setStartTime(startTime);
+        ot.setEndTime(endTime);
+        return ot;
+    }
+
+    public static Cuisine createCuisine(Long id, String name) {
+        Cuisine cuisine = new Cuisine();
+        cuisine.setId(id);
+        cuisine.setName(name);
+        return cuisine;
     }
 }

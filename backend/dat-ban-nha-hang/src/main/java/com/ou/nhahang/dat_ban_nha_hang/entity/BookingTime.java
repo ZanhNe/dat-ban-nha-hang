@@ -7,10 +7,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "booking_time")
-@Data
+@Getter
+@Setter
 @DiscriminatorValue("BOOKING_TIME")
 @PrimaryKeyJoinColumn(name = "booking_time_id")
-@EqualsAndHashCode(callSuper = true)
+
 public class BookingTime extends Time {
 
     @ManyToOne

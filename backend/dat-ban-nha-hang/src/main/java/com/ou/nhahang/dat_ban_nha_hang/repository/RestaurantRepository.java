@@ -1,5 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,4 +23,6 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
                         """, nativeQuery = true)
         Page<Restaurant> findNearByRestaurant(@Param("pointWkt") String pointWkt, @Param("radiusInMeters") int radius,
                         Pageable pageable);
+
+        Optional<Restaurant> findById(Long id);
 }

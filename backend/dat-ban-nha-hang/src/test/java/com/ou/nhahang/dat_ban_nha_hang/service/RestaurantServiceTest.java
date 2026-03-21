@@ -4,7 +4,13 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.request.BookingRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.TableSearchRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.BookingResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.TableSearchResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetRestaurantDetailRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantDetailResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.GeoDirectionResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Booking;
+import com.ou.nhahang.dat_ban_nha_hang.entity.Cuisine;
+import com.ou.nhahang.dat_ban_nha_hang.entity.OperationTime;
+import com.ou.nhahang.dat_ban_nha_hang.entity.TableArea;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
 import com.ou.nhahang.dat_ban_nha_hang.entity.RestaurantTable;
 import com.ou.nhahang.dat_ban_nha_hang.entity.User;
@@ -21,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,10 +54,11 @@ public class RestaurantServiceTest {
     @Mock
     private BookingRepository bookingRepository;
 
+    @Mock
+    private com.ou.nhahang.dat_ban_nha_hang.service.port.IGeolocationService geolocationService;
+
     @InjectMocks
     private RestaurantService restaurantService;
-
-    // --- TEST THÀNH CÔNG ---
 
     @Test
     public void givenValidTableSearchRequest_whenSearchTablesExecute_thenReturnAvailableTables() {
@@ -58,7 +66,6 @@ public class RestaurantServiceTest {
         Long restaurantId = 1L;
         TableSearchRequestDTO request = new TableSearchRequestDTO("2026-03-20", "19:00", 2L);
 
-        // Stub: Trả về hard-code data khi SUT yêu cầu dữ liệu.
         when(restaurantRepository.existsById(restaurantId)).thenReturn(true);
         when(restaurantTableRepository.findByRestaurantIdWithArea(restaurantId)).thenReturn(new ArrayList<>());
         when(bookingRepository.findOverlappingBookings(eq(restaurantId), any(LocalDateTime.class),
@@ -72,8 +79,6 @@ public class RestaurantServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.restaurantId()).isEqualTo(restaurantId);
 
-        // Output assertion: Ở đây không cần gọi verify() đọc DB (như findById), kiểm
-        // tra trạng thái là đủ.
     }
 
     @Test
@@ -84,18 +89,15 @@ public class RestaurantServiceTest {
         LocalDateTime bookingTime = LocalDateTime.of(2026, 3, 20, 19, 0);
         BookingRequestDTO request = new BookingRequestDTO(bookingTime, 2L, List.of(1L));
 
-        // Áp dụng Object Mother
         User user = TestDataMother.createUser(userId, "john_doe");
         Restaurant restaurant = TestDataMother.createRestaurant(restaurantId, "ResTest", null);
         RestaurantTable table = TestDataMother.createTable(1L, "T1", 4L, RestaurantTable.TableStatus.AVAILABLE, null);
         Booking mockBooking = TestDataMother.createBooking(1L, user, restaurant, bookingTime);
 
-        // Stub: Cung cấp data đầu vào cố định.
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(restaurant));
         when(restaurantTableRepository.findAllById(request.tableIds())).thenReturn(List.of(table));
 
-        // Stub: Cho hành vi save -> trả lại Fake ID
         when(bookingRepository.save(any(Booking.class))).thenReturn(mockBooking);
 
         // 2. Act
@@ -105,13 +107,9 @@ public class RestaurantServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.bookingId()).isEqualTo(mockBooking.getId());
 
-        // Verify (Interaction Check qua MOCK)
-        // Xác minh chắc chắn rằng hành động thay đổi dữ liệu đã được kích hoạt
         verify(restaurantRepository, times(1)).save(restaurant);
         verify(bookingRepository, times(1)).save(any(Booking.class));
     }
-
-    // --- TEST NGOẠI LỆ (EXCEPTION) ---
 
     @Test
     public void givenNonExistentRestaurant_whenSearchTablesExecute_thenThrowResourceNotFoundException() {
@@ -119,10 +117,8 @@ public class RestaurantServiceTest {
         Long restaurantId = 999L;
         TableSearchRequestDTO request = new TableSearchRequestDTO("2026-03-20", "19:00", 2L);
 
-        // Stub: giả lập luồng trả về false => kích hoạt lỗi do không tìm thấy nhà hàng
         when(restaurantRepository.existsById(restaurantId)).thenReturn(false);
 
-        // 2. Act & 3. Assert
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             restaurantService.searchTablesExecute(restaurantId, request);
         });
@@ -136,10 +132,8 @@ public class RestaurantServiceTest {
         Long restaurantId = 1L;
         BookingRequestDTO request = new BookingRequestDTO(LocalDateTime.now(), 2L, List.of(1L));
 
-        // Stub: user không tồn tại trả ra giá trị rỗng (Empty Optional)
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        // 2. Act & 3. Assert
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             restaurantService.bookingExecute(request, userId, restaurantId);
         });
@@ -156,15 +150,81 @@ public class RestaurantServiceTest {
         User user = TestDataMother.createUser(userId, "john_doe");
         Restaurant restaurant = TestDataMother.createRestaurant(restaurantId, "ResTest", null);
 
-        // Stub: Trả về trạng thái bàn trống/không hợp lệ
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(restaurant));
         when(restaurantTableRepository.findAllById(request.tableIds())).thenReturn(new ArrayList<>());
-
-        // 2. Act & 3. Assert
         BusinessException exception = assertThrows(BusinessException.class, () -> {
             restaurantService.bookingExecute(request, userId, restaurantId);
         });
         assertThat(exception.getMessage()).isEqualTo("Bạn chưa chọn bàn nào hợp lệ, hoặc bàn không tồn tại.");
+    }
+
+    @Test
+    public void givenValidRequest_whenGetRestaurantDetailExecute_thenReturnFullyMappedDTO() {
+        // 1. Arrange
+        Long restaurantId = 1L;
+        GetRestaurantDetailRequestDTO request = new GetRestaurantDetailRequestDTO("10.0,106.0", restaurantId);
+
+        Restaurant restaurant = TestDataMother.createRestaurant(restaurantId, "Full Restaurant", null);
+        OperationTime ot = TestDataMother.createOperationTime(1L, 1L, LocalDateTime.of(2026, 1, 1, 8, 0),
+                LocalDateTime.of(2026, 1, 1, 22, 0));
+        restaurant.setOperationTimes(List.of(ot));
+
+        TableArea area = TestDataMother.createTableArea(1L, "Tầng 1", restaurant);
+        RestaurantTable table = TestDataMother.createTable(1L, "T1", 4L, RestaurantTable.TableStatus.AVAILABLE, area);
+        area.setTables(List.of(table));
+        restaurant.setTableAreas(List.of(area));
+
+        Cuisine cuisine = TestDataMother.createCuisine(1L, "Món Việt");
+        restaurant.setCuisines(new java.util.HashSet<>(List.of(cuisine)));
+
+        GeoDirectionResponseDTO mockDirections = mock(GeoDirectionResponseDTO.class);
+
+        when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+        when(geolocationService.getDirection(any(Point.class), any(Point.class))).thenReturn(mockDirections);
+        GetRestaurantDetailResponseDTO response = restaurantService.getRestaurantDetailExecute(request);
+
+        // 3. Assert
+        // State-Based Testing
+        assertThat(response).isNotNull();
+        assertThat(response.restaurantId()).isEqualTo(restaurantId);
+        assertThat(response.restaurantOperationTimes()).hasSize(1);
+        assertThat(response.restaurantOperationTimes().get(0).day()).isEqualTo("MONDAY");
+        assertThat(response.restaurantTableAreas()).hasSize(1);
+        assertThat(response.restaurantTableAreas().get(0).availableTables()).isEqualTo(1);
+        assertThat(response.restaurantCuisines()).contains("Món Việt");
+        assertThat(response.restaurantDirections()).isEqualTo(mockDirections);
+    }
+
+    @Test
+    public void givenRestaurantNotFound_whenGetRestaurantDetailExecute_thenThrowResourceNotFoundException() {
+        // 1. Arrange
+        Long restaurantId = 999L;
+        GetRestaurantDetailRequestDTO request = new GetRestaurantDetailRequestDTO("10.0,106.0", restaurantId);
+
+        when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            restaurantService.getRestaurantDetailExecute(request);
+        });
+        assertThat(exception.getMessage()).isEqualTo("Không tìm thấy nhà hàng với ID: " + restaurantId);
+    }
+
+    @Test
+    public void givenGeolocationServiceFails_whenGetRestaurantDetailExecute_thenReturnsDTOWithNullDirections() {
+        // 1. Arrange
+        Long restaurantId = 1L;
+        GetRestaurantDetailRequestDTO request = new GetRestaurantDetailRequestDTO("10.0,106.0", restaurantId);
+
+        Restaurant restaurant = TestDataMother.createRestaurant(restaurantId, "Res Fails Geolocation", null);
+
+        when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+        when(geolocationService.getDirection(any(Point.class), any(Point.class)))
+                .thenThrow(new RuntimeException("API Sập"));
+
+        GetRestaurantDetailResponseDTO response = restaurantService.getRestaurantDetailExecute(request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.restaurantDirections()).isNull();
     }
 }

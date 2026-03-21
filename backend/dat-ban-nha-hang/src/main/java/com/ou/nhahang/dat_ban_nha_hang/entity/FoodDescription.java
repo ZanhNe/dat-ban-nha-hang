@@ -1,5 +1,6 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.*;
@@ -7,8 +8,9 @@ import lombok.*;
 
 @Entity
 @Table(name = "food_description")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+
 public class FoodDescription extends Base {
 
     @Column(name = "name", length = 255, nullable = false)
@@ -32,12 +34,8 @@ public class FoodDescription extends Base {
     private FoodGroup foodGroup;
 
     @ManyToMany
-    @JoinTable(
-        name = "food_description_option_group",
-        joinColumns = @JoinColumn(name = "food_description_id"),
-        inverseJoinColumns = @JoinColumn(name = "food_option_group_id")
-    )
-    private List<FoodOptionGroup> optionGroups;
+    @JoinTable(name = "food_description_option_group", joinColumns = @JoinColumn(name = "food_description_id"), inverseJoinColumns = @JoinColumn(name = "food_option_group_id"))
+    private List<FoodOptionGroup> optionGroups = new ArrayList<>();
 
     public FoodDescription() {
     }

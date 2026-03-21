@@ -17,5 +17,5 @@ public interface IRestaurantService {
 
     List<SearchRestaurantResponseDTO> searchRestaurantsExecute(SearchRestaurantRequestDTO requestDTO);
 
-    GetRestaurantDetailResponseDTO getRestaurantDetailExecute(Long restaurantId);
+    GetRestaurantDetailResponseDTO getRestaurantDetailExecute(com.ou.nhahang.dat_ban_nha_hang.dto.request.GetRestaurantDetailRequestDTO requestDto);
 }

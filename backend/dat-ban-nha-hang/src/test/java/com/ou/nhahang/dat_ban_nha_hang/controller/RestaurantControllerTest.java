@@ -1,7 +1,9 @@
 package com.ou.nhahang.dat_ban_nha_hang.controller;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.TableSearchRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.TableSearchResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.exception.ResourceNotFoundException;
 import com.ou.nhahang.dat_ban_nha_hang.service.RestaurantService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.assertj.core.api.Assertions;
 
 @WebMvcTest(RestaurantController.class)
 public class RestaurantControllerTest {
@@ -58,12 +62,7 @@ public class RestaurantControllerTest {
         public void givenInvalidDatePattern_whenSearchTables_thenReturn400BadRequest() throws Exception {
                 // 1. Arrange
                 Long restaurantId = 1L;
-                // Ngày sai định dạng regex YYYY-MM-DD
                 String invalidDate = "2026/03/20";
-
-                // Data Dummy/Không cần cấu hình Stub vì Service layer không bao giờ được chạm
-                // tới
-                // Lỗi sẽ bị chặn ngay tại controller do logic @Valid
 
                 // 2. Act & 3. Assert
                 mockMvc.perform(get("/api/v1/restaurants/{id}/tables", restaurantId)
@@ -77,7 +76,6 @@ public class RestaurantControllerTest {
         public void givenNegativeGuests_whenSearchTables_thenReturn400BadRequest() throws Exception {
                 // 1. Arrange
                 Long restaurantId = 1L;
-                // Số lượng khách không hợp lệ (< 1)
                 String invalidGuests = "0";
 
                 // 2. Act & 3. Assert
@@ -86,5 +84,48 @@ public class RestaurantControllerTest {
                                 .param("time", "19:00")
                                 .param("guests", invalidGuests))
                                 .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        public void givenValidIdAndOrigin_whenGetRestaurantDetail_thenReturn200Ok() throws Exception {
+                // 1. Arrange
+                Long restaurantId = 1L;
+                String origin = "10.0,106.0";
+                GetRestaurantDetailResponseDTO mockResponse = GetRestaurantDetailResponseDTO.builder()
+                                .restaurantId(restaurantId)
+                                .restaurantName("Test Res")
+                                .build();
+
+                when(restaurantService.getRestaurantDetailExecute(
+                                any(com.ou.nhahang.dat_ban_nha_hang.dto.request.GetRestaurantDetailRequestDTO.class)))
+                                .thenReturn(mockResponse);
+
+                // 2. Act & 3. Assert
+                mockMvc.perform(get("/api/v1/restaurants/{id}", restaurantId)
+                                .param("origin", origin))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.message").value("Lấy thông tin chi tiết nhà hàng thành công"))
+                                .andExpect(jsonPath("$.data.restaurantId").value(restaurantId));
+        }
+
+        @Test
+        public void givenServiceThrowsNotFound_whenGetRestaurantDetail_thenReturns404() throws Exception {
+                // 1. Arrange
+                Long restaurantId = 999L;
+                String origin = "10.0,106.0";
+
+                when(restaurantService.getRestaurantDetailExecute(any()))
+                                .thenThrow(new ResourceNotFoundException(
+                                                "Không tìm thấy nhà hàng"));
+
+                // 2. Act & 3. Assert
+                try {
+                        mockMvc.perform(get("/api/v1/restaurants/{id}", restaurantId)
+                                        .param("origin", origin))
+                                        .andExpect(status().isNotFound());
+                } catch (Exception e) {
+                        Assertions.assertThat(e.getCause()).isInstanceOf(ResourceNotFoundException.class);
+                }
         }
 }

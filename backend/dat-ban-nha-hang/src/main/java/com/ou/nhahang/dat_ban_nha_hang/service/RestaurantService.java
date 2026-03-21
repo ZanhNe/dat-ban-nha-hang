@@ -4,6 +4,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
@@ -14,12 +15,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.BookingRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetRestaurantDetailRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.SearchRestaurantRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.TableSearchRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.BookingResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GeoCoordinateResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.GeoDirectionResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.SearchRestaurantResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.TableSearchResponseDTO;
@@ -38,6 +42,7 @@ import com.ou.nhahang.dat_ban_nha_hang.repository.UserRepository;
 import com.ou.nhahang.dat_ban_nha_hang.service.port.IGeolocationService;
 
 @Service
+@Transactional(readOnly = true)
 public class RestaurantService implements IRestaurantService {
 
         private final RestaurantTableRepository restaurantTableRepository;
@@ -61,7 +66,6 @@ public class RestaurantService implements IRestaurantService {
         public List<SearchRestaurantResponseDTO> searchRestaurantsExecute(SearchRestaurantRequestDTO requestDTO) {
                 Point userLocation = geolocationService.getPointFromAddress(requestDTO.address());
 
-                // Gán Y (Latitude) đứng trước X (Longitude) để khớp với chuẩn MySQL SRID 4326
                 String pointWkt = String.format("POINT(%f %f)", userLocation.getY(), userLocation.getX());
 
                 Pageable pageable = PageRequest.of(requestDTO.page(), requestDTO.limit());
@@ -104,18 +108,15 @@ public class RestaurantService implements IRestaurantService {
 
         @Override
         public TableSearchResponseDTO searchTablesExecute(Long restaurantId, TableSearchRequestDTO requestDTO) {
-                // Kiểm tra nhà hàng
                 if (!restaurantRepository.existsById(restaurantId)) {
                         throw new ResourceNotFoundException("Không tìm thấy nhà hàng với ID: " + restaurantId);
                 }
 
-                // Parse lại thời gian để tí nữa đưa vô
                 LocalDate parsedDate = LocalDate.parse(requestDTO.date());
                 LocalTime parsedTime = LocalTime.parse(requestDTO.time());
                 LocalDateTime requestedStartTime = LocalDateTime.of(parsedDate, parsedTime);
-                LocalDateTime requestedEndTime = requestedStartTime.plusHours(2); // Giả định booking kéo dài 2 tiếng
+                LocalDateTime requestedEndTime = requestedStartTime.plusHours(2);
 
-                // Lấy ra tất cả bàn và khu vực đi kèm
                 List<RestaurantTable> allTables = restaurantTableRepository.findByRestaurantIdWithArea(restaurantId);
 
                 Map<TableArea, List<RestaurantTable>> tablesByArea = allTables.stream()
@@ -131,7 +132,6 @@ public class RestaurantService implements IRestaurantService {
                                 .map(RestaurantTable::getId)
                                 .collect(Collectors.toSet());
 
-                // Tạo trước DTO
                 List<TableSearchResponseDTO.AreaDTO> areaDTOs = new ArrayList<>();
 
                 for (Map.Entry<TableArea, List<RestaurantTable>> entry : tablesByArea.entrySet()) {
@@ -180,6 +180,7 @@ public class RestaurantService implements IRestaurantService {
         }
 
         @Override
+        @Transactional
         public BookingResponseDTO bookingExecute(BookingRequestDTO requestDTO, Long userId, Long restaurantId) {
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -208,7 +209,7 @@ public class RestaurantService implements IRestaurantService {
                 return new BookingResponseDTO(
                                 booking.getId(),
                                 restaurant.getId(),
-                                "Restaurant Name", // placeholder as name doesn't exist
+                                "Restaurant Name",
                                 requestDTO.bookingTime(),
                                 booking.getNumberOfPeople(),
                                 booking.getStatus().name(),
@@ -216,8 +217,89 @@ public class RestaurantService implements IRestaurantService {
         }
 
         @Override
-        public GetRestaurantDetailResponseDTO getRestaurantDetailExecute(Long restaurantId) {
-                System.out.println("Get restaurant detail");
-                return null;
+        public GetRestaurantDetailResponseDTO getRestaurantDetailExecute(
+                        GetRestaurantDetailRequestDTO requestDto) {
+                Restaurant restaurant = restaurantRepository.findById(requestDto.restaurantId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Không tìm thấy nhà hàng với ID: " + requestDto.restaurantId()));
+
+                Point userLocation = requestDto.extractLocation();
+                Point resLocation = restaurant.getLocation();
+
+                GeoDirectionResponseDTO directions = null;
+                if (userLocation != null && resLocation != null) {
+                        try {
+                                directions = geolocationService.getDirection(userLocation, resLocation);
+                        } catch (Exception e) {
+                        }
+                }
+
+                List<String> cuisines = restaurant.getCuisines() != null
+                                ? restaurant.getCuisines().stream().map(Cuisine::getName).collect(Collectors.toList())
+                                : new ArrayList<>();
+
+                List<GetRestaurantDetailResponseDTO.OperationTimeDTO> operationTimes = restaurant
+                                .getOperationTimes() != null ? restaurant.getOperationTimes().stream()
+                                                .map(t -> GetRestaurantDetailResponseDTO.OperationTimeDTO.builder()
+                                                                .day(DayOfWeek.of(t.getDay().intValue()).name())
+                                                                .open(t.getStartTime() != null ? t
+                                                                                .getStartTime()
+                                                                                .toLocalTime()
+                                                                                .toString() : "")
+                                                                .close(t.getEndTime() != null ? t
+                                                                                .getEndTime()
+                                                                                .toLocalTime()
+                                                                                .toString() : "")
+                                                                .build())
+                                                .collect(Collectors.toList())
+                                                : new ArrayList<>();
+
+                List<GetRestaurantDetailResponseDTO.TableAreaDTO> tableAreas = restaurant.getTableAreas() != null
+                                ? restaurant.getTableAreas().stream()
+                                                .map(a -> {
+                                                        int availableTables = 0;
+                                                        int maxCapacity = 0;
+                                                        if (a.getTables() != null) {
+                                                                for (RestaurantTable t : a.getTables()) {
+                                                                        if (t.getStatus() == RestaurantTable.TableStatus.AVAILABLE) {
+                                                                                availableTables++;
+                                                                        }
+                                                                        if (t.getCapacity() != null) {
+                                                                                maxCapacity += t.getCapacity()
+                                                                                                .intValue();
+                                                                        }
+                                                                }
+                                                        }
+                                                        return GetRestaurantDetailResponseDTO.TableAreaDTO.builder()
+                                                                        .areaName(a.getName())
+                                                                        .availableTables(availableTables)
+                                                                        .maxCapacity(maxCapacity)
+                                                                        .build();
+                                                })
+                                                .collect(Collectors.toList())
+                                : new ArrayList<>();
+
+                return GetRestaurantDetailResponseDTO.builder()
+                                .restaurantId(restaurant.getId())
+                                .restaurantName(restaurant.getName())
+                                .restaurantImage(restaurant.getLogo())
+                                .restaurantLogo(restaurant.getLogo())
+                                .restaurantDescription(restaurant.getDescription())
+                                .restaurantAddress(restaurant.getAddress())
+                                .restaurantLocation(resLocation != null
+                                                ? new GeoCoordinateResponseDTO.Result.Geometry.Location(
+                                                                resLocation.getY(), resLocation.getX())
+                                                : null)
+                                .restaurantCuisines(cuisines)
+                                .restaurantAvgRating(restaurant.getAvgRating())
+                                .restaurantTotalReviews(restaurant.getTotalReviews())
+                                .restaurantDepositPolicy(restaurant.getDepositPolicy() != null
+                                                ? restaurant.getDepositPolicy().name()
+                                                : null)
+                                .restaurantBaseDeposit(restaurant.getBaseDepositValue())
+                                .restaurantOperationTimes(operationTimes)
+                                .restaurantTableAreas(tableAreas)
+                                .restaurantDirections(directions)
+                                .build();
         }
 }
