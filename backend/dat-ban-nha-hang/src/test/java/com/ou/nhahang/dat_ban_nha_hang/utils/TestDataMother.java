@@ -10,6 +10,9 @@ import org.locationtech.jts.geom.Point;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Booking;
 import com.ou.nhahang.dat_ban_nha_hang.entity.BookingTime;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Cuisine;
+import com.ou.nhahang.dat_ban_nha_hang.entity.FoodDescription;
+import com.ou.nhahang.dat_ban_nha_hang.entity.FoodGroup;
+import com.ou.nhahang.dat_ban_nha_hang.entity.Menu;
 import com.ou.nhahang.dat_ban_nha_hang.entity.OperationTime;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
 import com.ou.nhahang.dat_ban_nha_hang.entity.RestaurantTable;
@@ -119,5 +122,34 @@ public class TestDataMother {
         cuisine.setId(id);
         cuisine.setName(name);
         return cuisine;
+    }
+
+    public static Menu createMenu(Restaurant restaurant, String name, Long id) {
+        Menu menu = new Menu();
+        menu.setId(id);
+        menu.setName(name);
+        menu.setDescription("Menu Description");
+        menu.setRestaurant(restaurant);
+        return menu;
+    }
+
+    public static FoodGroup createFoodGroup(Menu menu, String name, Long id) {
+        FoodGroup group = new FoodGroup();
+        group.setId(id);
+        group.setName(name);
+        group.setDescription("Group Description");
+        group.setMenu(menu);
+        return group;
+    }
+
+    public static FoodDescription createFoodDescription(FoodGroup group, String name, Long price, Long id) {
+        FoodDescription desc = new FoodDescription();
+        desc.setId(id);
+        desc.setName(name);
+        desc.setDescription("Item Description");
+        desc.setPrice(price);
+        desc.setImage("image.png");
+        desc.setFoodGroup(group);
+        return desc;
     }
 }

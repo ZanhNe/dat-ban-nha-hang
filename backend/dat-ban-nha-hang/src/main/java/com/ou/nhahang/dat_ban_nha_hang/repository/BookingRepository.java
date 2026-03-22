@@ -36,4 +36,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         @Param("requestedStartTime") LocalDateTime requestedStartTime,
         @Param("requestedEndTime") LocalDateTime requestedEndTime
     );
+
+    @Query("""
+        SELECT b FROM Booking b
+        WHERE b.bookingUser.id = :userId
+          AND b.restaurant.id = :restaurantId
+          AND b.status = com.ou.nhahang.dat_ban_nha_hang.entity.Booking$BookingStatus.COMPLETED
+        ORDER BY b.createdAt DESC
+    """)
+    List<Booking> findCompletedBookings(
+        @Param("userId") Long userId,
+        @Param("restaurantId") Long restaurantId,
+        org.springframework.data.domain.Pageable pageable
+    );
 }
