@@ -19,14 +19,7 @@ public class RestaurantService {
         this.restaurantTableRepository = restaurantTableRepository;
     }
 
-    /**
-     * Tương ứng với bước findTableExecute(time, quantity, resId)
-     * trong sequence diagram.
-     *
-     * - Gọi xuống repository: findTablesValidByTimeAndRes(time, resId)
-     * - Lọc thêm theo sức chứa (capacity >= quantity)
-     * - Mapping sang DTO và trả về cho controller/UI.
-     */
+    
     public List<RestaurantTableDTO> findTableExecute(LocalTime time, Long quantity, Long restaurantId) {
         List<RestaurantTable> tables =
             restaurantTableRepository.findTablesValidByTimeAndRes(time, restaurantId);

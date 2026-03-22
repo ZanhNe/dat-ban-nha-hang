@@ -23,13 +23,6 @@ public class RestaurantController {
         this.restaurantService = restaurantService;
     }
 
-    /**
-     * Tương ứng với bước KhachHang → UI → RestaurantController.findTable(time, quantity, resId)
-     * trong sequence diagram.
-     *
-     * Ví dụ gọi:
-     * GET /api/restaurants/1/tables/available?time=18:30&quantity=4
-     */
     @GetMapping("/{restaurantId}/tables/available")
     public List<RestaurantTableDTO> findTable(
             @PathVariable("restaurantId") Long restaurantId,

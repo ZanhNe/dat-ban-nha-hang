@@ -13,8 +13,7 @@ public interface RestaurantTableRepository extends JpaRepository<RestaurantTable
 
     /**
      * Tìm các bàn còn khả dụng của một nhà hàng tại một thời điểm cụ thể.
-     * Ở đây mới lọc theo nhà hàng + trạng thái bàn, logic kiểm tra trùng giờ
-     * và số lượng khách sẽ được xử lý thêm ở tầng service.
+     * Ở đây mới lọc theo nhà hàng + trạng thái bàn, logic kiểm tra trùng giờ và số lượng khách sẽ được xử lý thêm ở tầng service.
      */
     @Query("""
         SELECT t
