@@ -1,0 +1,137 @@
+.login-background {
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(135deg, #e11d48, #1e293b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+
+.login-container {
+    width: 380px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    margin: auto;
+
+}
+
+.forgot-password {
+    text-align: right;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #e11d48;
+    cursor: pointer;
+}
+
+.text-center {
+    position: relative;
+    text-align: center;
+    margin: 16px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+.text-center::before,
+.text-center::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background: #ccc;
+}
+
+.text-center::before {
+    left: 0;
+}
+
+.text-center::after {
+    right: 0;
+}
+
+.social-login {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    font-size: 22px;
+    color: #555;
+    cursor: pointer;
+}
+
+.social-login i:hover {
+    color: #e11d48;
+}
+
+.custom-input-password {
+    position: relative;
+
+    i {
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+
+    }
+}
+
+.login-content {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    .title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #111;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        input {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            width: 100%;
+
+            &:focus {
+                outline: none;
+                border-color: #e11d48;
+                box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.25);
+            }
+        }
+    }
+
+    .btn-login {
+        margin-top: 8px;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background: #e11d48;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+
+        &:hover {
+            background: #c2133a;
+        }
+    }
+}
