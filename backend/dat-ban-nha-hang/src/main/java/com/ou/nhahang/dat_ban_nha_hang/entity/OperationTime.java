@@ -5,10 +5,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "operation_time")
-@Data
+@Getter
+@Setter
 @DiscriminatorValue("OPERATION_TIME")
 @PrimaryKeyJoinColumn(name = "operation_time_id")
-@EqualsAndHashCode(callSuper = true)
+
 public class OperationTime extends Time {
 
     @Column(name = "day", nullable = false)

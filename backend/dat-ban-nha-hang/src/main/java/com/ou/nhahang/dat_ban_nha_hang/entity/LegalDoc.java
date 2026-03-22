@@ -7,8 +7,9 @@ import lombok.*;
 
 @Entity
 @Table(name = "legal_doc")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+
 public class LegalDoc extends Base {
     @Column(name = "file", length = 255, nullable = false)
     private String file;

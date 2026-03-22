@@ -5,8 +5,9 @@ import lombok.*;
 
 @Entity
 @Table(name = "food_item")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+
 public class FoodItem extends Base {
 
     @Column(name = "quantity", nullable = false)

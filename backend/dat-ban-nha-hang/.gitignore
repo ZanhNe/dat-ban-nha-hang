@@ -5,6 +5,13 @@ target/
 !**/src/test/**/target/
 
 ### Cấu hình môi trường ###
+application.yml
+application-dev.yml
+application-prod.yml
+
+
+resources/
+
 application.properties
 application-dev.properties
 application-prod.properties

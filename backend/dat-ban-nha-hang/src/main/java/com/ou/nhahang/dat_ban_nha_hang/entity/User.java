@@ -1,5 +1,6 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,8 +10,9 @@ import lombok.*;
 
 @Entity
 @Table(name = "user")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
+
 public class User extends Base {
     @Column(name = "username", length = 255, unique = true, nullable = false)
     private String username;
@@ -50,12 +52,10 @@ public class User extends Base {
     @JoinColumn(name = "workplace_restaurant_id", nullable = true)
     private Restaurant workplace;
 
-    // User – Review (N–N qua association class: 1 khách có thể review nhiều nhà hàng)
     @OneToMany(mappedBy = "user")
-    private List<Review> reviews;
+    private List<Review> reviews = new ArrayList<>();
 
     // @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL)
-    // // mappedBy phải trỏ chính xác vào tên biến 'manager' ở class Restaurant
     // private List<Restaurant> managedRestaurants = new ArrayList<>();
 
     // @OneToMany(mappedBy = "waiter", cascade = CascadeType.ALL)
