@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,6 +17,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -42,15 +45,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             username = jwtUtil.extractUsername(jwt);
             userId = jwtUtil.extractUserId(jwt);
+            List<String> roles = jwtUtil.extractRoles(jwt);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (jwtUtil.validateToken(jwt)) {
-                    // Create lightweight authentication token wrapping the username and userId
-                    UserDetails userDetails = new User(username, "", new ArrayList<>());
+                    List<SimpleGrantedAuthority> authorities = (roles == null)
+                            ? new ArrayList<>()
+                            : roles.stream()
+                                    .map(SimpleGrantedAuthority::new)
+                                    .collect(Collectors.toList());
+
+                    UserDetails userDetails = new User(username, "", authorities);
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
-                            userId, // We place userId in the credentials object to extract later in Controller
+                            userId,
                             userDetails.getAuthorities());
 
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -58,8 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Let the filter pass. Security filter chain upstream will block it naturally
-            // with 403 Forbidden.
+
         }
 
         filterChain.doFilter(request, response);

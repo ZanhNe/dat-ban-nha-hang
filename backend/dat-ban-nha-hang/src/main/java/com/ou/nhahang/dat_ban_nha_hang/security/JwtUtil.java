@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 
 @Component
@@ -17,6 +18,29 @@ public class JwtUtil {
 
     public JwtUtil(@Value("${jwt.secret}") String secret) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    public String generateToken(String username, Long userId, List<String> roles) {
+        return generateToken(username, userId, roles, 1000L * 60 * 60 * 24); // 24 giờ
+    }
+
+    public String generateRefreshToken(String username, Long userId, List<String> roles) {
+        return generateToken(username, userId, roles, 1000L * 60 * 60 * 24 * 7); // 7 ngày
+    }
+
+    private String generateToken(String username, Long userId, List<String> roles, long expirationTime) {
+        return Jwts.builder()
+                .subject(username)
+                .claim("userId", userId)
+                .claim("roles", roles)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(key)
+                .compact();
+    }
+
+    public List<String> extractRoles(String token) {
+        return extractClaim(token, claims -> claims.get("roles", List.class));
     }
 
     public String extractUsername(String token) {

@@ -19,6 +19,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.ou.nhahang.dat_ban_nha_hang.security.CustomUserDetailsService;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -27,23 +35,38 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthFilter;
 
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 1. Chỉ đích danh tên miền của React được phép gọi vào (Dùng * nếu muốn mở cho
-        // tất cả, nhưng không an toàn)
+        // Chỉ đích danh tên miền của React được phép gọi vào
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
 
-        // 2. Cho phép các Method HTTP nào? (Phải có OPTIONS)
+        // Cho phép các Method HTTP (Phải có OPTIONS)
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        // 3. Cho phép Frontend gửi lên những Header nào? (Bắt buộc phải có
-        // Authorization để gửi Token)
+        // Cho phép Frontend gửi lên những Header
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-
-        // 4. (Tùy chọn) Cho phép gửi Cookie chéo miền nếu có dùng
-        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         // Áp dụng luật CORS này cho TOÀN BỘ mọi endpoint trong hệ thống
@@ -55,15 +78,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // .csrf(AbstractHttpConfigurer::disable)
-                // .cors(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll() // Này cho phép đăng nhập, đăng ký
                         .requestMatchers(HttpMethod.POST, "/api/v1/restaurants/*/reviews").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/restaurants/*/bookings").authenticated()
                         .anyRequest().permitAll())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

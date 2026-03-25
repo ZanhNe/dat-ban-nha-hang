@@ -84,9 +84,10 @@ public class RestaurantController {
         @PostMapping("/{id}/bookings")
         public ResponseEntity<ApiResponse<BookingResponseDTO>> createBooking(
                         @PathVariable("id") Long id,
-                        @RequestBody @Valid BookingRequestDTO requestDTO) {
-                Long mockUserId = 1L;
-                BookingResponseDTO data = restaurantService.bookingExecute(requestDTO, mockUserId, id);
+                        @RequestBody @Valid BookingRequestDTO requestDTO,
+                        Authentication authentication) {
+                Long userId = (Long) authentication.getCredentials();
+                BookingResponseDTO data = restaurantService.bookingExecute(requestDTO, userId, id);
                 ApiResponse<BookingResponseDTO> apiResponse = ApiResponse.<BookingResponseDTO>builder()
                                 .status(201)
                                 .message("Đặt bàn thành công")
