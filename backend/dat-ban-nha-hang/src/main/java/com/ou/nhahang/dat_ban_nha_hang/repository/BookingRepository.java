@@ -49,4 +49,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         @Param("restaurantId") Long restaurantId,
         org.springframework.data.domain.Pageable pageable
     );
+
+    List<Booking> findByBookingUser_IdAndStatus(Long userId, Booking.BookingStatus status);
 }

@@ -26,7 +26,6 @@ public class ExternalApiUtil {
             params.forEach((key, value) -> builder.queryParam(key, value));
 
             String finalUrl = builder.toUriString();
-
             HttpHeaders headers = new HttpHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 

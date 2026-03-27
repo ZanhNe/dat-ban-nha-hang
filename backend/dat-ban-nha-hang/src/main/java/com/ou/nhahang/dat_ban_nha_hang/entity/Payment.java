@@ -7,7 +7,9 @@ import lombok.*;
 @Table(name = "payment")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Payment extends Base {
     @Column(name = "price", nullable = false)
     private Long price;
@@ -46,6 +48,4 @@ public class Payment extends Base {
     @Column(name = "log", columnDefinition = "TEXT", nullable = true)
     private String log;
 
-    public Payment() {
-    }
 }

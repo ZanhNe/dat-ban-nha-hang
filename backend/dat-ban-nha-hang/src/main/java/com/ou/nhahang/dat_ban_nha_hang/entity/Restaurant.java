@@ -114,6 +114,9 @@ public class Restaurant extends Base {
                 .bookingUser(user)
                 .restaurant(restaurant)
                 .bookingTime(new BookingTime(bookingTime, restaurant))
+                .depositAmount(this.depositPolicy == DepositType.FIXED ? this.baseDepositValue
+                        : this.depositPolicy == DepositType.PER_GUEST ? this.baseDepositValue * numberOfPeople
+                                : 0L)
                 .numberOfPeople(numberOfPeople)
                 .note(note)
                 .tables(tables)

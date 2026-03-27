@@ -16,10 +16,10 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 
         @Query(value = """
                         SELECT * FROM restaurant r
-                        WHERE ST_Distance_Sphere(r.location, ST_GeomFromText(:pointWkt, 4326)) <= :radiusInMeters
+                        WHERE ST_Distance_Sphere(r.location, ST_GeomFromText(:pointWkt, 4326)) <= :radiusInMeters * 1000
                         """, countQuery = """
                         SELECT count(*) FROM restaurant r
-                        WHERE ST_Distance_Sphere(r.location, ST_GeomFromText(:pointWkt, 4326)) <= :radiusInMeters
+                        WHERE ST_Distance_Sphere(r.location, ST_GeomFromText(:pointWkt, 4326)) <= :radiusInMeters * 1000
                         """, nativeQuery = true)
         Page<Restaurant> findNearByRestaurant(@Param("pointWkt") String pointWkt, @Param("radiusInMeters") int radius,
                         Pageable pageable);

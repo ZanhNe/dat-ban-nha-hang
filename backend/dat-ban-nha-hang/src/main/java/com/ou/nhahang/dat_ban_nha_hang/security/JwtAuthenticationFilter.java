@@ -52,6 +52,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     List<SimpleGrantedAuthority> authorities = (roles == null)
                             ? new ArrayList<>()
                             : roles.stream()
+                                    .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
                                     .map(SimpleGrantedAuthority::new)
                                     .collect(Collectors.toList());
 

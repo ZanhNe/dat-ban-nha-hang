@@ -1,5 +1,6 @@
 package com.ou.nhahang.dat_ban_nha_hang.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -16,8 +17,8 @@ public record GeoCoordinateResponseDTO(
                 @JsonProperty("location") Location location) {
             @JsonIgnoreProperties(ignoreUnknown = true)
             public record Location(
-                    @JsonProperty("lat") double lat,
-                    @JsonProperty("lng") double lng) {
+                    @JsonAlias("lat") double latitude,
+                    @JsonAlias("lng") double longitude) {
             }
         }
     }

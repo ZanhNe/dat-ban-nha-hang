@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.DayOfWeek;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -74,9 +75,11 @@ public class RestaurantService implements IRestaurantService {
 
         @Override
         public Page<SearchRestaurantResponseDTO> searchRestaurantsExecute(SearchRestaurantRequestDTO requestDTO) {
-                Point userLocation = geolocationService.getPointFromAddress(requestDTO.address());
+                Point userLocation = requestDTO.extractLocation();
 
                 String pointWkt = String.format("POINT(%f %f)", userLocation.getY(), userLocation.getX());
+
+                System.out.println(pointWkt);
 
                 Pageable pageable = PageRequest.of(requestDTO.page(), requestDTO.limit());
 
@@ -204,7 +207,7 @@ public class RestaurantService implements IRestaurantService {
                 Booking booking = restaurant.makeBooking(
                                 user,
                                 restaurant,
-                                new java.util.HashSet<>(tables),
+                                new HashSet<>(tables),
                                 requestDTO.bookingTime(),
                                 requestDTO.quantity(),
                                 null);
@@ -218,6 +221,7 @@ public class RestaurantService implements IRestaurantService {
                                 "Restaurant Name",
                                 requestDTO.bookingTime(),
                                 booking.getNumberOfPeople(),
+                                booking.getDepositAmount(),
                                 booking.getStatus().name(),
                                 booking.getNote());
         }
@@ -231,6 +235,9 @@ public class RestaurantService implements IRestaurantService {
 
                 Point userLocation = requestDto.extractLocation();
                 Point resLocation = restaurant.getLocation();
+
+                System.out.println(userLocation.getX() + " " + userLocation.getY());
+                System.out.println(resLocation.getX() + " " + resLocation.getY());
 
                 GeoDirectionResponseDTO directions = null;
                 if (userLocation != null && resLocation != null) {

@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -93,7 +94,7 @@ public class AuthService implements IAuthService {
     }
 
     private AuthResponseDTO buildAuthResponse(User user) {
-        java.util.List<String> rolesWithPrefix = user.getRoles().stream()
+        List<String> rolesWithPrefix = user.getRoles().stream()
                 .map(r -> "ROLE_" + r.getName())
                 .collect(Collectors.toList());
 

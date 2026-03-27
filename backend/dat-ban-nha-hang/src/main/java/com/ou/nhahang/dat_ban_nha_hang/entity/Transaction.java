@@ -7,6 +7,9 @@ import lombok.*;
 @Table(name = "transaction")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 
 public class Transaction extends Base {
 
@@ -21,10 +24,17 @@ public class Transaction extends Base {
 
     public enum TransactionStatus {
         PENDING,
-        SUCCESS,
+        AUTHORIZED,
+        CAPTURED,
         FAILED,
         CANCELLED
     }
+
+    @Column(name = "intent_id", nullable = true)
+    private String intentId;
+
+    @Column(name = "client_secret", nullable = true)
+    private String clientSecret;
 
     @Column(name = "transaction_type", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -42,6 +52,4 @@ public class Transaction extends Base {
     @JoinColumn(name = "payment_source_id", nullable = false)
     private PaymentSource paymentSource;
 
-    public Transaction() {
-    }
 }

@@ -24,19 +24,24 @@ public class Booking extends PaymentSource {
     private String note;
 
     public enum BookingStatus {
-        AWAITING_CONFIRMATION,
         PENDING_PAYMENT,
+        AWAITING_CONFIRMATION,
         CONFIRMED,
         CUSTOMER_DID_NOT_ARRIVE,
         COMPLETED,
         REJECTED,
+        EXPIRED,
         CANCELLED
     }
+
+    @Column(name = "deposit_amount", nullable = false)
+    @Builder.Default
+    private Long depositAmount = 0L;
 
     @Column(name = "status", length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private BookingStatus status = BookingStatus.AWAITING_CONFIRMATION;
+    private BookingStatus status = BookingStatus.PENDING_PAYMENT;
 
     @ManyToOne
     @JoinColumn(name = "booking_user_id", nullable = false)

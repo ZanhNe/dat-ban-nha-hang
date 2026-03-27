@@ -45,8 +45,8 @@ public class GoongGeolocationService implements IGeolocationService {
                 GeoCoordinateResponseDTO.Result.Geometry geometry = result.geometry();
                 GeoCoordinateResponseDTO.Result.Geometry.Location location = geometry.location();
                 return new GeometryFactory().createPoint(new Coordinate(
-                        location.lng(),
-                        location.lat()));
+                        location.longitude(),
+                        location.latitude()));
             }
             throw new BusinessException("Không tìm thấy tọa độ cho địa chỉ: " + address);
         } catch (BusinessException e) {
@@ -59,11 +59,14 @@ public class GoongGeolocationService implements IGeolocationService {
     @Override
     public GeoDirectionResponseDTO getDirection(Point start, Point end) {
         try {
+            System.out.println("Vào trong hàm Get Direction");
             Map<String, Object> params = new HashMap<>();
             params.put("origin", start.getY() + "," + start.getX());
             params.put("destination", end.getY() + "," + end.getX());
             params.put("api_key", apiKey);
-            GeoDirectionResponseDTO response = externalApiUtil.sendGetRequest(baseUrl + "directions", params,
+
+            String finalUrl = baseUrl + "direction";
+            GeoDirectionResponseDTO response = externalApiUtil.sendGetRequest(finalUrl, params,
                     GeoDirectionResponseDTO.class);
             if (response.routes().length > 0) {
                 return response;
@@ -73,6 +76,28 @@ public class GoongGeolocationService implements IGeolocationService {
             throw e;
         } catch (Exception e) {
             throw new BusinessException("Lỗi khi lấy đường đi từ " + start + " đến " + end);
+        }
+    }
+
+    @Override
+    public GeoCoordinateResponseDTO.Result.Geometry.Location getCoordinates(String address) {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("address", address);
+            params.put("api_key", apiKey);
+            GeoCoordinateResponseDTO response = externalApiUtil.sendGetRequest(baseUrl + "geocode", params,
+                    GeoCoordinateResponseDTO.class);
+            if (response.status().equals("OK")) {
+                GeoCoordinateResponseDTO.Result result = response.results()[0];
+                GeoCoordinateResponseDTO.Result.Geometry geometry = result.geometry();
+                GeoCoordinateResponseDTO.Result.Geometry.Location location = geometry.location();
+                return location;
+            }
+            throw new BusinessException("Không tìm thấy tọa độ cho địa chỉ: " + address);
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException("Lỗi khi lấy tọa độ cho địa chỉ: " + address);
         }
     }
 
