@@ -35,7 +35,8 @@ const Register = () => {
         try {
             await authService.register(formData);
 
-            const loginData = await authService.login(formData.username, formData.password);
+            const res = await authService.login(formData.username, formData.password);
+            const loginData = res.data;
             setAuth(loginData);
             navigate('/');
 

@@ -1,7 +1,5 @@
-import axios from 'axios';
 import { USE_MOCK } from './restaurantService';
-
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+import apiClient from './apiClient';
 
 export const authService = {
     login: async (username, password) => {
@@ -28,8 +26,9 @@ export const authService = {
             });
         }
 
-        const res = await axios.post(`${API_BASE_URL}/auth/login`, { username, password });
-        return res.data.data;
+        // const res = await axios.post(`${API_BASE_URL}/auth/login`, { username, password });
+        const res = await apiClient.post('/auth/login', { username, password });
+        return res;
     },
 
     register: async (userData) => {
@@ -42,7 +41,8 @@ export const authService = {
             }), 800));
         }
 
-        const res = await axios.post(`${API_BASE_URL}/auth/register`, userData);
-        return res.data.data;
+        // const res = await axios.post(`${API_BASE_URL}/auth/register`, userData);
+        const res = await apiClient.post('/auth/register', userData);
+        return res;
     }
 };

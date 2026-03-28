@@ -29,23 +29,22 @@ export default function MapSearchPage() {
   const cuisine = useAtomValue(cuisineAtom);
   const page = useAtomValue(pageAtom);
   const limit = useAtomValue(limitAtom);
-  
+
   const setRestaurants = useSetAtom(restaurantsAtom);
   const setTotalItems = useSetAtom(totalItemsAtom);
   const setTotalPages = useSetAtom(totalPagesAtom);
   const [loading, setLoading] = useAtom(loadingAtom);
-  
+
   const focusMode = useAtomValue(focusModeAtom);
   const restaurants = useAtomValue(restaurantsAtom);
   const searchTrigger = useAtomValue(searchTriggerAtom);
 
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const isLoggedIn = true; // Mock Auth State
+  const isLoggedIn = true;
 
-  // Effect gọi API search mỗi khi dependencies thay đổi (bị khóa bởi searchTrigger)
   useEffect(() => {
-    if (!origin || searchTrigger === 0) return; // Chỉ search khi nút tìm kiếm đc ấn
-    
+    if (!origin || searchTrigger === 0) return;
+
     const fetchRestaurants = async () => {
       setLoading(true);
       try {
@@ -58,7 +57,7 @@ export default function MapSearchPage() {
           limit: limit
         };
         const res = await mapService.searchRestaurants(searchParams);
-        
+
         if (res?.data) {
           setRestaurants(res.data);
         }
@@ -74,42 +73,42 @@ export default function MapSearchPage() {
     };
 
     fetchRestaurants();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTrigger, page]); // Bỏ qua origin/radius/cuisine trong deps để không auto-fetch lúc user vô tình update geo
+
+  }, [searchTrigger, page]);
 
   return (
     <div className="h-screen w-full flex flex-col md:flex-row overflow-hidden bg-gray-50 font-sans">
-      
+
       {/* CỘT TRÁI (Result Sidebar) */}
       <div className={`w-full md:w-[420px] h-[50vh] md:h-full flex flex-col shadow-2xl z-20 ${focusMode ? 'bg-white' : 'bg-gray-50'}`}>
         {focusMode ? (
           <RestaurantDetailPanel />
         ) : (
           <div className="flex flex-col h-full bg-slate-50 relative p-4 pb-0">
-             <div className="flex-1 overflow-y-auto pr-2 pb-4 scrollbar-hide">
-                {!origin && (
-                  <div className="text-center mt-10 text-gray-500">
-                    <div className="text-4xl mb-3">🧭</div>
-                    <p>Hãy nhập địa chỉ hoặc sử dụng GPS để tìm nhà hàng xung quanh bạn.</p>
-                  </div>
-                )}
-                
-                {loading && origin && (
-                  <div className="flex flex-col items-center justify-center mt-12 bg-white rounded-xl p-6 shadow-sm border border-blue-100">
-                    <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-3" />
-                    <div className="text-blue-600 font-medium animate-pulse">Đang tìm kiếm nhà hàng...</div>
-                  </div>
-                )}
+            <div className="flex-1 overflow-y-auto pr-2 pb-4 scrollbar-hide">
+              {!origin && (
+                <div className="text-center mt-10 text-gray-500">
 
-                {!loading && origin && restaurants.length === 0 && searchTrigger > 0 && (
-                  <div className="text-center mt-10 text-gray-500 bg-white rounded-xl p-6 shadow-sm">
-                    Không tìm thấy nhà hàng nào trong khu vực và điều kiện này.
-                  </div>
-                )}
+                  <p>Hãy nhập địa chỉ hoặc sử dụng GPS để tìm nhà hàng xung quanh bạn.</p>
+                </div>
+              )}
 
-                {!loading && restaurants.map(res => (
-                  <RestaurantCard key={res.restaurantId} restaurant={res} />
-                ))}
+              {loading && origin && (
+                <div className="flex flex-col items-center justify-center mt-12 bg-white rounded-xl p-6 shadow-sm border border-blue-100">
+                  <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-3" />
+                  <div className="text-blue-600 font-medium animate-pulse">Đang tìm kiếm nhà hàng...</div>
+                </div>
+              )}
+
+              {!loading && origin && restaurants.length === 0 && searchTrigger > 0 && (
+                <div className="text-center mt-10 text-gray-500 bg-white rounded-xl p-6 shadow-sm">
+                  Không tìm thấy nhà hàng nào trong khu vực và điều kiện này.
+                </div>
+              )}
+
+              {!loading && restaurants.map(res => (
+                <RestaurantCard key={res.restaurantId} restaurant={res} />
+              ))}
             </div>
             {/* Phân trang */}
             {origin && !loading && restaurants.length > 0 && <PaginationControl />}
@@ -117,7 +116,7 @@ export default function MapSearchPage() {
         )}
       </div>
 
-      {/* CỘT PHẢI (Map View + Overlay Controls) */}
+      {/* Map View + Overlay Controls */}
       <div className="flex-1 relative h-[50vh] md:h-full">
         <MapCanvas />
 
@@ -133,13 +132,13 @@ export default function MapSearchPage() {
         {isLoggedIn && (
           <div className="absolute top-4 right-4 z-20">
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className="w-10 h-10 rounded-full bg-white shadow-md border-2 border-primary-500 flex items-center justify-center overflow-hidden hover:shadow-lg transition"
               >
-                 <img src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" alt="Avatar" />
+                <img src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" alt="Avatar" />
               </button>
-              
+
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border py-2">
                   <div className="px-4 py-3 border-b">

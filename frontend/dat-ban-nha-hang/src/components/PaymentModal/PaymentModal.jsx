@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { paymentService } from '../../services/paymentService';
@@ -60,8 +60,8 @@ const CheckoutForm = ({ clientSecret, onSuccess, onError, isProcessing, setIsPro
                 type="submit"
                 disabled={!stripe || isProcessing}
                 className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors
-                    ${(!stripe || isProcessing) 
-                        ? 'bg-blue-400 cursor-not-allowed' 
+                    ${(!stripe || isProcessing)
+                        ? 'bg-blue-400 cursor-not-allowed'
                         : 'bg-blue-600 hover:bg-blue-700'}`}
             >
                 {isProcessing ? 'Đang xử lý...' : 'Xác nhận thanh toán'}
@@ -76,11 +76,12 @@ export const PaymentModal = ({ booking, onClose, onPaymentSuccess }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isInitiating, setIsInitiating] = useState(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const initPayment = async () => {
             try {
                 setIsInitiating(true);
-                const data = await paymentService.initiatePayment(booking.bookingId);
+                const res = await paymentService.initiatePayment(booking.bookingId);
+                const data = res.data;
                 setClientSecret(data.clientSecret);
             } catch (err) {
                 setError(err.response?.data?.message || 'Có lỗi xảy ra khi khởi tạo thanh toán');
@@ -109,12 +110,12 @@ export const PaymentModal = ({ booking, onClose, onPaymentSuccess }) => {
                         <X className="w-5 h-5 text-gray-500" />
                     </button>
                 </div>
-                
+
                 <div className="p-6">
                     <div className="mb-6 bg-gray-50 p-4 rounded-lg flex flex-col items-center">
                         <p className="text-sm text-gray-500 mb-1">Mã Booking</p>
                         <p className="font-medium text-gray-800 mb-3">#{booking.bookingId}</p>
-                        
+
                         <p className="text-sm text-gray-500 mb-1">Số tiền cọc</p>
                         <p className="text-2xl font-bold text-blue-600">
                             {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(booking.depositAmount)}
@@ -134,8 +135,8 @@ export const PaymentModal = ({ booking, onClose, onPaymentSuccess }) => {
                         </div>
                     ) : clientSecret ? (
                         <Elements stripe={stripePromise} options={{ clientSecret }}>
-                            <CheckoutForm 
-                                clientSecret={clientSecret} 
+                            <CheckoutForm
+                                clientSecret={clientSecret}
                                 onSuccess={handleSuccess}
                                 onError={setError}
                                 isProcessing={isProcessing}

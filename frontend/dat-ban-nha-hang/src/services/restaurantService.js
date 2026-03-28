@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Đổi cờ này thành 'false' để call api thật xuống localhost:8080
-export const USE_MOCK = true;
+export const USE_MOCK = false;
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 // ======================================
@@ -85,14 +85,14 @@ const mockAreaTables = [
 export const restaurantService = {
     getRestaurantDetail: async (id) => {
         if (USE_MOCK) return Promise.resolve(mockRestaurantData);
-        const res = await axios.get(`${API_BASE_URL}/restaurants/${id}`);
-        return res.data.data;
+        const res = await apiClient.get(`/restaurants/${id}`);
+        return res;
     },
 
     getRestaurantMenu: async (id) => {
         if (USE_MOCK) return Promise.resolve(mockMenuData);
-        const res = await axios.get(`${API_BASE_URL}/restaurants/${id}/menu`);
-        return res.data.data;
+        const res = await apiClient.get(`/restaurants/${id}/menu`);
+        return res;
     },
 
     getRestaurantReviews: async (id, limit = 10, cursor = null) => {
@@ -100,8 +100,8 @@ export const restaurantService = {
         const params = new URLSearchParams();
         if (limit) params.append('limit', limit);
         if (cursor) params.append('cursor', cursor);
-        const res = await axios.get(`${API_BASE_URL}/restaurants/${id}/reviews?${params.toString()}`);
-        return res.data;
+        const res = await apiClient.get(`/restaurants/${id}/reviews`, { params });
+        return res;
     },
 
     getAvailableTables: async (id, date, time, guests) => {
@@ -114,7 +114,7 @@ export const restaurantService = {
         params.append('time', time);
         params.append('guests', guests);
 
-        const res = await axios.get(`${API_BASE_URL}/restaurants/${id}/tables?${params.toString()}`);
-        return res.data.data.areas;
+        const res = await apiClient.get(`/restaurants/${id}/tables`, { params });
+        return res;
     }
 };

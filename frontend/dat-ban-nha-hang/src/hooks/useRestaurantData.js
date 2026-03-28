@@ -11,7 +11,8 @@ export const useRestaurantData = (id, activeTab) => {
         const fetchInitialData = async () => {
             setIsLoading(true);
             try {
-                const resData = await restaurantService.getRestaurantDetail(id);
+                const res = await restaurantService.getRestaurantDetail(id);
+                const resData = res.data;
                 setRestaurant(resData);
             } catch (error) {
                 console.error("Lỗi lấy chi tiết nhà hàng", error);
@@ -24,13 +25,15 @@ export const useRestaurantData = (id, activeTab) => {
 
     useEffect(() => {
         if (activeTab === 'menu' && menus.length === 0) {
-            restaurantService.getRestaurantMenu(id).then(data => {
-                if(data.restaurantMenus) setMenus(data.restaurantMenus);
+            restaurantService.getRestaurantMenu(id).then(res => {
+                const data = res.data;
+                if (data.restaurantMenus) setMenus(data.restaurantMenus);
             });
         }
         if (activeTab === 'reviews' && reviews.list.length === 0) {
-            restaurantService.getRestaurantReviews(id).then(data => {
-                 setReviews({ meta: data.meta, list: data.data });
+            restaurantService.getRestaurantReviews(id).then(res => {
+                const data = res.data;
+                setReviews({ meta: data.meta, list: data.data });
             });
         }
     }, [activeTab, id, menus.length, reviews.list.length]);

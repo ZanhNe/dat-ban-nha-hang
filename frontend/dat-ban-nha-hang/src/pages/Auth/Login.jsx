@@ -20,7 +20,8 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const data = await authService.login(username, password);
+            const res = await authService.login(username, password);
+            const data = res.data;
 
             setAuth(data);
             navigate(-1);

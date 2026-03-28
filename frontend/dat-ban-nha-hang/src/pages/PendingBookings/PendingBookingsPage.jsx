@@ -15,7 +15,8 @@ const PendingBookingsPage = () => {
     const fetchBookings = async () => {
         try {
             setLoading(true);
-            const data = await paymentService.getPendingBookings();
+            const res = await paymentService.getPendingBookings();
+            const data = res.data;
             setBookings(data);
         } catch (err) {
             if (err.response?.status === 401 || err.response?.status === 403) {
@@ -34,7 +35,6 @@ const PendingBookingsPage = () => {
     const handlePaymentSuccess = () => {
         setSuccessMessage('Đã khởi tạo giao dịch đặt cọc thành công, vui lòng chờ nhà hàng duyệt.');
         setSelectedBooking(null);
-        // Refresh the list after successful payment
         fetchBookings();
     };
 
@@ -127,10 +127,10 @@ const PendingBookingsPage = () => {
             </div>
 
             {selectedBooking && (
-                <PaymentModal 
-                    booking={selectedBooking} 
-                    onClose={() => setSelectedBooking(null)} 
-                    onPaymentSuccess={handlePaymentSuccess} 
+                <PaymentModal
+                    booking={selectedBooking}
+                    onClose={() => setSelectedBooking(null)}
+                    onPaymentSuccess={handlePaymentSuccess}
                 />
             )}
         </div>
