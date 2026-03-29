@@ -8,13 +8,15 @@ export const authService = {
                 setTimeout(() => {
                     if (username === 'admin' && password === '123456') {
                         resolve({
-                            accessToken: "mock.jwt.token",
-                            user: {
-                                userId: 1,
-                                username: "admin",
-                                fullName: "Admin System",
-                                email: "admin@example.com",
-                                roles: ["ADMIN", "CUSTOMER"]
+                            data: {
+                                accessToken: "mock.jwt.token",
+                                user: {
+                                    userId: 1,
+                                    username: "admin",
+                                    fullName: "Admin System",
+                                    email: "admin@example.com",
+                                    roles: ["ROLE_ADMIN", "ROLE_CUSTOMER"]
+                                }
                             }
                         });
                     } else {
@@ -34,10 +36,12 @@ export const authService = {
     register: async (userData) => {
         if (USE_MOCK) {
             return new Promise((resolve) => setTimeout(() => resolve({
-                userId: 99,
-                username: userData.username,
-                fullName: userData.fullName,
-                roles: ["CUSTOMER"]
+                data: {
+                    userId: 99,
+                    username: userData.username,
+                    fullName: userData.fullName,
+                    roles: ["CUSTOMER"]
+                }
             }), 800));
         }
 

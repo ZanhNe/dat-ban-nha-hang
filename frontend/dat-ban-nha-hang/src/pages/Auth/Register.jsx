@@ -1,56 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useSetAtom } from 'jotai';
-import { setAuthAtom } from '../../store/authStore';
-import { authService } from '../../services/authService';
+import { Link } from 'react-router-dom';
 import { Loader2, ArrowLeft } from 'lucide-react';
+import useRegisterData from '../../hooks/useRegisterData';
 
 const Register = () => {
-    const navigate = useNavigate();
-    const setAuth = useSetAtom(setAuthAtom);
-
-    const [formData, setFormData] = useState({
-        username: '',
-        password: '',
-        fullName: '',
-        email: '',
-        phone: '',
-        address: ''
-    });
-
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [fieldErrors, setFieldErrors] = useState({});
-
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const handleRegister = async (e) => {
-        e.preventDefault();
-        setError('');
-        setFieldErrors({});
-        setIsLoading(true);
-
-        try {
-            await authService.register(formData);
-
-            const res = await authService.login(formData.username, formData.password);
-            const loginData = res.data;
-            setAuth(loginData);
-            navigate('/');
-
-        } catch (err) {
-            const errData = err.response?.data;
-            if (errData?.errors) {
-                setFieldErrors(errData.errors);
-            } else {
-                setError(errData?.message || 'Đăng ký thất bại, vui lòng thử lại!');
-            }
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const { formData, isLoading, error, fieldErrors, handleChange, handleRegister, navigate } = useRegisterData();
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center px-4 font-sans py-8">

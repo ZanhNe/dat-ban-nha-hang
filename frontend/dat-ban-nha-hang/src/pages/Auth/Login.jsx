@@ -1,41 +1,14 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useSetAtom } from 'jotai';
-import { setAuthAtom } from '../../store/authStore';
-import { authService } from '../../services/authService';
+import { Link } from 'react-router-dom';
 import { Loader2, ArrowLeft } from 'lucide-react';
+import useLoginData from '../../hooks/useLoginData';
 
 const Login = () => {
-    const navigate = useNavigate();
-    const setAuth = useSetAtom(setAuthAtom);
-
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        setError('');
-        setIsLoading(true);
-
-        try {
-            const res = await authService.login(username, password);
-            const data = res.data;
-
-            setAuth(data);
-            navigate(-1);
-        } catch (err) {
-            setError(err.response?.data?.message || 'Tên đăng nhập hoặc mật khẩu không đúng!');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const { username, password, isLoading, error, handleChange, handleLogin, navigate } = useLoginData();
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center px-4 font-sans">
             <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate(-1)}
                 className="absolute top-6 left-4 p-2 bg-white rounded-full shadow-sm text-gray-600"
             >
                 <ArrowLeft size={20} />
@@ -62,7 +35,8 @@ const Login = () => {
                             type="text"
                             required
                             value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            name="username"
+                            onChange={handleChange}
                             className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
                             placeholder="Nhập tên đăng nhập"
                         />
@@ -76,7 +50,8 @@ const Login = () => {
                             type="password"
                             required
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            name="password"
+                            onChange={handleChange}
                             className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
                             placeholder="••••••••"
                         />

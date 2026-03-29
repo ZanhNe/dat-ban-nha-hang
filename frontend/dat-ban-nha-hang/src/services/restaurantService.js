@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Đổi cờ này thành 'false' để call api thật xuống localhost:8080
-export const USE_MOCK = false;
+export const USE_MOCK = true;
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 // ======================================
