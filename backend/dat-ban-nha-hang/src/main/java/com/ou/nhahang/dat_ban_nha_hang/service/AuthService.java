@@ -98,11 +98,15 @@ public class AuthService implements IAuthService {
                 .map(r -> "ROLE_" + r.getName())
                 .collect(Collectors.toList());
 
-        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getId(), rolesWithPrefix);
-        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), user.getId(), rolesWithPrefix);
+        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getWorkplace().getId(),
+                rolesWithPrefix);
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), user.getId(),
+                user.getWorkplace().getId(),
+                rolesWithPrefix);
 
         UserDTO userDTO = UserDTO.builder()
                 .userId(user.getId())
+                .restaurantId(user.getWorkplace().getId())
                 .username(user.getUsername())
                 .fullName(user.getFullName())
                 .email(user.getEmail())

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.data.domain.Page;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 
 import java.util.HashMap;
@@ -68,6 +68,7 @@ public class RestaurantController {
         }
 
         @GetMapping("/{id}/tables")
+        @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'CUSTOMER')")
         public ResponseEntity<ApiResponse<TableSearchResponseDTO>> searchTables(
                         @PathVariable("id") Long id,
                         @ModelAttribute @Valid TableSearchRequestDTO requestDTO) {
@@ -82,6 +83,7 @@ public class RestaurantController {
         }
 
         @PostMapping("/{id}/bookings")
+        @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'CUSTOMER')")
         public ResponseEntity<ApiResponse<BookingResponseDTO>> createBooking(
                         @PathVariable("id") Long id,
                         @RequestBody @Valid BookingRequestDTO requestDTO,
@@ -150,6 +152,7 @@ public class RestaurantController {
         }
 
         @PostMapping("/{id}/reviews")
+        @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'CUSTOMER')")
         public ResponseEntity<ApiResponse<GetRestaurantReviewResponseDTO>> createReview(
                         @PathVariable("id") Long id,
                         @Valid @RequestBody CreateRestaurantReviewRequestDTO requestDTO,

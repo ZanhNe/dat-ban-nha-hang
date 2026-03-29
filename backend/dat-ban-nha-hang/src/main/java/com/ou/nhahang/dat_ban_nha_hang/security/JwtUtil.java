@@ -20,19 +20,21 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String username, Long userId, List<String> roles) {
-        return generateToken(username, userId, roles, 1000L * 60 * 60 * 24); // 24 giờ
+    public String generateToken(String username, Long userId, Long restaurantId, List<String> roles) {
+        return generateToken(username, userId, roles, restaurantId, 1000L * 60 * 60 * 24); // 24 giờ
     }
 
-    public String generateRefreshToken(String username, Long userId, List<String> roles) {
-        return generateToken(username, userId, roles, 1000L * 60 * 60 * 24 * 7); // 7 ngày
+    public String generateRefreshToken(String username, Long userId, Long restaurantId, List<String> roles) {
+        return generateToken(username, userId, roles, restaurantId, 1000L * 60 * 60 * 24 * 7); // 7 ngày
     }
 
-    private String generateToken(String username, Long userId, List<String> roles, long expirationTime) {
+    private String generateToken(String username, Long userId, List<String> roles, Long restaurantId,
+            long expirationTime) {
         return Jwts.builder()
                 .subject(username)
                 .claim("userId", userId)
                 .claim("roles", roles)
+                .claim("restaurantId", restaurantId)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(key)

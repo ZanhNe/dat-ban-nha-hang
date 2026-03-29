@@ -236,8 +236,7 @@ public class RestaurantService implements IRestaurantService {
                 Point userLocation = requestDto.extractLocation();
                 Point resLocation = restaurant.getLocation();
 
-                System.out.println(userLocation.getX() + " " + userLocation.getY());
-                System.out.println(resLocation.getX() + " " + resLocation.getY());
+                
 
                 GeoDirectionResponseDTO directions = null;
                 if (userLocation != null && resLocation != null) {

@@ -6,14 +6,15 @@ import lombok.Builder;
 
 @Builder
 public record UserDTO(
-    Long userId,
-    String username,
-    String fullName,
-    String email,
-    String phone,
-    String address,
-    String avatar,
-    String status,
-    List<String> roles,
-    String createdAt
-) {}
+        Long userId,
+        String username,
+        String fullName,
+        String email,
+        String phone,
+        String address,
+        String avatar,
+        String status,
+        Long restaurantId,
+        List<String> roles,
+        String createdAt) {
+}

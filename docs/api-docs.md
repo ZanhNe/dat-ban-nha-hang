@@ -129,10 +129,13 @@ Authorization: Bearer <JWT_TOKEN>
     "tokenType": "Bearer",
     "expiresIn": 3600,
     "user": {
-      "id": 1,
+      "userId": 1,
       "username": "admin",
       "fullName": "Nguyễn Văn A",
-      "role": "ADMIN"
+      "email": "admin@example.com",
+      "phone": "0987654321",
+      "avatar": "https://abc.com/avatar.jpg",
+      "roles": ["ADMIN"]
     }
   }
 }
@@ -148,12 +151,110 @@ Authorization: Bearer <JWT_TOKEN>
 }
 ```
 
+### 2.2. Đăng ký
+
+**`POST /auth/register`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Đăng ký tài khoản người dùng |
+| **Auth**     | Không yêu cầu              |
+| **Role**     | Tất cả                     |
+
+**Request Body:**
+
+```json
+{
+  "username": "string, required",
+  "password": "string, required, tối thiểu 6 ký tự",
+  "fullName": "string, required",
+  "email": "string, required, định dạng email hợp lệ",
+  "phone": "string, required",
+  "address": "string, optional"
+}
+```
+
+**Response `201 Created`:**
+
+```json
+{
+  "status": 201,
+  "message": "Đăng ký tài khoản thành công",
+  "data": {
+    "userId": 2,
+    "username": "nguyenvana",
+    "fullName": "Nguyễn Văn A",
+    "email": "nguyenvana@example.com",
+    "phone": "0901234567",
+    "address": "123 Đường A, Quận 1, TP.HCM",
+    "avatar": null,
+    "status": "ACTIVE",
+    "roles": ["CUSTOMER"],
+    "createdAt": "2026-03-25T10:00:00"
+  }
+}
+```
+
+**Response `400 Bad Request`:**
+(Lỗi do sai định dạng đầu vào hoặc vi phạm logic kinh doanh)
+
+```json
+{
+  "status": 400,
+  "message": "Tên đăng nhập đã tồn tại / Dữ liệu không hợp lệ",
+  "errors": null // Hoặc object chứa chi tiết lỗi field nếu sai định dạng (@NotBlank, @Email...)
+}
+```
+
 
 ---
 
 
+### 1. Lấy tọa độ
 
-### 1. Tìm kiếm nhà hàng 
+**`GET /api/v1/geolocation/get-coordinates`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Dùng để lấy tọa độ của một địa chỉ cụ thể           |
+| **Auth**     | Không|
+| **Role**     | Guest           |
+
+**Query Parameters:**
+
+| Param    | Type      | Required | Default | Mô tả           |
+| -------- | --------- | -------- | ------- | ---------------- |
+| `address`   | `string` | Yes       | `null`    | Địa chỉ do khách hàng đưa ra |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Mô tả",
+  "data": {
+    "geometry": {
+      "location": {
+        "latitude": 10.758,
+        "longitude": 106.663
+      }
+    }
+  },      
+} 
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+
+### 2. Tìm kiếm nhà hàng 
 
 **`GET /api/v1/restaurants`**
 
@@ -169,7 +270,7 @@ Authorization: Bearer <JWT_TOKEN>
 | -------- | --------- | -------- | ------- | ---------------- |
 | `page`   | `integer` | No       | `0`     | Số trang         |
 | `limit`   | `integer` | No       | `10`    | Số phần tử/trang |
-| `address`   | `string` | Yes       | `null`    | Địa chỉ do khách hàng đưa ra |
+| `origin`   | `string` | No       | `null`    | Tọa độ của khách hàng (latitude,longitude) |
 | `cuisine`   | `string` | No       | `null`    | Loại hình ẩm thực |
 | `radius`   | `integer` | No       | `2`    | Bán kính tìm kiếm |
 
@@ -181,19 +282,21 @@ Authorization: Bearer <JWT_TOKEN>
   "status": 200,
   "message": "Mô tả",
   "data": [ //Dữ liệu chính hoặc Array
+
     {
     "restaurantId": 101,
     "restaurantName": "Haidilao - Chi nhánh Hùng Vương Plaza",
     "restaurantLogo": "https://abc.com/logo.png",
-    "cuisines": ["Lẩu", "Món Trung"],
-    "avgRating": 4.8,
-    "totalReviews": 1250,
+    "restaurantCuisines": ["Lẩu", "Món Trung"],
+    "restaurantAvgRating": 4.8,
+    "restaurantTotalReviews": 1250,
     "restaurantAddress": "126 Hùng Vương, Quận 5, TP.HCM",
-    "distance": 1.2, // km (Được tính từ tọa độ của khách hàng so với tọa độ của nhà hàng)
-    "restaurantDepositType": "Fixed",
-    "restaurantBaseDeposit": 200000,
+    "restaurantDistance": 1.2, // km (Được tính từ tọa độ của khách hàng so với tọa độ của nhà hàng)
     "restaurantIsOpen": true, // (Tính toán giữa thời gian thực tế và thời gian mở cửa của nhà hàng)
-    "restaurantDirection": {} // (Thông tin về chỉ đường và khoảng cách)
+    "restaurantLocation": {
+      "latitude": 10.758,
+      "longitude": 106.663
+    }
     },
   ],      
   "meta": {
@@ -233,6 +336,12 @@ Authorization: Bearer <JWT_TOKEN>
 | ----- | --------- | -------- | ---------- |
 | `id`  | `integer` | Yes       | ID của nhà hàng |
 
+**Query Parameters:**
+
+| Param    | Type      | Required | Default | Mô tả           |
+| -------- | --------- | -------- | ------- | ---------------- |
+| `origin`   | `string` | Yes       | `null`    | Tọa độ của khách hàng (latitude, longitude) |
+
 **Response `200 OK`:**
 
 ```json
@@ -240,72 +349,30 @@ Authorization: Bearer <JWT_TOKEN>
   "status": 200,
   "message": "Mô tả",
   "data": {
-    "id": 101,
-    "name": "Haidilao - Chi nhánh Hùng Vương Plaza",
-    "description": "Thương hiệu lẩu nổi tiếng với dịch vụ chăm sóc khách hàng tận tâm...",
-    "address": "126 Hùng Vương, Quận 5, TP.HCM",
-    "latitude": 10.758,
-    "longitude": 106.663,
-    "cuisines": ["Lẩu", "Món Trung"],
-    "avgRating": 4.8,
-    "totalReviews": 1250,
-    "depositPolicy": "Fixed",
-    "baseDepositAmount": 200000,
-    "operationTimes": [
+    "restaurantId": 101,
+    "restaurantName": "Haidilao - Chi nhánh Hùng Vương Plaza",
+    "restaurantImage": "https://abc.com/logo.png",
+    "restaurantLogo": "https://abc.com/logo.png",
+    "restaurantDescription": "Thương hiệu lẩu nổi tiếng với dịch vụ chăm sóc khách hàng tận tâm...",
+    "restaurantAddress": "126 Hùng Vương, Quận 5, TP.HCM",
+    "restaurantLocation": {
+      "latitude": 10.758,
+      "longitude": 106.663
+    },
+    "restaurantCuisines": ["Lẩu", "Món Trung"],
+    "restaurantAvgRating": 4.8,
+    "restaurantTotalReviews": 1250,
+    "restaurantDepositPolicy": "Fixed",
+    "restaurantBaseDeposit": 200000,
+    "restaurantOperationTimes": [
       { "day": "Monday", "open": "09:00", "close": "23:00" },
       { "day": "Tuesday", "open": "09:00", "close": "23:00" }
     ],
-    "menus": [
-      {
-        "categoryName": "Món lẩu",
-        "foods": [
-          {
-            "id": 501,
-            "name": "Lẩu Thái Hai ngăn",
-            "price": 350000,
-            "description": "Vị chua cay đặc trưng...",
-            "optionsGroup": [
-              {
-                "id": 1,
-                "name": "Độ cay",
-                "options": [
-                  {
-                    "id": 1,
-                    "name": "Ít cay",
-                    "price": 0,
-                    "image": "https://abc.com/logo.png"
-                  },
-                  {
-                    "id": 2,
-                    "name": "Cay vừa",
-                    "price": 0,
-                    "image": "https://abc.com/logo.png"
-                  },
-                  {
-                    "id": 3,
-                    "name": "Cay nhiều",
-                    "price": 0,
-                    "image": "https://abc.com/logo.png"
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-      }
-    ],
-    "tableAreas": [
+    "restaurantTableAreas": [
       { "areaName": "Trong nhà", "availableTables": 15, "maxCapacity": 10 },
       { "areaName": "VIP", "availableTables": 2, "maxCapacity": 20 }
     ],
-    "topReviews": [
-      {
-        "userName": "Doanh Diệp",
-        "rating": 5,
-        "comment": "Dịch vụ rất tốt, món ăn ngon!",
-        "createdAt": "2026-02-10"
-      }
-    ]
+    "restaurantDirections": {} //Dùng để chứa thông tin chỉ đường từ vị trí của khách hàng đến nhà hàng
   }
 }
 ```
@@ -319,6 +386,149 @@ Authorization: Bearer <JWT_TOKEN>
   "errors": { }
 }
 ```
+
+
+---
+
+### 3. Xem menu nhà hàng
+**`GET /api/v1/restaurants/{id}/menu`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Lấy danh sách menu của nhà hàng dựa vào ID.            |
+| **Auth**     | No |
+| **Role**     | Guest           |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `id`  | `integer` | Yes       | ID của nhà hàng |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Mô tả",
+  "data": {
+    "restaurantId": 101,
+    "restaurantName": "Haidilao - Chi nhánh Hùng Vương Plaza",
+    "restaurantMenus": [
+      {
+        "menuId": 1,
+        "menuName": "Menu 1",
+        "menuDescription": "Menu 1",
+        "restaurantMenu": [
+          {
+            "groupId": 1,
+            "groupName": "Khai vị",
+            "groupDescription": "Món khai vị",
+            "items": [
+              {
+                "itemId": 1,
+                "itemName": "Gỏi cuốn",
+                "itemDescription": "Cuốn rau sống tươi ngon",
+                "itemPrice": 50000,
+                "itemImage": "https://abc.com/logo.png"
+              },
+              {
+                "itemId": 2,
+                "itemName": "Chả giò",
+                "itemDescription": "Chả giò giòn rụm",
+                "itemPrice": 60000,
+                "itemImage": "https://abc.com/logo.png"
+              }
+            ]
+          },
+          {
+            "groupId": 2,
+            "groupName": "Món chính",
+            "groupDescription": "Món chính",
+            "items": [
+              {
+                "itemId": 3,
+                "itemName": "Lẩu Thái",
+                "itemDescription": "Lẩu Thái chua cay",
+                "itemPrice": 200000,
+                "itemImage": "https://abc.com/logo.png"
+              },
+              {
+                "itemId": 4,
+                "itemName": "Cơm chiên",
+                "itemDescription": "Cơm chiên hải sản",
+                "itemPrice": 100000,
+                "itemImage": "https://abc.com/logo.png"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "menuId": 2,
+        "menuName": "Menu 2",
+        "menuDescription": "Menu 2",
+        "restaurantMenu": [
+          {
+            "groupId": 1,
+            "groupName": "Khai vị",
+            "groupDescription": "Món khai vị",
+            "items": [
+              {
+                "itemId": 1,
+                "itemName": "Gỏi cuốn",
+                "itemDescription": "Cuốn rau sống tươi ngon",
+                "itemPrice": 50000,
+                "itemImage": "https://abc.com/logo.png"
+              },
+              {
+                "itemId": 2,
+                "itemName": "Chả giò",
+                "itemDescription": "Chả giò giòn rụm",
+                "itemPrice": 60000,
+                "itemImage": "https://abc.com/logo.png"
+              }
+            ]
+          },
+          {
+            "groupId": 2,
+            "groupName": "Món chính",
+            "groupDescription": "Món chính",
+            "items": [
+              {
+                "itemId": 3,
+                "itemName": "Lẩu Thái",
+                "itemDescription": "Lẩu Thái chua cay",
+                "itemPrice": 200000,
+                "itemImage": "https://abc.com/logo.png"
+              },
+              {
+                "itemId": 4,
+                "itemName": "Cơm chiên",
+                "itemDescription": "Cơm chiên hải sản",
+                "itemPrice": 100000,
+                "itemImage": "https://abc.com/logo.png"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+  
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
 
 ---
 
@@ -550,39 +760,52 @@ HTTP Code,Mô tả
 ```
 
 
-### 6. Xem lịch sử đặt bàn
+### 6. Xem lịch sử đặt bàn (danh sách dạng tóm tắt)
 **`GET /api/v1/bookings/my-history`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Xem lịch sử đặt bàn (tóm tắt) |
+| **Auth**     | Bearer Token               |
+| **Role**     | Customer                   |
 
 **Query Parameters:**
 
-| Param    | Type      | Required | Default | Mô tả           |
-| -------- | --------- | -------- | ------- | ---------------- |
-| `page`   | `integer` | No       | `0`     | Số trang         |
-| `limit`   | `integer` | No       | `10`    | Số phần tử/trang |
-| `status`   | `string` | No       | `null`    | Lọc theo trạng thái (SUCCESS, CANCELLED, REJECTED) |
-| `fromDate/toDate`   | `integer` | No       | `null`    | Lọc theo thời gian |
+| Param           | Type      | Required | Default | Mô tả           |
+| --------------- | --------- | -------- | ------- | ---------------- |
+| `page`          | `integer` | No       | `0`     | Số trang         |
+| `limit`         | `integer` | No       | `10`    | Số phần tử/trang |
+| `status`        | `string`  | No       | `null`  | Lọc theo trạng thái (AWAITING_CONFIRMATION, PENDING_PAYMENT, CONFIRMED, COMPLETED, CANCELLED, v.v.) |
+| `fromDate`      | `string`  | No       | `null`  | Lọc theo thời gian `bookingStartTime` (ISO-8601) |
+| `toDate`        | `string`  | No       | `null`  | Lọc theo thời gian `bookingStartTime` (ISO-8601) |
 
 **Response `200 OK`:**
 
 ```json
 {
   "status": 200,
-  "message": "Mô tả",
+  "message": "Lấy danh sách lịch sử đặt bàn",
   "data": [
     {
       "bookingId": 5001,
-      "restaurantName": "Haidilao - Hùng Vương Plaza",
-      "restaurantLogo": "https://cdn.com/haidilao.png",
-      "restaurantAddress": "126 Hùng Vương, Q5, TP.HCM",
-      "bookingDate": "2026-02-15",
-      "bookingTime": "19:00",
-      "guestCount": 4,
-      "tableLabels": ["T1.01"],
-      "bookingStatus": "CONFIRMED",
-      "financials": {
-        "depositAmount": 200000,
-        "refundAmount": 0,
-        "isRefunded": false
+      "bookingTime": {
+        "startTime": "2026-02-15T19:00:00",
+        "endTime": "2026-02-15T21:00:00"
+      },
+      "quantity": 4,
+      "status": "CONFIRMED",
+      "depositAmount": 200000,
+      "tables": [
+        {
+          "tableId": 1,
+          "tableLabel": "Bàn 01"
+        }
+      ],
+      "restaurant": {
+        "restaurantId": 101,
+        "restaurantName": "Haidilao - Chi nhánh Hùng Vương Plaza",
+        "restaurantLogo": "https://abc.com/logo.png",
+        "restaurantAddress": "126 Hùng Vương, Quận 5, TP.HCM"
       },
       "createdAt": "2026-02-10T14:30:00"
     }
@@ -590,8 +813,8 @@ HTTP Code,Mô tả
   "meta": {
     "page": 0,
     "limit": 10,
-    "total": 1,
-    "totalPages": 1
+    "totalItems": 15,
+    "totalPages": 2
   }
 }
 ```
@@ -614,8 +837,8 @@ HTTP Code,Mô tả
 
 | Param    | Type      | Required | Default | Mô tả           |
 | -------- | --------- | -------- | ------- | ---------------- |
-| `page`   | `integer` | No       | `0`     | Số trang         |
 | `limit`   | `integer` | No       | `10`    | Số phần tử/trang |
+| `cursor`   | `integer` | No       | `null`    | ID của đánh giá cuối cùng |
 | `rating`   | `integer` | No       | `null`    | Lọc theo đánh giá (1-5) |
 | `sort`   | `string` | No       | `null`    | Sắp xếp (NEWEST, OLDEST) |
 
@@ -644,10 +867,9 @@ HTTP Code,Mô tả
     }
   ],
   "meta": {
-    "page": 0,
-    "limit": 10,
-    "total": 1,
-    "totalPages": 1
+    "nextCursor": 101, // ID của đánh giá cuối cùng
+    "hasMore": true,
+    "totalReviews": 1250
   }
 }
 ```
@@ -666,6 +888,13 @@ HTTP Code,Mô tả
 
 **`POST /api/v1/restaurants/{restaurantId}/reviews`**
 
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Đánh giá nhà hàng            |
+| **Auth**     | Bearer Token |
+| **Role**     | Customer           |
+
+
 **Path Parameters:**
 
 | Param    | Type      | Required | Mô tả           |
@@ -679,19 +908,20 @@ HTTP Code,Mô tả
 | `rating`     | `integer` (1-5)            |
 | `comment`    | `string` (Tối đa 500 ký tự) |
 
-**Response `200 OK`:**
+
+**Response `201 Created`:**
 
 ```json
 {
-  "status": 200,
+  "status": 201,
   "message": "Đánh giá thành công",
   "data": {
-    "reviewId": 101,
-    "restaurantId": 1,
-    "userId": 1,
+    "id": 9901,
+    "userName": "Diệp Bảo Doanh",
+    "userAvatar": "https://cdn.com/avatars/user_1.jpg",
     "rating": 5,
-    "comment": "Đồ ăn ngon, phục vụ tốt",
-    "createdAt": "2026-02-10T14:30:00"
+    "comment": "Không gian rất thoáng đãng, món sườn nướng cực kỳ ngon!",
+    "createdAt": "2026-02-14T08:30:00Z"
   }
 }
 ```
@@ -705,4 +935,117 @@ HTTP Code,Mô tả
   "errors": { }
 }
 ```
+
+### 9. Đặt bàn
+
+**`POST /api/v1/restaurants/{id}/booking`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Đặt bàn tại nhà hàng dựa vào thời gian đặt, số lượng khách và danh sách bàn, ghi chú (nếu có), nhà hàng            |
+| **Auth**     | Yes (Bearer Token) |
+| **Role**     | Customer           |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `id`  | `integer` | Yes       | ID của nhà hàng |
+
+**Request Body:**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| `restaurantId` | `Long` (ID của nhà hàng) |
+| `bookingTime`     | `LocalDateTime` (Thời gian đặt)            |
+| `quantity`    | `Long` (Số lượng khách) |
+| `tableIds`    | `List<Long>` (Danh sách ID bàn) |
+| `note`    | `String` (Ghi chú) |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Đặt bàn thành công",
+  "data": {
+    "bookingId": 101,
+    "restaurantId": 1,
+    "userId": 1,
+    "bookingTime": "2026-02-10T14:30:00",
+    "depositAmount": 100000,
+    "quantity": 2,
+    "tableIds": [1, 2],
+    "bookingStatus": "PENDING_PAYMENT"
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json 
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+
+---
+
+### 10. Thanh toán đặt cọc
+
+**`POST /api/v1/booking/{id}/payment`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Thanh toán đặt cọc            |
+| **Auth**     | Yes (Bearer Token) |
+| **Role**     | Customer           |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `id`  | `integer` | Yes       | ID của booking |
+
+**Request Body:**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| `paymentMethod` | `String` (Phương thức thanh toán) |
+| `amount`     | `Long` (Số tiền thanh toán)            |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Thanh toán đặt cọc thành công",
+  "data": {
+    "bookingId": 101,
+    "restaurantId": 1,
+    "userId": 1,
+    "bookingTime": "2026-02-10T14:30:00",
+    "depositAmount": 100000,
+    "quantity": 2,
+    "tableIds": [1, 2],
+    "bookingStatus": "PENDING_PAYMENT"
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json 
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+
+
 
