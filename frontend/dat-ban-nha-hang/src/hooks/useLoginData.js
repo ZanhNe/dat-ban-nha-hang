@@ -29,13 +29,15 @@ const useLoginData = () => {
 
         try {
             const res = await authService.login(username, password);
+
             const data = res.data;
 
-            localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('accessToken', data.accessToken);
+            // localStorage.setItem('user', JSON.stringify(data.user));
+            // localStorage.setItem('accessToken', data.accessToken);
 
             setAuth(data);
-            navigate('/');
+            console.log('check', data);
+            navigate('/customer');
         } catch (err) {
             setError(err.response?.data?.message || 'Tên đăng nhập hoặc mật khẩu không đúng!');
         } finally {

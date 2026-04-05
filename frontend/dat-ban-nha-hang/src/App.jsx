@@ -7,6 +7,7 @@ import RestaurantDetailPage from './pages/RestaurantDetail/RestaurantDetailPage'
 import PendingBookingsPage from './pages/PendingBookings/PendingBookingsPage'
 import ProtectedRoute from "./pages/RoutePage/ProtectedRoute"
 import PublicRoute from "./pages/RoutePage/PublicRoute"
+import HomeCustomer from "./pages/Customer/HomeCustomer"
 import { Navigate } from "react-router-dom"
 
 function App() {
@@ -28,8 +29,8 @@ function App() {
 
         <Route path="/" element={<Home />} />
 
-        <Route path="/customer/*" element={<ProtectedRoute allowedRoles={["ROLE_CUSTOMER"]} />}>
-          <Route index element={<Navigate to="map-search" replace />} />
+        <Route path="/customer/*" element={<ProtectedRoute allowedRoles={["CUSTOMER"]} />}>
+          <Route index element={<HomeCustomer />} />
           <Route path="map-search" element={<MapSearchPage />} />
           <Route path="restaurants/:id" element={<RestaurantDetailPage />} />
           <Route path="bookings/pending-payment" element={<PendingBookingsPage />} />
