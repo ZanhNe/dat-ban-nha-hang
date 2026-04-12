@@ -12,7 +12,9 @@ import lombok.*;
 @Setter
 @DiscriminatorValue("FOOD_ORDER")
 @PrimaryKeyJoinColumn(name = "food_order_id")
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FoodOrder extends PaymentSource {
 
     public enum FoodOrderStatus {
@@ -32,9 +34,7 @@ public class FoodOrder extends PaymentSource {
     private RestaurantTableSession tableSession;
 
     @OneToMany(mappedBy = "foodOrder")
+    @Builder.Default
     private List<FoodItem> foodItems = new ArrayList<>();
-
-    public FoodOrder() {
-    }
 
 }

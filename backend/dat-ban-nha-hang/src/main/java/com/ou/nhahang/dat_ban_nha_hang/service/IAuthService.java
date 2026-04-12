@@ -6,5 +6,6 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.response.AuthResponseDTO;
 
 public interface IAuthService {
     AuthResponseDTO register(RegisterRequestDTO request);
+
     AuthResponseDTO login(LoginRequestDTO request);
 }

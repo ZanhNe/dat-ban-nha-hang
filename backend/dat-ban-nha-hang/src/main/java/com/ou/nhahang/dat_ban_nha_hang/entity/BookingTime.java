@@ -11,15 +11,14 @@ import lombok.*;
 @Setter
 @DiscriminatorValue("BOOKING_TIME")
 @PrimaryKeyJoinColumn(name = "booking_time_id")
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class BookingTime extends Time {
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
-
-    public BookingTime() {
-    }
 
     public BookingTime(LocalDateTime bookingTime, Restaurant restaurant) {
         this.setStartTime(bookingTime);

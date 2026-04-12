@@ -1,4 +1,4 @@
-package com.ou.nhahang.dat_ban_nha_hang.service;
+package com.ou.nhahang.dat_ban_nha_hang.service.impl;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.LoginRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.RegisterRequestDTO;
@@ -9,6 +9,7 @@ import com.ou.nhahang.dat_ban_nha_hang.entity.User;
 import com.ou.nhahang.dat_ban_nha_hang.repository.RoleRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.UserRepository;
 import com.ou.nhahang.dat_ban_nha_hang.security.JwtUtil;
+import com.ou.nhahang.dat_ban_nha_hang.service.IAuthService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -54,14 +55,15 @@ public class AuthService implements IAuthService {
             throw new BusinessException("Số điện thoại đã được sử dụng");
         }
 
-        User user = new User();
-        user.setUsername(request.username());
-        user.setPassword(passwordEncoder.encode(request.password()));
-        user.setFullName(request.fullName());
-        user.setEmail(request.email());
-        user.setPhone(request.phone());
-        user.setAddress(request.address() != null ? request.address() : "");
-        user.setStatus(User.UserStatus.ACTIVE);
+        User user = User.builder()
+                .username(request.username())
+                .password(passwordEncoder.encode(request.password()))
+                .fullName(request.fullName())
+                .email(request.email())
+                .phone(request.phone())
+                .address(request.address() != null ? request.address() : "")
+                .status(User.UserStatus.ACTIVE)
+                .build();
 
         Role userRole = roleRepository.findByName("CUSTOMER").orElseGet(() -> {
             Role role = new Role();
@@ -76,6 +78,7 @@ public class AuthService implements IAuthService {
         user = userRepository.save(user);
 
         return buildAuthResponse(user);
+
     }
 
     @Override
@@ -98,15 +101,16 @@ public class AuthService implements IAuthService {
                 .map(r -> "ROLE_" + r.getName())
                 .collect(Collectors.toList());
 
-        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getId(), user.getWorkplace().getId(),
+        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getId(),
+                user.getWorkplace() != null ? user.getWorkplace().getId() : null,
                 rolesWithPrefix);
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), user.getId(),
-                user.getWorkplace().getId(),
+                user.getWorkplace() != null ? user.getWorkplace().getId() : null,
                 rolesWithPrefix);
 
         UserDTO userDTO = UserDTO.builder()
                 .userId(user.getId())
-                .restaurantId(user.getWorkplace().getId())
+                .restaurantId(user.getWorkplace() != null ? user.getWorkplace().getId() : null)
                 .username(user.getUsername())
                 .fullName(user.getFullName())
                 .email(user.getEmail())

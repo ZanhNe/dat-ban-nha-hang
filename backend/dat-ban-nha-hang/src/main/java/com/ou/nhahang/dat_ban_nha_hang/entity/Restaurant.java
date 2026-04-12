@@ -15,7 +15,9 @@ import org.locationtech.jts.geom.Point;
 @Table(name = "restaurant")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Restaurant extends Base {
 
     @Column(name = "name", length = 255, nullable = false)
@@ -77,6 +79,7 @@ public class Restaurant extends Base {
     private Long baseCommissionValue;
 
     @OneToMany(mappedBy = "workplace")
+    @Builder.Default
     private List<User> employees = new ArrayList<>();
 
     @ManyToOne
@@ -84,29 +87,33 @@ public class Restaurant extends Base {
     private User manager;
 
     @OneToMany(mappedBy = "restaurant")
+    @Builder.Default
     private List<TableArea> tableAreas = new ArrayList<>();
 
     @OneToMany(mappedBy = "restaurant")
+    @Builder.Default
     private List<Menu> menus = new ArrayList<>();
 
     @OneToMany(mappedBy = "restaurant")
+    @Builder.Default
     private List<OperationTime> operationTimes = new ArrayList<>();
 
     @OneToMany(mappedBy = "restaurant")
+    @Builder.Default
     private List<Booking> bookings = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(name = "restaurant_cuisine", joinColumns = @JoinColumn(name = "restaurant_id"), inverseJoinColumns = @JoinColumn(name = "cuisine_id"))
+    @Builder.Default
     private Set<Cuisine> cuisines = new HashSet<>();
+
     @OneToMany(mappedBy = "restaurant")
+    @Builder.Default
     private List<LegalDoc> legalDocs = new ArrayList<>();
 
     @OneToMany(mappedBy = "restaurant")
+    @Builder.Default
     private List<Review> reviews = new ArrayList<>();
-
-    public Restaurant() {
-
-    }
 
     public Booking makeBooking(User user, Restaurant restaurant, Set<RestaurantTable> tables, LocalDateTime bookingTime,
             Long numberOfPeople, String note) {

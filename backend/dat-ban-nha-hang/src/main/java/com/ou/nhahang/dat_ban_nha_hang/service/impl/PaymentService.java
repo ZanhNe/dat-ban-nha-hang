@@ -1,4 +1,4 @@
-package com.ou.nhahang.dat_ban_nha_hang.service;
+package com.ou.nhahang.dat_ban_nha_hang.service.impl;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.BookingResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.PaymentInitResponseDTO;
@@ -13,6 +13,7 @@ import com.ou.nhahang.dat_ban_nha_hang.repository.BookingRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.PaymentRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.TransactionRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.UserRepository;
+import com.ou.nhahang.dat_ban_nha_hang.service.IPaymentService;
 import com.ou.nhahang.dat_ban_nha_hang.service.port.IStripeGateway;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class PaymentServiceImpl implements IPaymentService {
+public class PaymentService implements IPaymentService {
 
     private final BookingRepository bookingRepository;
     private final TransactionRepository transactionRepository;
@@ -30,7 +31,7 @@ public class PaymentServiceImpl implements IPaymentService {
     private final UserRepository userRepository;
     private final IStripeGateway stripeGateway;
 
-    public PaymentServiceImpl(BookingRepository bookingRepository, TransactionRepository transactionRepository,
+    public PaymentService(BookingRepository bookingRepository, TransactionRepository transactionRepository,
             PaymentRepository paymentRepository, UserRepository userRepository, IStripeGateway stripeGateway) {
         this.bookingRepository = bookingRepository;
         this.transactionRepository = transactionRepository;

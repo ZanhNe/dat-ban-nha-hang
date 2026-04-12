@@ -7,7 +7,9 @@ import lombok.*;
 @Table(name = "food_option")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FoodOption extends Base {
 
     @Column(name = "name", length = 255, nullable = false)
@@ -27,6 +29,4 @@ public class FoodOption extends Base {
     @JoinColumn(name = "option_group_id", nullable = false)
     private FoodOptionGroup optionGroup;
 
-    public FoodOption() {
-    }
 }

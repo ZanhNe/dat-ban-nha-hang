@@ -31,13 +31,7 @@ public class PaymentTimeoutTask {
     public void expirePendingBookings() {
         logger.info("Running PaymentTimeoutTask to expire pending bookings...");
         
-        // Find bookings created > 30 minutes ago that are still pending payment
         LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
-        
-        // Cần custom query tìm theo trạng thái hoặc lấy toàn bộ ra tự check để không sửa repository
-        // Alternatively, filter in memory or add query. Wait, Booking extends PaymentSource -> Base, so we theoretically have getCreatedAt
-        // Assuming we rely on getAll or add a custom query. Since custom query with date might be complex for inheritance, we can fetch all PENDING and filter.
-        // Actually, since this runs regularly, the number of PENDING_PAYMENT bookings at any time should be relatively small.
         
         List<Booking> allPending = bookingRepository.findAll().stream()
                 .filter(b -> b.getStatus() == Booking.BookingStatus.PENDING_PAYMENT)
@@ -50,7 +44,6 @@ public class PaymentTimeoutTask {
                 bookingRepository.save(b);
                 count++;
             } else if (b.getCreatedAt() == null) {
-                // Defensive measure if created_at is null
                 b.setStatus(Booking.BookingStatus.EXPIRED);
                 bookingRepository.save(b);
                 count++;

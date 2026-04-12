@@ -10,7 +10,9 @@ import lombok.*;
 @Table(name = "table_area")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class TableArea extends Base {
     @Column(name = "name", length = 255, unique = true, nullable = false)
     private String name;
@@ -31,8 +33,7 @@ public class TableArea extends Base {
     private Restaurant restaurant;
 
     @OneToMany(mappedBy = "tableArea")
+    @Builder.Default
     private List<RestaurantTable> tables = new ArrayList<>();
 
-    public TableArea() {
-    }
 }

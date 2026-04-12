@@ -56,7 +56,7 @@ public class PaymentController {
     }
 
     @PostMapping("/bookings/{bookingId}/payments/approve")
-    @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST', 'RECEPTIONIST', 'ROLE_MANAGER', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
     public ResponseEntity<ApiResponse<String>> approvePayment(@PathVariable Long bookingId,
             Authentication authentication) {
         Long userId = (Long) authentication.getCredentials();
@@ -70,7 +70,7 @@ public class PaymentController {
     }
 
     @PostMapping("/bookings/{bookingId}/payments/reject")
-    @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST', 'RECEPTIONIST', 'ROLE_MANAGER', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
     public ResponseEntity<ApiResponse<String>> rejectPayment(@PathVariable Long bookingId,
             Authentication authentication) {
         Long userId = (Long) authentication.getCredentials();

@@ -9,7 +9,9 @@ import lombok.*;
 @Table(name = "legal_doc")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class LegalDoc extends Base {
     @Column(name = "file", length = 255, nullable = false)
     private String file;
@@ -45,9 +47,5 @@ public class LegalDoc extends Base {
     @ManyToOne
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
-
-    public LegalDoc() {
-
-    }
 
 }

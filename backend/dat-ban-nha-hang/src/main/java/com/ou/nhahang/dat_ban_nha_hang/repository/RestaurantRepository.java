@@ -25,4 +25,6 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
                         Pageable pageable);
 
         Optional<Restaurant> findById(Long id);
+
+        Optional<Restaurant> findByIdAndManagerId(Long id, Long managerId);
 }

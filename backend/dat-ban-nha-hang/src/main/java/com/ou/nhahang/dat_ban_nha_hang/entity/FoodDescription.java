@@ -10,7 +10,9 @@ import lombok.*;
 @Table(name = "food_description")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FoodDescription extends Base {
 
     @Column(name = "name", length = 255, nullable = false)
@@ -35,9 +37,7 @@ public class FoodDescription extends Base {
 
     @ManyToMany
     @JoinTable(name = "food_description_option_group", joinColumns = @JoinColumn(name = "food_description_id"), inverseJoinColumns = @JoinColumn(name = "food_option_group_id"))
+    @Builder.Default
     private List<FoodOptionGroup> optionGroups = new ArrayList<>();
-
-    public FoodDescription() {
-    }
 
 }

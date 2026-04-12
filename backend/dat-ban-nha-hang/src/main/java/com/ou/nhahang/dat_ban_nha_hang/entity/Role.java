@@ -7,11 +7,11 @@ import lombok.*;
 @Table(name = "role")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Role extends Base {
     @Column(name = "name", length = 255, unique = true, nullable = false)
     private String name;
 
-    public Role() {
-    }
 }
