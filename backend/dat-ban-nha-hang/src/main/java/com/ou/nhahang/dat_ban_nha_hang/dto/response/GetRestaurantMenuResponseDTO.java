@@ -6,31 +6,31 @@ import lombok.Builder;
 
 @Builder
 public record GetRestaurantMenuResponseDTO(
-        Long restaurantId,
-        String restaurantName,
-        List<MenuDTO> restaurantMenus) {
-    @Builder
-    public record MenuDTO(
-            Long menuId,
-            String menuName,
-            String menuDescription,
-            List<FoodGroupDTO> restaurantMenu) {
-    }
+                Long restaurantId,
+                String restaurantName,
+                List<MenuDTO> restaurantMenus) {
+        @Builder
+        public record MenuDTO(
+                        Long menuId,
+                        String menuName,
+                        String menuDescription,
+                        List<FoodGroupDTO> restaurantMenu) {
+        }
 
-    @Builder
-    public record FoodGroupDTO(
-            Long groupId,
-            String groupName,
-            String groupDescription,
-            List<FoodItemDTO> items) {
-    }
+        @Builder
+        public record FoodGroupDTO(
+                        Long groupId,
+                        String groupName,
+                        String groupDescription,
+                        List<FoodDescriptionDTO> items) {
+        }
 
-    @Builder
-    public record FoodItemDTO(
-            Long itemId,
-            String itemName,
-            String itemDescription,
-            Long itemPrice,
-            String itemImage) {
-    }
+        @Builder
+        public record FoodDescriptionDTO(
+                        Long itemId,
+                        String itemName,
+                        String itemDescription,
+                        Long itemPrice,
+                        String itemImage) {
+        }
 }

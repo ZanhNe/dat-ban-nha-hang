@@ -10,7 +10,9 @@ import lombok.*;
 @Table(name = "restaurant_table_session")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RestaurantTableSession extends Base {
 
     public enum TableSessionStatus {
@@ -34,9 +36,7 @@ public class RestaurantTableSession extends Base {
     private Booking booking;
 
     @OneToMany(mappedBy = "tableSession")
+    @Builder.Default
     private List<FoodOrder> foodOrders = new ArrayList<>();
 
-    public RestaurantTableSession() {
-
-    }
 }

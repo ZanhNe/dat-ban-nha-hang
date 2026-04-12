@@ -21,11 +21,18 @@ public class JwtUtil {
     }
 
     public String generateToken(String username, Long userId, Long restaurantId, List<String> roles) {
-        return generateToken(username, userId, roles, restaurantId, 1000L * 60 * 60 * 24); // 24 giờ
+        if (restaurantId == null) {
+            return generateToken(username, userId, roles, 1000L * 60 * 60 * 24);
+        }
+        return generateToken(username, userId, roles, restaurantId, 1000L * 60 * 60 * 24);
     }
 
     public String generateRefreshToken(String username, Long userId, Long restaurantId, List<String> roles) {
-        return generateToken(username, userId, roles, restaurantId, 1000L * 60 * 60 * 24 * 7); // 7 ngày
+        if (restaurantId == null) {
+            return generateToken(username, userId, roles, 1000L * 60 * 60 * 24 * 7);
+        }
+        return generateToken(username, userId, roles, restaurantId,
+                1000L * 60 * 60 * 24 * 7);
     }
 
     private String generateToken(String username, Long userId, List<String> roles, Long restaurantId,
@@ -35,6 +42,17 @@ public class JwtUtil {
                 .claim("userId", userId)
                 .claim("roles", roles)
                 .claim("restaurantId", restaurantId)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(key)
+                .compact();
+    }
+
+    private String generateToken(String username, Long userId, List<String> roles, long expirationTime) {
+        return Jwts.builder()
+                .subject(username)
+                .claim("userId", userId)
+                .claim("roles", roles)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(key)

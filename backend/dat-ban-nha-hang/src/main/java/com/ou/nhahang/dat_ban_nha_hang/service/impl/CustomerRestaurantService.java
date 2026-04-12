@@ -1,4 +1,4 @@
-package com.ou.nhahang.dat_ban_nha_hang.service;
+package com.ou.nhahang.dat_ban_nha_hang.service.impl;
 
 import java.time.LocalTime;
 import java.util.List;
@@ -10,9 +10,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -20,12 +22,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.BookingRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.CreateRestaurantReviewRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetBookingHistoryRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetRestaurantDetailRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.SearchRestaurantRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.TableSearchRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.BookingResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GeoCoordinateResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GeoDirectionResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetBookingHistoryResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantMenuResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.SearchRestaurantResponseDTO;
@@ -35,6 +39,7 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantReviewResponseD
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.CursorPaginationResult;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Booking;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Cuisine;
+import com.ou.nhahang.dat_ban_nha_hang.entity.FoodGroup;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
 import com.ou.nhahang.dat_ban_nha_hang.entity.RestaurantTable;
 import com.ou.nhahang.dat_ban_nha_hang.entity.TableArea;
@@ -47,11 +52,12 @@ import com.ou.nhahang.dat_ban_nha_hang.repository.RestaurantRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.RestaurantTableRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.UserRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.ReviewRepository;
+import com.ou.nhahang.dat_ban_nha_hang.service.ICustomerRestaurantService;
 import com.ou.nhahang.dat_ban_nha_hang.service.port.IGeolocationService;
 
 @Service
 @Transactional(readOnly = true)
-public class RestaurantService implements IRestaurantService {
+public class CustomerRestaurantService implements ICustomerRestaurantService {
 
         private final RestaurantTableRepository restaurantTableRepository;
         private final RestaurantRepository restaurantRepository;
@@ -60,7 +66,7 @@ public class RestaurantService implements IRestaurantService {
         private final IGeolocationService geolocationService;
         private final ReviewRepository reviewRepository;
 
-        public RestaurantService(RestaurantTableRepository restaurantTableRepository,
+        public CustomerRestaurantService(RestaurantTableRepository restaurantTableRepository,
                         RestaurantRepository restaurantRepository,
                         UserRepository userRepository,
                         BookingRepository bookingRepository, IGeolocationService geolocationService,
@@ -73,20 +79,62 @@ public class RestaurantService implements IRestaurantService {
                 this.reviewRepository = reviewRepository;
         }
 
-        @Override
-        public Page<SearchRestaurantResponseDTO> searchRestaurantsExecute(SearchRestaurantRequestDTO requestDTO) {
-                Point userLocation = requestDTO.extractLocation();
+        private GetBookingHistoryResponseDTO mapToBookingHistoryDTO(Booking b) {
+                return GetBookingHistoryResponseDTO.builder()
+                                .bookingId(b.getId())
+                                .bookingTime(GetBookingHistoryResponseDTO.BookingTimeDTO.builder()
+                                                .startTime(b.getBookingTime().getStartTime())
+                                                .endTime(b.getBookingTime().getEndTime())
+                                                .build())
+                                .quantity(b.getNumberOfPeople())
+                                .status(b.getStatus())
+                                .depositAmount(b.getDepositAmount())
+                                .tables(b.getTables().stream()
+                                                .map(t -> GetBookingHistoryResponseDTO.TableSummaryDTO.builder()
+                                                                .tableId(t.getId())
+                                                                .tableLabel(t.getName())
+                                                                .build())
+                                                .collect(Collectors.toList()))
+                                .restaurant(GetBookingHistoryResponseDTO.RestaurantSummaryDTO.builder()
+                                                .restaurantId(b.getRestaurant().getId())
+                                                .restaurantName(b.getRestaurant().getName())
+                                                .restaurantLogo(b.getRestaurant().getLogo())
+                                                .restaurantAddress(b.getRestaurant().getAddress())
+                                                .build())
+                                .createdAt(b.getCreatedAt())
+                                .build();
+        }
 
-                String pointWkt = String.format("POINT(%f %f)", userLocation.getY(), userLocation.getX());
+        private GetRestaurantReviewResponseDTO mapToReviewDTO(Review r) {
+                return GetRestaurantReviewResponseDTO.builder()
+                                .reviewId(r.getId())
+                                .userName(r.getUser().getFullName())
+                                .userAvatar(r.getUser().getAvatar())
+                                .rating(r.getRating())
+                                .comment(r.getComment())
+                                .createdAt(r.getCreatedAt())
+                                .build();
+        }
 
-                System.out.println(pointWkt);
+        private GetRestaurantMenuResponseDTO.FoodGroupDTO mapToFoodGroupDTO(FoodGroup fg) {
+                return GetRestaurantMenuResponseDTO.FoodGroupDTO.builder()
+                                .groupId(fg.getId())
+                                .groupName(fg.getName())
+                                .groupDescription(fg.getDescription())
+                                .items(fg.getFoodDescriptions().stream()
+                                                .map(f -> GetRestaurantMenuResponseDTO.FoodDescriptionDTO.builder()
+                                                                .itemId(f.getId())
+                                                                .itemName(f.getName())
+                                                                .itemDescription(f.getDescription())
+                                                                .itemPrice(f.getPrice())
+                                                                .itemImage(f.getImage())
+                                                                .build())
+                                                .collect(Collectors.toList()))
+                                .build();
+        }
 
-                Pageable pageable = PageRequest.of(requestDTO.page(), requestDTO.limit());
-
-                Page<Restaurant> restaurants = restaurantRepository.findNearByRestaurant(pointWkt, requestDTO.radius(),
-                                pageable);
-
-                return restaurants.map(restaurant -> SearchRestaurantResponseDTO.builder()
+        private SearchRestaurantResponseDTO mapToSearchRestaurantDTO(Restaurant restaurant, Point userLocation) {
+                return SearchRestaurantResponseDTO.builder()
                                 .restaurantId(restaurant.getId())
                                 .restaurantName(restaurant.getName())
                                 .restaurantLogo(restaurant.getLogo())
@@ -112,7 +160,62 @@ public class RestaurantService implements IRestaurantService {
                                                                 restaurant.getLocation().getY(),
                                                                 restaurant.getLocation().getX())
                                                 : null)
-                                .build());
+                                .build();
+        }
+
+        private TableSearchResponseDTO mapToTableSearchDTO(Long restaurantId, LocalDateTime requestedStartTime,
+                        Long guests, List<TableSearchResponseDTO.AreaDTO> areaDTOs) {
+                return TableSearchResponseDTO.builder()
+                                .restaurantId(restaurantId)
+                                .requestContext(TableSearchResponseDTO.RequestContextDTO.builder()
+                                                .dateTime(requestedStartTime)
+                                                .guests(guests)
+                                                .build())
+                                .areas(areaDTOs)
+                                .build();
+        }
+
+        private BookingResponseDTO mapToBookingResponseDTO(Booking booking, Restaurant restaurant,
+                        BookingRequestDTO requestDTO) {
+                return BookingResponseDTO.builder()
+                                .bookingId(booking.getId())
+                                .restaurantId(restaurant.getId())
+                                .restaurantName(restaurant.getName())
+                                .bookingTime(requestDTO.bookingTime())
+                                .guestCount(booking.getNumberOfPeople())
+                                .depositAmount(booking.getDepositAmount())
+                                .status(booking.getStatus().name())
+                                .note(booking.getNote())
+                                .build();
+        }
+
+        @Override
+        public Page<GetBookingHistoryResponseDTO> getBookingHistoryExecute(Long userId,
+                        GetBookingHistoryRequestDTO requestDTO) {
+
+                Pageable pageable = PageRequest.of(requestDTO.page(), requestDTO.limit(),
+                                Sort.by("createdAt").descending());
+                Page<Booking> results = bookingRepository.findByBookingUser_Id(userId, pageable);
+
+                return results.map(this::mapToBookingHistoryDTO);
+
+        }
+
+        @Override
+        public Page<SearchRestaurantResponseDTO> searchRestaurantsExecute(SearchRestaurantRequestDTO requestDTO) {
+                Point userLocation = requestDTO.extractLocation();
+
+                String pointWkt = String.format("POINT(%f %f)", userLocation.getY(), userLocation.getX());
+
+                System.out.println(pointWkt);
+
+                Pageable pageable = PageRequest.of(requestDTO.page(), requestDTO.limit());
+
+                Page<Restaurant> restaurants = restaurantRepository.findNearByRestaurant(pointWkt, requestDTO.radius(),
+                                pageable);
+
+                return restaurants.map(r -> mapToSearchRestaurantDTO(r, userLocation));
+
         }
 
         @Override
@@ -137,7 +240,7 @@ public class RestaurantService implements IRestaurantService {
                 Set<Long> bookedTableIds = overlappingBookings.stream()
                                 .map(Booking::getTables)
                                 .<RestaurantTable>flatMap(tables -> tables != null ? tables.stream()
-                                                : java.util.stream.Stream.empty())
+                                                : Stream.empty())
                                 .map(RestaurantTable::getId)
                                 .collect(Collectors.toSet());
 
@@ -178,14 +281,7 @@ public class RestaurantService implements IRestaurantService {
                                         .build());
                 }
 
-                return TableSearchResponseDTO.builder()
-                                .restaurantId(restaurantId)
-                                .requestContext(TableSearchResponseDTO.RequestContextDTO.builder()
-                                                .dateTime(requestedStartTime)
-                                                .guests(requestDTO.guests())
-                                                .build())
-                                .areas(areaDTOs)
-                                .build();
+                return mapToTableSearchDTO(restaurantId, requestedStartTime, requestDTO.guests(), areaDTOs);
         }
 
         @Override
@@ -215,15 +311,8 @@ public class RestaurantService implements IRestaurantService {
                 restaurantRepository.save(restaurant);
                 booking = bookingRepository.save(booking);
 
-                return new BookingResponseDTO(
-                                booking.getId(),
-                                restaurant.getId(),
-                                "Restaurant Name",
-                                requestDTO.bookingTime(),
-                                booking.getNumberOfPeople(),
-                                booking.getDepositAmount(),
-                                booking.getStatus().name(),
-                                booking.getNote());
+                return mapToBookingResponseDTO(booking, restaurant, requestDTO);
+
         }
 
         @Override
@@ -235,8 +324,6 @@ public class RestaurantService implements IRestaurantService {
 
                 Point userLocation = requestDto.extractLocation();
                 Point resLocation = restaurant.getLocation();
-
-                
 
                 GeoDirectionResponseDTO directions = null;
                 if (userLocation != null && resLocation != null) {
@@ -291,6 +378,14 @@ public class RestaurantService implements IRestaurantService {
                                                 .collect(Collectors.toList())
                                 : new ArrayList<>();
 
+                return mapToRestaurantDetailResponseDTO(restaurant, cuisines, operationTimes, tableAreas, resLocation,
+                                directions);
+        }
+
+        private GetRestaurantDetailResponseDTO mapToRestaurantDetailResponseDTO(Restaurant restaurant,
+                        List<String> cuisines, List<GetRestaurantDetailResponseDTO.OperationTimeDTO> operationTimes,
+                        List<GetRestaurantDetailResponseDTO.TableAreaDTO> tableAreas, Point resLocation,
+                        GeoDirectionResponseDTO directions) {
                 return GetRestaurantDetailResponseDTO.builder()
                                 .restaurantId(restaurant.getId())
                                 .restaurantName(restaurant.getName())
@@ -330,11 +425,11 @@ public class RestaurantService implements IRestaurantService {
                                                 if (m.getFoodGroups() != null) {
                                                         foodGroupDTOs = m.getFoodGroups().stream()
                                                                         .map(g -> {
-                                                                                List<GetRestaurantMenuResponseDTO.FoodItemDTO> foodItemDTOs = new ArrayList<>();
+                                                                                List<GetRestaurantMenuResponseDTO.FoodDescriptionDTO> foodItemDTOs = new ArrayList<>();
                                                                                 if (g.getFoodDescriptions() != null) {
                                                                                         foodItemDTOs = g.getFoodDescriptions()
                                                                                                         .stream()
-                                                                                                        .map(d -> GetRestaurantMenuResponseDTO.FoodItemDTO
+                                                                                                        .map(d -> GetRestaurantMenuResponseDTO.FoodDescriptionDTO
                                                                                                                         .builder()
                                                                                                                         .itemId(d.getId())
                                                                                                                         .itemName(d.getName())
@@ -395,7 +490,7 @@ public class RestaurantService implements IRestaurantService {
                                 request.sort(),
                                 pageable);
 
-                // Convert to modifiable list to remove the extra item
+                // Chuyển sang list có thể sửa để xóa phần tử cuối cùng
                 List<Review> modifiableReviews = new ArrayList<>(rawReviews);
 
                 boolean hasMore = modifiableReviews.size() > request.limit();
@@ -456,13 +551,13 @@ public class RestaurantService implements IRestaurantService {
                 Booking booking = completedBookings.get(0);
 
                 // Tạo Review
-                Review review = new Review();
-                review.setRestaurant(restaurant);
-                review.setUser(user);
-                review.setRating(request.rating());
-                // Handle optional comment map correctly matching null structure if requested
-                review.setComment(request.comment() != null ? request.comment() : "");
-                review.setBooking(booking); // Hợp thể 1-1 bảo vệ Database Scheme!
+                Review review = Review.builder()
+                                .restaurant(restaurant)
+                                .user(user)
+                                .rating(request.rating())
+                                .comment(request.comment() != null ? request.comment() : "")
+                                .booking(booking)
+                                .build();
 
                 // Cập nhật Điểm Trung Bình Bằng Công Thức
                 if (restaurant.getReviews() == null) {

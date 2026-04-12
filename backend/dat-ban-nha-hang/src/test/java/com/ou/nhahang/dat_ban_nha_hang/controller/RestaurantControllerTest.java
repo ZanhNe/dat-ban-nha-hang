@@ -1,5 +1,6 @@
 package com.ou.nhahang.dat_ban_nha_hang.controller;
 
+import com.ou.nhahang.dat_ban_nha_hang.controller.customer.CustomerRestaurantController;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetRestaurantDetailRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.TableSearchRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.BookingResponseDTO;
@@ -11,7 +12,7 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetRestaurantReviewRequestDTO
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantReviewResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.CursorPaginationResult;
 import com.ou.nhahang.dat_ban_nha_hang.exception.ResourceNotFoundException;
-import com.ou.nhahang.dat_ban_nha_hang.service.RestaurantService;
+import com.ou.nhahang.dat_ban_nha_hang.service.impl.CustomerRestaurantService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,14 +33,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.assertj.core.api.Assertions;
 
-@WebMvcTest(RestaurantController.class)
+@WebMvcTest(CustomerRestaurantController.class)
 public class RestaurantControllerTest {
 
         @Autowired
         private MockMvc mockMvc;
 
         @MockitoBean
-        private RestaurantService restaurantService;
+        private CustomerRestaurantService restaurantService;
 
         @Test
         public void givenValidTableSearchRequest_whenSearchTables_thenReturn200Ok() throws Exception {

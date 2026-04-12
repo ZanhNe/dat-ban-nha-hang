@@ -16,13 +16,15 @@ public record SearchRestaurantRequestDTO(
         String cuisine,
         @NotNull(message = "Bán kính tìm kiếm không được để trống") @Min(value = 1, message = "Bán kính tìm kiếm phải lớn hơn 0") Integer radius,
         @Min(value = 0, message = "Số trang phải lớn hơn hoặc bằng 0") Integer page,
-        @Min(value = 10, message = "Số lượng trên mỗi trang phải lớn hơn 0") @Max(value = 100, message = "Số lượng trên mỗi trang phải nhỏ hơn hoặc bằng 100") Integer limit) {
+        @Min(value = 10, message = "Số lượng trên mỗi trang phải lớn hơn 0") @Max(value = 50, message = "Số lượng trên mỗi trang phải nhỏ hơn hoặc bằng 50") Integer limit) {
 
     public SearchRestaurantRequestDTO {
-        if (page == null)
-            page = 1;
-        if (limit == null)
+        if (page == null || page < 0)
+            page = 0;
+        if (limit == null || limit <= 0)
             limit = 10;
+        if (limit > 50)
+            limit = 50;
     }
 
     public Point extractLocation() {

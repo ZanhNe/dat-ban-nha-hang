@@ -26,6 +26,7 @@ import com.ou.nhahang.dat_ban_nha_hang.repository.BookingRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.RestaurantRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.RestaurantTableRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.UserRepository;
+import com.ou.nhahang.dat_ban_nha_hang.service.impl.CustomerRestaurantService;
 import com.ou.nhahang.dat_ban_nha_hang.repository.ReviewRepository;
 import com.ou.nhahang.dat_ban_nha_hang.utils.TestDataMother;
 
@@ -74,7 +75,7 @@ public class RestaurantServiceTest {
     private ReviewRepository reviewRepository;
 
     @InjectMocks
-    private RestaurantService restaurantService;
+    private CustomerRestaurantService restaurantService;
 
     @Test
     public void givenValidTableSearchRequest_whenSearchTablesExecute_thenReturnAvailableTables() {

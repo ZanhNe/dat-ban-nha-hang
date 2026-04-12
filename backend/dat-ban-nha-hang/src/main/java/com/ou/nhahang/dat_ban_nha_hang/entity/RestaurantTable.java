@@ -12,7 +12,9 @@ import lombok.*;
 @Table(name = "restaurant_table")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RestaurantTable extends Base {
 
     @Column(name = "name", length = 255, unique = true, nullable = false)
@@ -37,12 +39,11 @@ public class RestaurantTable extends Base {
     private TableArea tableArea;
 
     @OneToMany(mappedBy = "table")
+    @Builder.Default
     private List<RestaurantTableSession> sessions = new ArrayList<>();
 
     @ManyToMany(mappedBy = "tables")
+    @Builder.Default
     private Set<Booking> bookings = new HashSet<>();
-
-    public RestaurantTable() {
-    }
 
 }

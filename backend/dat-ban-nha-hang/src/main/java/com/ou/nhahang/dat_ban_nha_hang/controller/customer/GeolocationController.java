@@ -1,4 +1,4 @@
-package com.ou.nhahang.dat_ban_nha_hang.controller;
+package com.ou.nhahang.dat_ban_nha_hang.controller.customer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

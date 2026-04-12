@@ -10,7 +10,9 @@ import lombok.*;
 @Table(name = "food_option_group")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FoodOptionGroup extends Base {
 
     @Column(name = "name", length = 255, nullable = false)
@@ -23,13 +25,16 @@ public class FoodOptionGroup extends Base {
     @Enumerated(EnumType.STRING)
     private DescriptionStatus status;
 
+    @ManyToOne
+    @JoinColumn(name = "restaurant_id", nullable = false)
+    private Restaurant restaurant;
+
     @ManyToMany(mappedBy = "optionGroups")
+    @Builder.Default
     private List<FoodDescription> foodDescriptions = new ArrayList<>();
 
     @OneToMany(mappedBy = "optionGroup")
+    @Builder.Default
     private List<FoodOption> options = new ArrayList<>();
-
-    public FoodOptionGroup() {
-    }
 
 }

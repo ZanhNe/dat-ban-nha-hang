@@ -9,7 +9,9 @@ import lombok.*;
 @Table(name = "review")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Review extends Base {
 
     @Min(1)
@@ -35,6 +37,4 @@ public class Review extends Base {
     @ToString.Exclude
     private Booking booking;
 
-    public Review() {
-    }
 }

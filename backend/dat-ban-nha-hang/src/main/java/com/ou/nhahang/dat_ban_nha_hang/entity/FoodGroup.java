@@ -10,7 +10,9 @@ import lombok.*;
 @Table(name = "food_group")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class FoodGroup extends Base {
     @Column(name = "name", length = 255, unique = true, nullable = false)
     private String name;
@@ -23,8 +25,7 @@ public class FoodGroup extends Base {
     private Menu menu;
 
     @OneToMany(mappedBy = "foodGroup")
+    @Builder.Default
     private List<FoodDescription> foodDescriptions = new ArrayList<>();
 
-    public FoodGroup() {
-    }
 }

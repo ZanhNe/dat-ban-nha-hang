@@ -1,4 +1,4 @@
-package com.ou.nhahang.dat_ban_nha_hang.controller;
+package com.ou.nhahang.dat_ban_nha_hang.controller.customer;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +22,7 @@ import jakarta.validation.Valid;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.BookingRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.CreateRestaurantReviewRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetBookingHistoryRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetRestaurantDetailRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.SearchRestaurantRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.TableSearchRequestDTO;
@@ -31,18 +32,19 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantDetailResponseD
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantMenuResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.SearchRestaurantResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.TableSearchResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.service.impl.CustomerRestaurantService;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetRestaurantReviewRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantReviewResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.CursorPaginationResult;
-import com.ou.nhahang.dat_ban_nha_hang.service.RestaurantService;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetBookingHistoryResponseDTO;
 
 @RestController
-@RequestMapping("/api/v1/restaurants")
-public class RestaurantController {
+@RequestMapping("/api/v1/customer/restaurants")
+public class CustomerRestaurantController {
 
-        private final RestaurantService restaurantService;
+        private final CustomerRestaurantService restaurantService;
 
-        public RestaurantController(RestaurantService restaurantService) {
+        public CustomerRestaurantController(CustomerRestaurantService restaurantService) {
                 this.restaurantService = restaurantService;
         }
 
@@ -68,7 +70,7 @@ public class RestaurantController {
         }
 
         @GetMapping("/{id}/tables")
-        @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'CUSTOMER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER')")
         public ResponseEntity<ApiResponse<TableSearchResponseDTO>> searchTables(
                         @PathVariable("id") Long id,
                         @ModelAttribute @Valid TableSearchRequestDTO requestDTO) {
@@ -83,7 +85,7 @@ public class RestaurantController {
         }
 
         @PostMapping("/{id}/bookings")
-        @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'CUSTOMER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER')")
         public ResponseEntity<ApiResponse<BookingResponseDTO>> createBooking(
                         @PathVariable("id") Long id,
                         @RequestBody @Valid BookingRequestDTO requestDTO,
@@ -152,7 +154,7 @@ public class RestaurantController {
         }
 
         @PostMapping("/{id}/reviews")
-        @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'CUSTOMER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER')")
         public ResponseEntity<ApiResponse<GetRestaurantReviewResponseDTO>> createReview(
                         @PathVariable("id") Long id,
                         @Valid @RequestBody CreateRestaurantReviewRequestDTO requestDTO,
@@ -169,5 +171,32 @@ public class RestaurantController {
                                 .data(data)
                                 .build();
                 return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        }
+
+        @GetMapping("/bookings/my-history")
+        @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER')")
+        public ResponseEntity<ApiResponse<List<GetBookingHistoryResponseDTO>>> getBookingHistory(
+                        @ModelAttribute @Valid GetBookingHistoryRequestDTO requestDTO,
+                        Authentication authentication) {
+
+                Long userId = (Long) authentication.getCredentials();
+
+                Page<GetBookingHistoryResponseDTO> result = restaurantService
+                                .getBookingHistoryExecute(userId, requestDTO);
+
+                Map<String, Object> meta = new HashMap<>();
+                meta.put("page", result.getNumber());
+                meta.put("limit", result.getSize());
+                meta.put("totalItems", result.getTotalElements());
+                meta.put("totalPages", result.getTotalPages());
+
+                ApiResponse<List<GetBookingHistoryResponseDTO>> response = ApiResponse
+                                .<List<GetBookingHistoryResponseDTO>>builder()
+                                .status(200)
+                                .message("Lấy danh sách đặt bàn thành công")
+                                .data(result.getContent())
+                                .meta(meta)
+                                .build();
+                return ResponseEntity.ok(response);
         }
 }

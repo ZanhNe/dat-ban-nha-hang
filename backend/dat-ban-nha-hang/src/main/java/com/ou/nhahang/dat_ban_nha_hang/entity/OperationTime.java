@@ -9,7 +9,9 @@ import lombok.*;
 @Setter
 @DiscriminatorValue("OPERATION_TIME")
 @PrimaryKeyJoinColumn(name = "operation_time_id")
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OperationTime extends Time {
 
     @Column(name = "day", nullable = false)
@@ -18,8 +20,5 @@ public class OperationTime extends Time {
     @ManyToOne
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
-
-    public OperationTime() {
-    }
 
 }

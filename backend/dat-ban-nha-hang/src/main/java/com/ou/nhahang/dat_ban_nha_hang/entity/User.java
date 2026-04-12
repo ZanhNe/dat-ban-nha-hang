@@ -12,7 +12,9 @@ import lombok.*;
 @Table(name = "user")
 @Getter
 @Setter
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User extends Base {
     @Column(name = "username", length = 255, unique = true, nullable = false)
     private String username;
@@ -46,6 +48,7 @@ public class User extends Base {
 
     @ManyToMany
     @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
     @ManyToOne
@@ -53,6 +56,7 @@ public class User extends Base {
     private Restaurant workplace;
 
     @OneToMany(mappedBy = "user")
+    @Builder.Default
     private List<Review> reviews = new ArrayList<>();
 
     // @OneToMany(mappedBy = "manager", cascade = CascadeType.ALL)
@@ -62,6 +66,4 @@ public class User extends Base {
     // private List<RestaurantTableSession> restaurantTableSessions = new
     // ArrayList<>();
 
-    public User() {
-    }
 }

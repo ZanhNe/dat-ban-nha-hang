@@ -10,7 +10,6 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Transaction extends Base {
 
     @Column(name = "amount", nullable = false)
