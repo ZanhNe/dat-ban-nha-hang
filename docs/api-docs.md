@@ -10,7 +10,14 @@
 
 - [1. Quy ước chung](#1-quy-ước-chung)
 - [2. Authentication](#2-authentication)
-- [3. Module: Quản lý nhà hàng](#3-module-quản-lý-nhà-hàng)
+- [3. Customer API](#3-customer-api)
+- [4. Module: Manager API](#4-module-manager-api)
+- [5. Module: Notification](#5-module-notification)
+- [6. Module: Receptionist Booking](#6-module-receptionist-booking)
+- [7. Module: Admin API](#7-module-admin-api)
+- [8. State Machine](#8-state-machine)
+- [9. Module: Waiter API](#9-module-waiter-api)
+- [10. Module: Cashier API](#10-module-cashier-api)
 
 ---
 
@@ -210,7 +217,9 @@ Authorization: Bearer <JWT_TOKEN>
 ---
 
 
-### 1. Lấy tọa độ
+## 3. Customer API
+
+### 3.1. Lấy tọa độ
 
 **`GET /api/v1/geolocation/get-coordinates`**
 
@@ -254,7 +263,7 @@ Authorization: Bearer <JWT_TOKEN>
 ```
 
 
-### 2. Tìm kiếm nhà hàng 
+### 3.2. Tìm kiếm nhà hàng 
 
 **`GET /api/v1/restaurants`**
 
@@ -320,7 +329,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
-### 2. Lấy chi tiết nhà hàng
+### 3.3. Lấy chi tiết nhà hàng
 
 **`GET /api/v1/restaurants/{id}`**
 
@@ -390,7 +399,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
-### 3. Xem menu nhà hàng
+### 3.4. Xem menu nhà hàng
 **`GET /api/v1/restaurants/{id}/menu`**
 
 | Thuộc tính   | Giá trị                    |
@@ -532,7 +541,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
-### 3. Xem chi tiết danh sách bàn cho việc đặt bàn
+### 3.5. Xem chi tiết danh sách bàn cho việc đặt bàn
 **`GET /api/v1/restaurants/{id}/tables`**
 
 | Thuộc tính   | Giá trị                    |
@@ -635,7 +644,7 @@ Authorization: Bearer <JWT_TOKEN>
   "errors": { }
 }
 ```
-### 4. Tạo thanh toán qua Stripe
+### 3.6. Tạo thanh toán qua Stripe
 **`POST /api/v1/payments/create-intent`**
 
 | Thuộc tính   | Giá trị                    |
@@ -684,7 +693,7 @@ HTTP Code,Error Code,Mô tả
 400,ORDER_EMPTY,"Đơn hàng không có món nào (tổng tiền = 0), không thể gọi Stripe."
 502,STRIPE_GATEWAY_ERROR,Lỗi kết nối với server của Stripe (Stripe bị sập hoặc sai API Key).
 
-### 5. Xác nhận thanh toán qua Stripe
+### 3.7. Xác nhận thanh toán qua Stripe
 **`POST /api/v1/webhooks/stripe`**
 
 | Thuộc tính   | Giá trị                    |
@@ -760,7 +769,7 @@ HTTP Code,Mô tả
 ```
 
 
-### 6. Xem lịch sử đặt bàn (danh sách dạng tóm tắt)
+### 3.8. Xem lịch sử đặt bàn (danh sách dạng tóm tắt)
 **`GET /api/v1/bookings/my-history`**
 
 | Thuộc tính   | Giá trị                    |
@@ -829,7 +838,7 @@ HTTP Code,Mô tả
 }
 ```
 
-### 7. Xem đánh giá nhà hàng
+### 3.9. Xem đánh giá nhà hàng
 
 **`GET /api/v1/restaurants/{restaurantId}/reviews`**
 
@@ -884,7 +893,7 @@ HTTP Code,Mô tả
 }
 ```
 
-### 8. Đánh giá nhà hàng
+### 3.10. Đánh giá nhà hàng
 
 **`POST /api/v1/restaurants/{restaurantId}/reviews`**
 
@@ -936,7 +945,7 @@ HTTP Code,Mô tả
 }
 ```
 
-### 9. Đặt bàn
+### 3.11. Đặt bàn
 
 **`POST /api/v1/restaurants/{id}/booking`**
 
@@ -994,7 +1003,7 @@ HTTP Code,Mô tả
 
 ---
 
-### 10. Thanh toán đặt cọc
+### 3.12. Thanh toán đặt cọc
 
 **`POST /api/v1/booking/{id}/payment`**
 
@@ -1046,6 +1055,2346 @@ HTTP Code,Mô tả
 }
 ```
 
+---
+
+### 3.13. Đăng ký mở nhà hàng
+**`POST /api/v1/restaurants/register`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Cho phép khách hàng đăng ký mở nhà hàng mới trên hệ thống. Yêu cầu sẽ được đưa vào trạng thái PENDING để Admin duyệt. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | CUSTOMER |
+
+**Request Body (`multipart/form-data`):**
+| Field | Type | Required | Mô tả |
+| --- | --- | --- | --- |
+| `name` | `string` | Yes | Tên nhà hàng |
+| `description` | `string` | Yes | Mô tả nhà hàng |
+| `address` | `string` | Yes | Địa chỉ |
+| `latitude` | `double` | Yes | Vĩ độ |
+| `longitude` | `double` | Yes | Kinh độ |
+| `baseDepositValue` | `integer` | Yes | Mức cọc cơ bản |
+| `depositPolicy` | `string` | Yes | "FIXED", "PER_GUEST", "NONE" |
+| `cuisineIds` | `array[integer]` | Yes | Mảng ID danh mục ẩm thực (VD: 1, 2) |
+| `logo` | `file` | Yes | File ảnh logo nhà hàng |
+| `legalDocs` | `array[file]` | Yes | Danh sách file giấy tờ pháp lý (PDF, JPG) |
+
+**Response `201 Created`:**
+```json
+{
+  "status": 201,
+  "message": "Đã gửi yêu cầu đăng ký nhà hàng thành công. Vui lòng chờ Admin duyệt.",
+  "data": {
+    "restaurantId": 105,
+    "status": "PENDING"
+  }
+}
+```
+
+---
+
+## 4. Module: Manager API
+
+> Lưu ý: Tất cả các API trong module này đều yêu cầu `Auth: Bearer Token` và Role `ROLE_MANAGER` (hoặc manager có quyền với cơ sở hiện tại).
+
+### 4.1. Thông tin nhà hàng
+
+**`GET /api/v1/manager/restaurants/{restaurantId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Lấy thông tin nhà hàng đang được quản lý bởi user hiện tại |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": {
+    "restaurantId": 101,
+    "name": "Haidilao - Chi nhánh Hùng Vương Plaza",
+    "logo": "https://abc.com/logo.png",
+    "description": "Thương hiệu lẩu nổi tiếng...",
+    "address": "126 Hùng Vương, Quận 5, TP.HCM",
+    "status": "OPENING",
+    "baseDepositValue": 200000,
+    "depositPolicy": "FIXED",
+    "dayOfWeek": 7
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`PUT /api/v1/manager/restaurants/{restaurantId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Cập nhật thông tin cơ bản của nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
+
+**Request Body:**
+
+```json
+{
+  "name": "string",
+  "logo": "string",
+  "description": "string",
+  "address": "string",
+  "baseDepositValue": "Long",
+  "depositPolicy": "FIXED | PER_GUEST | NONE",
+  "dayOfWeek": "Integer"
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Cập nhật thành công",
+  "data": {
+    "restaurantId": 101,
+    "name": "Haidilao - Chi nhánh Hùng Vương Plaza",
+    "logo": "https://abc.com/logo.png",
+    "description": "Thương hiệu lẩu nổi tiếng...",
+    "address": "126 Hùng Vương, Quận 5, TP.HCM",
+    "status": "OPENING",
+    "baseDepositValue": 200000,
+    "depositPolicy": "FIXED",
+    "dayOfWeek": 7
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`DELETE /api/v1/manager/restaurants/{restaurantId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Xóa nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Xóa thành công",
+  "data": null
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+### 4.2. Quản lý Nhân sự (Staff)
+
+**`GET /api/v1/manager/restaurants/{restaurantId}/staffs`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Lấy danh sách nhân viên của nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
+
+**Query Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `page`  | `integer` | No       | Trang |
+| `size`  | `integer` | No       | Số lượng |
+| `sort`  | `string` | No       | Sắp xếp |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "userId": 201,
+      "fullName": "Nguyễn Văn B",
+      "username": "waiter_b",
+      "email": "b@example.com",
+      "phone": "0981234567",
+      "roles": [
+        {
+          "id": 2,
+          "name": "ROLE_WAITER"
+        }
+      ],
+      "status": "ACTIVE"
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "size": 10,
+    "totalElements": 1,
+    "totalPages": 1
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`POST /api/v1/manager/restaurants/{restaurantId}/staffs`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Thêm nhân viên mới vào nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
+
+**Request Body:**
+
+```json
+{
+  "username": "string, required",
+  "password": "string, required",
+  "fullName": "string, required",
+  "email": "string, required",
+  "phone": "string, required",
+  "roleId": "Long, required"
+}
+```
+
+**Response `201 Created`:**
+
+```json
+{
+  "status": 201,
+  "message": "Thêm nhân viên thành công",
+  "data": {
+      "userId": 201,
+      "fullName": "Nguyễn Văn B",
+      "username": "waiter_b",
+      "email": "b@example.com",
+      "phone": "0981234567",
+      "roles": [
+        {
+          "id": 2,
+          "name": "ROLE_WAITER"
+        }
+      ],
+      "status": "ACTIVE"
+    }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`PUT /api/v1/manager/staffs/{staffId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Cập nhật thông tin nhân viên |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `staffId`  | `integer` | Yes       | ID của nhân viên |
+
+**Request Body:**
+
+```json
+{
+  "fullName": "string, required",
+  "email": "string, required",
+  "phone": "string, required",
+  "status": "ACTIVE | BANNED, required",
+  "roleId": "Long, required"
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Cập nhật nhân viên thành công",
+  "data": {
+      "userId": 201,
+      "fullName": "Nguyễn Văn B",
+      "username": "waiter_b",
+      "email": "b@example.com",
+      "phone": "0981234567",
+      "roles": [
+        {
+          "id": 2,
+          "name": "ROLE_WAITER"
+        }
+      ],
+      "status": "ACTIVE"
+    }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`DELETE /api/v1/manager/staffs/{staffId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Xóa nhân viên khỏi nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `staffId`  | `integer` | Yes       | ID của nhân viên |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Xóa nhân viên thành công",
+  "data": null
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
 
 
+---
 
+
+### 4.3. Quản lý Menu
+
+**`GET /api/v1/manager/menus`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Lấy danh sách menu của nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "menuId": 1,
+      "name": "Thực đơn chính",
+      "description": "Dùng cho cả ngày"
+    }
+  ]
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`POST /api/v1/manager/menus`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Tạo Menu mới cho nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required"
+}
+```
+
+**Response `201 Created`:**
+
+```json
+{
+  "status": 201,
+  "message": "Tạo menu thành công",
+  "data": {
+    "menuId": 2,
+    "name": "Thực đơn sáng",
+    "description": "Dành cho bữa sáng"
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`PUT /api/v1/manager/menus/{menuId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Cập nhật thông tin Menu |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `menuId`  | `integer` | Yes       | ID của Menu |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required"
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Cập nhật menu thành công",
+  "data": {
+    "menuId": 1,
+    "name": "Thực đơn chính",
+    "description": "Dùng cho cả ngày"
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`DELETE /api/v1/manager/menus/{menuId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Xóa Menu |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `menuId`  | `integer` | Yes       | ID của Menu |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Xóa menu thành công",
+  "data": null
+}
+```
+
+---
+
+**`GET /api/v1/manager/menus/{menuId}/food-groups`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Lấy danh sách nhóm món ăn thuộc Menu |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `menuId`  | `integer` | Yes       | ID của Menu |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "groupId": 10,
+      "name": "Món Chính",
+      "description": "Các loại steak và salad"
+    }
+  ]
+}
+```
+
+---
+
+**`POST /api/v1/manager/menus/{menuId}/food-groups`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Thêm một nhóm món ăn vào Menu |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `menuId`  | `integer` | Yes       | ID của Menu |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required"
+}
+```
+
+**Response `201 Created`:**
+
+```json
+{
+  "status": 201,
+  "message": "Tạo nhóm món ăn thành công",
+  "data": {
+    "groupId": 10,
+    "name": "Món Chính",
+    "description": "Các loại món chính"
+  }
+}
+```
+
+---
+
+**`PUT /api/v1/manager/food-groups/{foodGroupId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Cập nhật thông tin nhóm món ăn |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `foodGroupId`  | `integer` | Yes       | ID của FoodGroup |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required"
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Cập nhật nhóm món ăn thành công",
+  "data": {
+    "groupId": 10,
+    "name": "Món Chính",
+    "description": "Các loại steak và salad"
+  }
+}
+```
+
+---
+
+**`DELETE /api/v1/manager/food-groups/{foodGroupId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Xóa nhóm món ăn |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `foodGroupId`  | `integer` | Yes       | ID của FoodGroup |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Xóa nhóm thành công",
+  "data": null
+}
+```
+
+---
+
+**`GET /api/v1/manager/food-groups/{groupId}/foods`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Lấy danh sách món ăn thuộc nhóm |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `groupId`  | `integer` | Yes       | ID của FoodGroup |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "foodId": 50,
+      "name": "Bò lúc lắc",
+      "description": "Bò Mỹ sốt tiêu",
+      "image": "https://abc.com/bo-luc-lac.jpg",
+      "price": 150000,
+      "status": "OPENING",
+      "optionGroups": [
+        {
+          "optionGroupId": 5,
+          "name": "Chọn Cỡ",
+          "status": "OPENING"
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+**`POST /api/v1/manager/food-groups/{foodGroupId}/foods`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Thêm một món ăn mới vào nhóm món ăn |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `foodGroupId`  | `integer` | Yes       | ID của FoodGroup |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required",
+  "image": "string, optional",
+  "price": "Long, required",
+  "status": "OPENING | CLOSED, required",
+  "optionGroupIds": "[Long], optional"
+}
+```
+
+**Response `201 Created`:**
+
+```json
+{
+  "status": 201,
+  "message": "Thêm món ăn thành công",
+  "data": {
+    "foodId": 50,
+    "name": "Bò lúc lắc",
+    "description": "Bò Mỹ sốt tiêu",
+    "image": "https://abc.com/bo-luc-lac.jpg",
+    "price": 150000,
+    "status": "OPENING"
+  }
+}
+```
+
+---
+
+**`PUT /api/v1/manager/foods/{foodId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Cập nhật thông tin món ăn |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `foodId`  | `integer` | Yes       | ID của món ăn (FoodDescription) |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required",
+  "image": "string, optional",
+  "price": "Long, required",
+  "status": "OPENING | CLOSED, required",
+  "optionGroupIds": "[Long], optional"
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Cập nhật món ăn thành công",
+  "data": {
+    "foodId": 50,
+    "name": "Bò lúc lắc",
+    "description": "Bò Mỹ sốt tiêu",
+    "image": "https://abc.com/bo-luc-lac.jpg",
+    "price": 150000,
+    "status": "OPENING"
+  }
+}
+```
+
+---
+
+**`DELETE /api/v1/manager/foods/{foodId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Xóa món ăn khỏi menu |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `foodId`  | `integer` | Yes       | ID của món ăn |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Xóa món ăn thành công",
+  "data": null
+}
+```
+
+---
+
+**`GET /api/v1/manager/restaurants/{restaurantId}/option-groups`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Lấy danh sách tất cả nhóm tùy chọn đang có trong nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "optionGroupId": 5,
+      "name": "Chọn Cỡ",
+      "description": "Size của món ăn",
+      "status": "OPENING"
+    }
+  ]
+}
+```
+
+---
+
+**`POST /api/v1/manager/restaurants/{restaurantId}/option-groups`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Tạo nhóm tùy chọn mới (áp dụng chung, chưa móc vào món ăn) |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required",
+  "status": "OPENING | CLOSED, required"
+}
+```
+
+**Response `201 Created`:**
+
+```json
+{
+  "status": 201,
+  "message": "Tạo nhóm tùy chọn thành công",
+  "data": {
+    "optionGroupId": 5,
+    "name": "Chọn Cỡ",
+    "description": "Size của món ăn",
+    "status": "OPENING"
+  }
+}
+```
+
+---
+
+**`PUT /api/v1/manager/option-groups/{optionGroupId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Cập nhật nhóm tùy chọn |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `optionGroupId`  | `integer` | Yes       | ID của nhóm tùy chọn |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required",
+  "status": "OPENING | CLOSED, required"
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Cập nhật thành công",
+  "data": {
+    "optionGroupId": 5,
+    "name": "Chọn Cỡ",
+    "description": "Size của món ăn",
+    "status": "OPENING"
+  }
+}
+```
+
+---
+
+**`DELETE /api/v1/manager/option-groups/{optionGroupId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Xóa nhóm tùy chọn |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `optionGroupId`  | `integer` | Yes       | ID của nhóm tùy chọn |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Xóa thành công",
+  "data": null
+}
+```
+
+---
+
+**`GET /api/v1/manager/option-groups/{groupId}/options`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Lấy danh sách các tùy chọn chi tiết |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `optionGroupId`  | `integer` | Yes       | ID của nhóm tùy chọn |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "optionId": 21,
+      "name": "Ít cay",
+      "description": "Giảm bớt ớt",
+      "price": 0,
+      "status": "OPENING"
+    }
+  ]
+}
+```
+
+---
+
+**`POST /api/v1/manager/option-groups/{optionGroupId}/options`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Thêm một tùy chọn mới vào nhóm |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `optionGroupId`  | `integer` | Yes       | ID của nhóm tùy chọn |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required",
+  "price": "Long, required",
+  "status": "OPENING | CLOSED, required"
+}
+```
+
+**Response `201 Created`:**
+
+```json
+{
+  "status": 201,
+  "message": "Thêm tùy chọn thành công",
+  "data": {
+    "optionId": 21,
+    "name": "Ít cay",
+    "description": "Giảm bớt ớt",
+    "price": 0,
+    "status": "OPENING"
+  }
+}
+```
+
+---
+
+**`PUT /api/v1/manager/options/{optionId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Cập nhật chi tiết tùy chọn |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `optionId`  | `integer` | Yes       | ID của tùy chọn |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required",
+  "price": "Long, required",
+  "status": "OPENING | CLOSED, required"
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Cập nhật thành công",
+  "data": {
+    "optionId": 21,
+    "name": "Ít cay",
+    "description": "Giảm bớt ớt",
+    "price": 0,
+    "status": "OPENING"
+  }
+}
+```
+
+---
+
+**`DELETE /api/v1/manager/options/{optionId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Xóa tùy chọn khỏi nhóm |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `optionId`  | `integer` | Yes       | ID của tùy chọn |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Xóa thành công",
+  "data": null
+}
+```
+
+---
+
+### 4.4. Quản lý Sơ đồ bàn (Table Layout)
+
+**`GET /api/v1/manager/table-areas`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Lấy danh sách khu vực bàn ăn trong nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "tableAreaId": 1,
+      "name": "Tầng 1",
+      "status": "ACTIVE",
+    }
+  ]
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+**`POST /api/v1/manager/table-areas`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Thêm khu vực bàn ăn mới vào nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required",
+  "status": "ACTIVE | INACTIVE, required"
+}
+```
+
+**Response `201 Created`:**
+
+```json
+{
+  "status": 201,
+  "message": "Thêm khu vực bàn ăn thành công",
+  "data": {
+    "tableAreaId": 1,
+    "name": "Tầng 1",
+    "status": "ACTIVE"
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`PUT /api/v1/manager/table-areas/{tableAreaId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Cập nhật thông tin khu vực bàn ăn |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `tableAreaId`  | `integer` | Yes       | ID của khu vực bàn ăn |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "description": "string, required",
+  "status": "ACTIVE | INACTIVE, required"
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Cập nhật khu vực bàn ăn thành công",
+  "data": {
+    "tableAreaId": 1,
+    "name": "Tầng 1",
+    "status": "ACTIVE"
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`DELETE /api/v1/manager/table-areas/{tableAreaId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Xóa khu vực bàn ăn khỏi nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `tableAreaId`  | `integer` | Yes       | ID của khu vực bàn ăn |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Xóa khu vực bàn ăn thành công",
+  "data": {
+    "tableAreaId": 1,
+    "name": "Tầng 1",
+    "status": "DELETED"
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`GET /api/v1/manager/table-areas/{tableAreaId}/tables`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Lấy danh sách bàn ăn trong khu vực bàn ăn |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `tableAreaId`  | `integer` | Yes       | ID của khu vực bàn ăn |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "tableId": 10,
+      "name": "Bàn T1-01",
+      "capacity": 4,
+      "status": "AVAILABLE"
+    }
+  ]
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`POST /api/v1/manager/table-areas/{tableAreaId}/tables`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Thêm bàn ăn mới vào khu vực bàn ăn |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `tableAreaId`  | `integer` | Yes       | ID của khu vực bàn ăn |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "capacity": "integer, required",
+  "status": "AVAILABLE | OCCUPIED | RESERVED | CLEANING, required"
+}
+```
+
+**Response `201 Created`:**
+
+```json
+{
+  "status": 201,
+  "message": "Thêm bàn ăn thành công",
+  "data": {
+    "tableId": 10,
+    "name": "Bàn T1-01",
+    "capacity": 4,
+    "status": "AVAILABLE"
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`PUT /api/v1/manager/tables/{tableId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Cập nhật thông tin bàn ăn |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `tableId`  | `integer` | Yes       | ID của bàn ăn |
+
+**Request Body:**
+
+```json
+{
+  "name": "string, required",
+  "capacity": "integer, required",
+  "status": "AVAILABLE | OCCUPIED | RESERVED | CLEANING, required"
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Cập nhật bàn ăn thành công",
+  "data": {
+    "tableId": 10,
+    "name": "Bàn T1-01",
+    "capacity": 4,
+    "status": "AVAILABLE"
+  }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+---
+
+**`DELETE /api/v1/manager/tables/{tableId}`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Xóa bàn ăn khỏi nhà hàng |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Manager                    |
+
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `tableId`  | `integer` | Yes       | ID của bàn ăn |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Xóa bàn ăn thành công",
+  "data": null
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+### 4.5. Báo cáo doanh thu (Revenue Report)
+
+**`GET /api/v1/manager/restaurants/{restaurantId}/reports/overview`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy số liệu tổng quan (Dashboard Overview) dựa trên các giao dịch (Transaction) đã thanh toán thành công (CAPTURED). |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | MANAGER |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `fromDate` | `string` | No | `null` | Lọc từ ngày (ISO-8601) |
+| `toDate` | `string` | No | `null` | Lọc đến ngày (ISO-8601) |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": {
+    "totalRevenue": 25000000, 
+    "netRevenue": 22500000, // Doanh thu sau khi đã trừ phí hoa hồng cho hệ thống
+    "totalBookings": 120,
+    "totalCustomers": 350,
+    "averageBill": 208333
+  }
+}
+```
+
+**`GET /api/v1/manager/restaurants/{restaurantId}/reports/revenue-chart`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy dữ liệu biểu đồ doanh thu theo thời gian |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | MANAGER |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `fromDate` | `string` | Yes | - | Lọc từ ngày (ISO-8601) |
+| `toDate` | `string` | Yes | - | Lọc đến ngày (ISO-8601) |
+| `timeUnit` | `string` | Yes | `DAY` | Nhóm theo `DAY`, `WEEK`, `MONTH` |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "date": "2026-02-10",
+      "revenue": 5000000,
+      "netRevenue": 4500000,
+      "bookingsCount": 20
+    },
+    {
+      "date": "2026-02-11",
+      "revenue": 7000000,
+      "netRevenue": 6300000,
+      "bookingsCount": 35
+    }
+  ]
+}
+```
+
+**`GET /api/v1/manager/restaurants/{restaurantId}/reports/top-foods`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Báo cáo danh sách món ăn bán chạy nhất |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | MANAGER |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `fromDate` | `string` | No | `null` | Lọc từ ngày (ISO-8601) |
+| `toDate` | `string` | No | `null` | Lọc đến ngày (ISO-8601) |
+| `limit` | `integer` | No | `5` | Số lượng món cần lấy (Top 5, Top 10) |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "foodId": 12,
+      "foodName": "Lẩu Tứ Xuyên",
+      "quantitySold": 120,
+      "revenue": 24000000
+    },
+    {
+      "foodId": 5,
+      "foodName": "Bò Wagyu",
+      "quantitySold": 50,
+      "revenue": 15000000
+    }
+  ]
+}
+```
+
+---
+
+## 5. Module: Notification
+
+### 5.1. Xem danh sách thông báo
+**`GET /api/v1/notifications`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Lấy danh sách thông báo của user đang đăng nhập (Cursor pagination) |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Mọi user đăng nhập                    |
+
+**Query Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `cursor`  | `integer` | No       | ID của thông báo cuối cùng từ danh sách trước (Dùng để lấy next page) |
+| `limit`  | `integer` | No       | Giới hạn số lượng (Default: 10) |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Lấy danh sách thông báo thành công",
+  "data": [
+    {
+      "id": 1,
+      "title": "Đặt bàn thành công",
+      "content": "Bạn đã đặt bàn thành công...",
+      "type": "BOOKING_CONFIRMED",
+      "read": false,
+      "metadata": {
+         "bookingId": 123
+      },
+      "createdAt": "2026-04-20T07:45:00Z"
+    }
+  ],
+  "meta": {
+    "nextCursor": 5,
+    "hasMore": true,
+    "totalElements": 25
+  }
+}
+```
+
+---
+
+### 5.2. Lấy số lượng thông báo chưa đọc
+**`GET /api/v1/notifications/unread-count`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Đếm số lượng thông báo chưa đọc của user |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Mọi user đăng nhập                    |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Lấy số lượng thông báo chưa đọc thành công",
+  "data": {
+    "unreadCount": 5
+  }
+}
+```
+
+---
+
+### 5.3. Đánh dấu 1 thông báo là đã đọc
+**`PATCH /api/v1/notifications/{id}/read`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Đánh dấu một thông báo là đã đọc |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Mọi user đăng nhập                    |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Đã đánh dấu thông báo là đã đọc",
+  "data": null
+}
+```
+
+---
+
+### 5.4. Đánh dấu tất cả thông báo là đã đọc
+**`PATCH /api/v1/notifications/read-all`**
+
+| Thuộc tính   | Giá trị                    |
+| ------------ | -------------------------- |
+| **Summary**  | Đánh dấu tất cả thông báo thành đã đọc |
+| **Auth**     | Yes (Bearer Token)       |
+| **Role**     | Mọi user đăng nhập                    |
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Đã đánh dấu tất cả thông báo là đã đọc",
+  "data": null
+}
+```
+
+---
+
+## 6. Module: Receptionist Booking
+
+### 6.1. Xác nhận yêu cầu đặt bàn
+**`PATCH /api/v1/receptionist/bookings/{bookingId}/confirm`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Cập nhật trạng thái đặt bàn tương ứng với DepositPolicy (`CONFIRMED` hoặc `PENDING_PAYMENT`), trigger gửi thông báo cho Customer, và lên lịch kiểm tra thanh toán nếu cần. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | RECEPTIONIST / MANAGER |
+
+**Response `200 OK` (Trường hợp Có cần cọc):**
+```json
+{
+  "status": 200,
+  "message": "Đã xác nhận yêu cầu đặt bàn, chờ khách hàng thanh toán cọc trong 15 phút.",
+  "data": {
+    "bookingId": 1234,
+    "status": "PENDING_PAYMENT",
+    "depositAmount": 500000
+  }
+}
+```
+
+**Response `200 OK` (Trường hợp KHÔNG cần cọc):**
+```json
+{
+  "status": 200,
+  "message": "Đã xác nhận yêu cầu đặt bàn (Không yêu cầu cọc).",
+  "data": {
+    "bookingId": 1235,
+    "status": "CONFIRMED",
+    "depositAmount": 0
+  }
+}
+```
+
+---
+
+### 6.2. Từ chối yêu cầu đặt bàn
+**`PATCH /api/v1/receptionist/bookings/{bookingId}/reject`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Cập nhật trạng thái đặt bàn thành REJECTED, trigger gửi thông báo lý do cho Customer |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | RECEPTIONIST / MANAGER |
+
+**Request Body:**
+```json
+{
+  "reason": "Nhà hàng đã hết bàn ở khu vực VIP lúc 19:00, mong quý khách thông cảm."
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã từ chối đặt bàn.",
+  "data": {
+    "bookingId": 1234,
+    "status": "REJECTED"
+  }
+}
+```
+
+### 6.3. Lễ tân Check-in bàn đã đặt
+**`PATCH /api/v1/receptionist/bookings/{bookingId}/check-in`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | (Bước 1) Xác nhận khách đã đến. Chuyển trạng thái Table sang OCCUPIED, khởi tạo TableSession (ACTIVE, waiter_id: null). |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | RECEPTIONIST, MANAGER |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Check-in thành công",
+  "data": {
+    "sessionId": 1001,
+    "tableIds": [1, 2],
+    "status": "ACTIVE"
+  }
+}
+```
+
+---
+
+## 7. Module: Admin API
+
+### 7.1. Duyệt nhà hàng mới
+**`PATCH /api/v1/admin/restaurants/{id}/approval`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Duyệt hoặc từ chối yêu cầu đăng ký mở nhà hàng |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Path Parameters:**
+| Param | Type | Required | Mô tả |
+| --- | --- | --- | --- |
+| `id` | `integer` | Yes | ID của nhà hàng |
+
+**Request Body:**
+```json
+{
+  "status": "APPROVED", // hoặc "REJECTED"
+  "rejectReason": "Thiếu giấy phép kinh doanh hợp lệ" // Bắt buộc nếu status = REJECTED
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã phê duyệt nhà hàng thành công.",
+  "data": {
+    "restaurantId": 105,
+    "status": "APPROVED"
+  }
+}
+```
+
+### 7.2. Lấy danh sách nhà hàng (CRUD)
+**`GET /api/v1/admin/restaurants`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy danh sách nhà hàng với các bộ lọc dành cho Admin |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `page` | `integer` | No | `0` | Số trang |
+| `limit` | `integer` | No | `10` | Số phần tử/trang |
+| `status` | `string` | No | `null` | Lọc theo trạng thái (PENDING, APPROVED, REJECTED, SUSPENDED...) |
+| `search` | `string` | No | `null` | Tìm kiếm theo tên hoặc địa chỉ nhà hàng |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Lấy danh sách nhà hàng thành công",
+  "data": [
+    {
+      "restaurantId": 105,
+      "restaurantName": "Haidilao",
+      "managerName": "Nguyễn Văn A",
+      "status": "PENDING",
+      "createdAt": "2026-03-01T10:00:00"
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "limit": 10,
+    "totalItems": 50,
+    "totalPages": 5
+  }
+}
+```
+
+### 7.3. Xem chi tiết nhà hàng
+**`GET /api/v1/admin/restaurants/{id}`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy thông tin chi tiết nhà hàng, bao gồm cả manager và các giấy tờ pháp lý |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": {
+    "restaurantId": 105,
+    "restaurantName": "Haidilao",
+    "status": "PENDING",
+    "manager": {
+      "userId": 10,
+      "fullName": "Nguyễn Văn A",
+      "phone": "0987654321"
+    },
+    "legalDocs": [
+      {
+        "docId": 1,
+        "docUrl": "https://abc.com/giay-phep.pdf"
+      }
+    ]
+  }
+}
+```
+
+### 7.4. Khóa / Mở khóa nhà hàng
+**`PATCH /api/v1/admin/restaurants/{id}/status`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Thay đổi trạng thái hoạt động của nhà hàng (VD: Đình chỉ) |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Request Body:**
+```json
+{
+  "status": "SUSPENDED",
+  "reason": "Vi phạm chính sách nền tảng"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Cập nhật trạng thái thành công",
+  "data": {
+    "restaurantId": 105,
+    "status": "SUSPENDED"
+  }
+}
+```
+
+### 7.5. Quản lý danh mục Cuisine
+**`GET /api/v1/admin/cuisines`** (Dùng chung endpoint lấy list `GET /api/v1/cuisines` nếu đã public, hoặc tự định nghĩa 1 cái riêng, nhưng thường list là public)
+
+**`POST /api/v1/admin/cuisines`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Thêm mới một danh mục ẩm thực |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Request Body:**
+```json
+{
+  "name": "Món Ý"
+}
+```
+
+**Response `201 Created`:**
+```json
+{
+  "status": 201,
+  "message": "Tạo danh mục thành công",
+  "data": {
+    "cuisineId": 5,
+    "name": "Món Ý"
+  }
+}
+```
+
+**`PUT /api/v1/admin/cuisines/{id}`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Cập nhật tên danh mục ẩm thực |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Request Body:**
+```json
+{
+  "name": "Món Ý (Italian)"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Cập nhật thành công",
+  "data": {
+    "cuisineId": 5,
+    "name": "Món Ý (Italian)"
+  }
+}
+```
+
+**`DELETE /api/v1/admin/cuisines/{id}`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Xóa danh mục ẩm thực |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Xóa thành công",
+  "data": null
+}
+```
+
+### 7.6. Cấu hình Commission (Hoa hồng)
+**`PATCH /api/v1/admin/restaurants/{id}/commission`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Cấu hình mức hoa hồng riêng cho một nhà hàng cụ thể |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Request Body:**
+```json
+{
+  "commissionType": "PERCENTAGE", // "PERCENTAGE" hoặc "FIXED"
+  "baseCommissionValue": 10 // Nghĩa là 10% nếu type là PERCENTAGE
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Cấu hình hoa hồng thành công",
+  "data": {
+    "restaurantId": 105,
+    "commissionType": "PERCENTAGE",
+    "baseCommissionValue": 10
+  }
+}
+```
+
+### 7.7. Báo cáo toàn hệ thống
+**`GET /api/v1/admin/reports/dashboard`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy số liệu thống kê tổng quan của toàn hệ thống |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `fromDate` | `string` | No | `null` | Lọc từ ngày (ISO-8601) |
+| `toDate` | `string` | No | `null` | Lọc đến ngày (ISO-8601) |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Lấy dữ liệu dashboard thành công",
+  "data": {
+    "totalRevenue": 15000000, // Doanh thu hoa hồng
+    "totalBookings": 1250,
+    "totalRestaurants": 45,
+    "totalNewUsers": 120
+  }
+}
+```
+
+### 7.8. Gửi thông báo (Broadcast)
+**`POST /api/v1/admin/notifications/broadcast`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Gửi thông báo đến tất cả người dùng hoặc theo Role |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Request Body:**
+```json
+{
+  "title": "Bảo trì hệ thống",
+  "content": "Hệ thống sẽ bảo trì từ 00:00 đến 02:00 ngày mai.",
+  "type": "SYSTEM_MESSAGE"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã đưa vào hàng đợi gửi thông báo",
+  "data": null
+}
+```
+
+### 7.9. Gửi thông báo cho cá nhân
+**`POST /api/v1/admin/notifications/send`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Gửi thông báo cho một người dùng cụ thể |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Request Body:**
+```json
+{
+  "userId": 105,
+  "title": "Nhắc nhở cập nhật thông tin",
+  "content": "Vui lòng cập nhật đầy đủ giấy phép kinh doanh.",
+  "type": "SYSTEM_MESSAGE"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã gửi thông báo thành công",
+  "data": null
+}
+```
+
+---
+
+## 8. State Machine (Vòng đời thực thể)
+
+Để quy trình vận hành mượt mà, hệ thống tuân thủ các bộ trạng thái sau:
+
+- **Table (Bàn)**: 
+  `AVAILABLE` (Trống) ➔ `OCCUPIED` (Có khách) ➔ `MAINTENANCE` (Bảo trì)
+- **RestaurantTableSession (Phiên bàn)**: 
+  `ACTIVE` (Mới mở, Lễ tân thao tác) ➔ `SERVING` (Đang phục vụ, Phục vụ đảm nhận) ➔ `PAYING` (Đang thanh toán, Khóa order) ➔ `COMPLETED` (Hoàn tất, Bàn trống).
+- **FoodOrder (Đơn gọi món)**: 
+  `TAKING_ORDER` (Đang ghi món nháp) ➔ `CONFIRMED` (Đã chốt món gửi bếp) ➔ `COMPLETED` (Đã bưng xong hết) hoặc `CANCELLED` (Hủy).
+- **FoodItem (Món ăn chi tiết)**: 
+  `PENDING` (Đang chờ chế biến) ➔ `SERVED` (Đã phục vụ) hoặc `CANCELLED` (Hết món/Hủy).
+
+---
+
+## 9. Module: Waiter API
+
+### 9.1. Đảm nhận phiên bàn
+**`PATCH /api/v1/waiter/sessions/{sessionId}/assign`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | (Bước 2) Phục vụ nhận bàn. Cập nhật `waiter_id` và chuyển TableSession sang `SERVING`. Chỉ Phục vụ này mới có quyền tạo Order. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Nhận bàn thành công",
+  "data": {
+    "sessionId": 1001,
+    "status": "SERVING",
+    "waiterId": 15
+  }
+}
+```
+
+### 9.2. Tạo FoodOrder mới (Khởi tạo ghi món)
+**`POST /api/v1/waiter/sessions/{sessionId}/orders`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | (Bước 3.1) Tạo một Order rỗng với trạng thái `TAKING_ORDER` để chuẩn bị ghi món trên thiết bị của phục vụ. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Response `201 Created`:**
+```json
+{
+  "status": 201,
+  "message": "Tạo Order thành công",
+  "data": {
+    "orderId": 5001,
+    "status": "TAKING_ORDER"
+  }
+}
+```
+
+### 9.3. Xác nhận và Gửi bếp
+**`POST /api/v1/waiter/orders/{orderId}/confirm-items`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | (Bước 3.2) Gửi toàn bộ danh sách món ăn từ Client lên Server. Lưu vào DB, chuyển FoodOrder thành `CONFIRMED` và các FoodItem thành `PENDING`. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Request Body:**
+```json
+{
+  "items": [
+    {
+      "foodDescriptionId": 12,
+      "quantity": 2,
+      "optionIds": [1, 5] // Các tuỳ chọn đi kèm (VD: Size L, Ít đá)
+    },
+    {
+      "foodDescriptionId": 15,
+      "quantity": 1,
+      "optionIds": []
+    }
+  ]
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã gửi bếp thành công",
+  "data": {
+    "orderId": 5001,
+    "status": "CONFIRMED",
+    "itemsCount": 2
+  }
+}
+```
+
+### 9.4. Xử lý trạng thái món ăn (Bưng ra / Hủy món)
+**`PATCH /api/v1/waiter/food-items/{itemId}/status`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | (Bước 4) Phục vụ cập nhật món đã bưng lên (`SERVED`) hoặc Hủy do bếp hết đồ (`CANCELLED`). Giữ lại bản ghi để lưu vết. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Request Body:**
+```json
+{
+  "status": "SERVED" // hoặc "CANCELLED"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Cập nhật món ăn thành công",
+  "data": {
+    "itemId": 8001,
+    "status": "SERVED"
+  }
+}
+```
+
+### 9.5. Hoàn tất FoodOrder
+**`PATCH /api/v1/waiter/orders/{orderId}/complete`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | (Bước 4) Khi tất cả món ăn đã `SERVED` hoặc `CANCELLED`, Phục vụ chốt Order chuyển sang `COMPLETED`. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã hoàn tất FoodOrder",
+  "data": {
+    "orderId": 5001,
+    "status": "COMPLETED"
+  }
+}
+```
+
+---
+
+## 10. Module: Cashier API (Thu ngân)
+
+### 10.1. Khởi tạo thanh toán
+**`PATCH /api/v1/cashier/sessions/{sessionId}/initiate-payment`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | (Bước 5) Khách yêu cầu tính tiền. Kiểm tra không có Order nào `PENDING`. Chuyển Session sang `PAYING`. Khóa quyền thêm order của Phục vụ. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | CASHIER, MANAGER |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã chuyển sang trạng thái chờ thanh toán",
+  "data": {
+    "sessionId": 1001,
+    "status": "PAYING"
+  }
+}
+```
+
+### 10.2. Hoàn tất hóa đơn (Thanh toán xong)
+**`POST /api/v1/cashier/sessions/{sessionId}/complete`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | (Bước 6) Thu ngân thu tiền. Chuyển TableSession sang `COMPLETED` và giải phóng Table về `AVAILABLE`. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | CASHIER, MANAGER |
+
+**Request Body:**
+```json
+{
+  "paymentMethod": "CASH",
+  "totalAmount": 550000
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thanh toán hoàn tất, bàn đã trống.",
+  "data": {
+    "sessionId": 1001,
+    "status": "COMPLETED"
+  }
+}
+```
