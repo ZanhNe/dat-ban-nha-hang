@@ -1,61 +1,92 @@
 .header {
     background: white;
-
     border-bottom: 1px solid #eee;
-
     padding: 15px 0;
     position: sticky;
     top: 0;
-
     z-index: 1000;
+}
 
-    .container {
-        max-width: 1200px;
-        margin: auto;
-        padding: 15px 20px;
+.header .container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+.header .logo {
+    font-size: 22px;
+    font-weight: bold;
+}
 
-        .auth {
-            .login {
-                background: #f2f2f2;
-            }
+.header .logo span {
+    color: orange;
+}
 
-            .signup {
-                background: orange;
-                color: white;
-            }
+.header .nav a {
+    margin: 0 15px;
+    text-decoration: none;
+    color: #333;
+}
 
-            a {
-                margin-left: 10px;
-                padding: 6px 14px;
-                border-radius: 6px;
-                border: none;
-                cursor: pointer;
-            }
-        }
+.header .nav a:hover {
+    color: orange;
+}
 
-        .logo {
-            font-size: 22px;
-            font-weight: bold;
+.header .auth {
+    display: flex;
+    align-items: center;
+}
 
-            span {
-                color: orange;
-            }
-        }
+/* Các nút khi CHƯA đăng nhập */
+.header .auth a {
+    margin-left: 10px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+}
 
-        .nav {
-            a {
-                margin: 0 15px;
-                text-decoration: none;
-                color: #333;
-            }
+.header .auth .login {
+    background: #f2f2f2;
+    color: #333;
+}
 
-            a:hover {
-                color: orange;
-            }
-        }
-    }
+.header .auth .signup {
+    background: orange;
+    color: white;
+}
+
+/* Khu vực khi ĐÃ đăng nhập */
+.header .auth .user-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header .auth .greeting {
+    font-size: 16px;
+    color: #333;
+}
+
+.header .auth .greeting strong {
+    color: orange;
+}
+
+.header .auth .btn-logout {
+    padding: 6px 14px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.header .auth .btn-logout:hover {
+    background-color: #c0392b;
 }

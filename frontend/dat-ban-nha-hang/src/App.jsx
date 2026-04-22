@@ -9,7 +9,11 @@ import ProtectedRoute from "./pages/RoutePage/ProtectedRoute"
 import PublicRoute from "./pages/RoutePage/PublicRoute"
 import HomeCustomer from "./pages/Customer/HomeCustomer"
 import { Navigate } from "react-router-dom"
-
+import AdminDashboard from "./pages/Admin/AdminDashboard"
+import AdminLayout from "./pages/Admin/AdminLayout"
+import RestaurantApprovals from "./pages/Admin/RestaurantApprovals"
+import RestaurantManagement from "./pages/Admin/RestaurantManagement"
+import CuisineManagement from "./pages/Admin/CuisineManagement"
 function App() {
 
   return (
@@ -34,6 +38,15 @@ function App() {
           <Route path="map-search" element={<MapSearchPage />} />
           <Route path="restaurants/:id" element={<RestaurantDetailPage />} />
           <Route path="bookings/pending-payment" element={<PendingBookingsPage />} />
+        </Route>
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
+          <Route element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="approvals" element={<RestaurantApprovals />} />
+            <Route path="restaurants" element={<RestaurantManagement />} />
+            <Route path="cuisines" element={<CuisineManagement />} />
+            <Route path="broadcast" element={<div>Broadcast</div>} />
+          </Route>
         </Route>
 
 
