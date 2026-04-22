@@ -12,15 +12,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class PaymentController {
 
     private final IPaymentService paymentService;
-
-    public PaymentController(IPaymentService paymentService) {
-        this.paymentService = paymentService;
-    }
 
     @GetMapping("/users/me/bookings/pending-payment")
     @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER', 'CUSTOMER')")

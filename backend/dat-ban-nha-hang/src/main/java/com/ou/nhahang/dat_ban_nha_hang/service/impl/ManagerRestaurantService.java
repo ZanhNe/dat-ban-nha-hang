@@ -7,16 +7,15 @@ import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
 import com.ou.nhahang.dat_ban_nha_hang.repository.RestaurantRepository;
 import com.ou.nhahang.dat_ban_nha_hang.service.IManagerRestaurantService;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ManagerRestaurantService implements IManagerRestaurantService {
 
     private final RestaurantRepository restaurantRepository;
-
-    public ManagerRestaurantService(RestaurantRepository restaurantRepository) {
-        this.restaurantRepository = restaurantRepository;
-    }
 
     private Restaurant getRestaurantIfManager(Long restaurantId, Long managerId) {
         return restaurantRepository.findByIdAndManagerId(restaurantId, managerId)

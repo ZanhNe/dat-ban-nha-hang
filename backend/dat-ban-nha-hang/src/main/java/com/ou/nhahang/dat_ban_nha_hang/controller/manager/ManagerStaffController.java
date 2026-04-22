@@ -16,16 +16,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/v1/manager")
 @PreAuthorize("hasAnyAuthority('ROLE_MANAGER')")
+@RequiredArgsConstructor
 public class ManagerStaffController {
 
     private final IManagerStaffService managerStaffService;
-
-    public ManagerStaffController(IManagerStaffService managerStaffService) {
-        this.managerStaffService = managerStaffService;
-    }
 
     @GetMapping("/restaurants/{restaurantId}/staffs")
     public ResponseEntity<ApiResponse<List<ManagerStaffResponseDTO>>> getStaffs(

@@ -15,16 +15,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/v1/manager")
 @PreAuthorize("hasAnyAuthority('ROLE_MANAGER')")
+@RequiredArgsConstructor
 public class ManagerTableController {
 
         private final IManagerTableService managerTableService;
-
-        public ManagerTableController(IManagerTableService managerTableService) {
-                this.managerTableService = managerTableService;
-        }
 
         @GetMapping("/restaurants/{restaurantId}/table-areas")
         public ResponseEntity<ApiResponse<List<ManagerTableAreaResponseDTO>>> getTableAreas(

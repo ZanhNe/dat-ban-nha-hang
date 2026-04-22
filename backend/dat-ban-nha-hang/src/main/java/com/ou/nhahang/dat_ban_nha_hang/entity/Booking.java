@@ -24,8 +24,8 @@ public class Booking extends PaymentSource {
     private String note;
 
     public enum BookingStatus {
-        PENDING_PAYMENT,
         AWAITING_CONFIRMATION,
+        PENDING_PAYMENT,
         CONFIRMED,
         CUSTOMER_DID_NOT_ARRIVE,
         COMPLETED,
@@ -65,5 +65,13 @@ public class Booking extends PaymentSource {
 
     @OneToOne(mappedBy = "booking")
     private Review review;
+
+    public Long calculateDepositAmount() {
+        return this.restaurant.getDepositPolicy() == Restaurant.DepositType.FIXED
+                ? this.restaurant.getBaseDepositValue()
+                : this.restaurant.getDepositPolicy() == Restaurant.DepositType.PER_GUEST
+                        ? this.restaurant.getBaseDepositValue() * this.numberOfPeople
+                        : 0L;
+    }
 
 }

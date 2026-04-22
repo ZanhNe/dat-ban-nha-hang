@@ -24,15 +24,16 @@ public class PaymentTimeoutTask {
 
     /**
      * Chạy định kỳ 15 phút 1 lần.
-     * Quét các Booking ở trạng thái PENDING_PAYMENT trong 30 phút mà chưa thanh toán để chuyển sang EXPIRED.
+     * Quét các Booking ở trạng thái PENDING_PAYMENT trong 30 phút mà chưa thanh
+     * toán để chuyển sang EXPIRED.
      */
     @Scheduled(fixedRate = 900000) // 15 mins
     @Transactional
     public void expirePendingBookings() {
         logger.info("Running PaymentTimeoutTask to expire pending bookings...");
-        
+
         LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
-        
+
         List<Booking> allPending = bookingRepository.findAll().stream()
                 .filter(b -> b.getStatus() == Booking.BookingStatus.PENDING_PAYMENT)
                 .collect(Collectors.toList());
@@ -49,7 +50,7 @@ public class PaymentTimeoutTask {
                 count++;
             }
         }
-        
+
         logger.info("Expired {} pending bookings.", count);
     }
 }

@@ -1,5 +1,8 @@
 package com.ou.nhahang.dat_ban_nha_hang.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,5 +39,10 @@ public class FoodItem extends Base {
     @ManyToOne
     @JoinColumn(name = "waiter_id", nullable = true)
     private User waiter;
+
+    @ManyToMany
+    @JoinTable(name = "food_item_option", joinColumns = @JoinColumn(name = "food_item_id"), inverseJoinColumns = @JoinColumn(name = "food_option_id"))
+    @Builder.Default
+    private List<FoodOption> selectedOptions = new ArrayList<>();
 
 }

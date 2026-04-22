@@ -27,7 +27,6 @@ public class RestaurantTable extends Base {
         AVAILABLE,
         OCCUPIED,
         MAINTENANCE,
-        PRIVATE_EVENT
     }
 
     @Column(name = "status", length = 50, nullable = false)
