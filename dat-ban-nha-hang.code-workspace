@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "backend/dat-ban-nha-hang"
+		},
+		{
+			"path": "frontend/dat-ban-nha-hang"
+		}
+	],
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "interactive"
+	}
+}

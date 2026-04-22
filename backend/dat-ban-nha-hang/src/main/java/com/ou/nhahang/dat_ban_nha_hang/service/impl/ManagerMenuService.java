@@ -12,7 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class ManagerMenuService implements IManagerMenuService {
 
         private final RestaurantRepository restaurantRepository;
@@ -21,20 +24,6 @@ public class ManagerMenuService implements IManagerMenuService {
         private final FoodDescriptionRepository foodDescriptionRepository;
         private final FoodOptionGroupRepository foodOptionGroupRepository;
         private final FoodOptionRepository foodOptionRepository;
-
-        public ManagerMenuService(RestaurantRepository restaurantRepository,
-                        MenuRepository menuRepository,
-                        FoodGroupRepository foodGroupRepository,
-                        FoodDescriptionRepository foodDescriptionRepository,
-                        FoodOptionGroupRepository foodOptionGroupRepository,
-                        FoodOptionRepository foodOptionRepository) {
-                this.restaurantRepository = restaurantRepository;
-                this.menuRepository = menuRepository;
-                this.foodGroupRepository = foodGroupRepository;
-                this.foodDescriptionRepository = foodDescriptionRepository;
-                this.foodOptionGroupRepository = foodOptionGroupRepository;
-                this.foodOptionRepository = foodOptionRepository;
-        }
 
         private Restaurant getMenuRestaurant(Long managerId) {
                 return restaurantRepository.findAll().stream()

@@ -38,15 +38,14 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantReviewResponseD
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.CursorPaginationResult;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetBookingHistoryResponseDTO;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/v1/customer/restaurants")
+@RequiredArgsConstructor
 public class CustomerRestaurantController {
 
         private final CustomerRestaurantService restaurantService;
-
-        public CustomerRestaurantController(CustomerRestaurantService restaurantService) {
-                this.restaurantService = restaurantService;
-        }
 
         @GetMapping
         public ResponseEntity<ApiResponse<List<SearchRestaurantResponseDTO>>> searchRestaurants(

@@ -22,7 +22,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class PaymentService implements IPaymentService {
 
     private final BookingRepository bookingRepository;
@@ -30,15 +33,6 @@ public class PaymentService implements IPaymentService {
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
     private final IStripeGateway stripeGateway;
-
-    public PaymentService(BookingRepository bookingRepository, TransactionRepository transactionRepository,
-            PaymentRepository paymentRepository, UserRepository userRepository, IStripeGateway stripeGateway) {
-        this.bookingRepository = bookingRepository;
-        this.transactionRepository = transactionRepository;
-        this.paymentRepository = paymentRepository;
-        this.userRepository = userRepository;
-        this.stripeGateway = stripeGateway;
-    }
 
     @Override
     @Transactional

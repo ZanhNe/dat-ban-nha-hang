@@ -17,12 +17,15 @@ public class RestaurantTableSession extends Base {
 
     public enum TableSessionStatus {
         ACTIVE,
-        CLOSED
+        SERVING,
+        PAYING,
+        COMPLETED
     }
 
     @Column(name = "status", length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
-    private TableSessionStatus status;
+    @Builder.Default
+    private TableSessionStatus status = TableSessionStatus.ACTIVE;
 
     @ManyToOne
     @JoinColumn(name = "waiter_id", nullable = false)

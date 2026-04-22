@@ -17,14 +17,13 @@ import com.ou.nhahang.dat_ban_nha_hang.utils.ExternalApiUtil;
 
 import org.springframework.beans.factory.annotation.Value;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class GoongGeolocationService implements IGeolocationService {
 
-    private ExternalApiUtil externalApiUtil;
-
-    public GoongGeolocationService(ExternalApiUtil externalApiUtil) {
-        this.externalApiUtil = externalApiUtil;
-    }
+    private final ExternalApiUtil externalApiUtil;
 
     @Value("${goong.api-key}")
     private String apiKey;

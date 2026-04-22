@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -44,6 +45,7 @@ import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
 import com.ou.nhahang.dat_ban_nha_hang.entity.RestaurantTable;
 import com.ou.nhahang.dat_ban_nha_hang.entity.TableArea;
 import com.ou.nhahang.dat_ban_nha_hang.entity.User;
+import com.ou.nhahang.dat_ban_nha_hang.event.dto.RequestBookingEvent;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Review;
 import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
 import com.ou.nhahang.dat_ban_nha_hang.exception.ResourceNotFoundException;
@@ -55,8 +57,10 @@ import com.ou.nhahang.dat_ban_nha_hang.repository.ReviewRepository;
 import com.ou.nhahang.dat_ban_nha_hang.service.ICustomerRestaurantService;
 import com.ou.nhahang.dat_ban_nha_hang.service.port.IGeolocationService;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
-@Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class CustomerRestaurantService implements ICustomerRestaurantService {
 
         private final RestaurantTableRepository restaurantTableRepository;
@@ -65,19 +69,7 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
         private final BookingRepository bookingRepository;
         private final IGeolocationService geolocationService;
         private final ReviewRepository reviewRepository;
-
-        public CustomerRestaurantService(RestaurantTableRepository restaurantTableRepository,
-                        RestaurantRepository restaurantRepository,
-                        UserRepository userRepository,
-                        BookingRepository bookingRepository, IGeolocationService geolocationService,
-                        ReviewRepository reviewRepository) {
-                this.restaurantTableRepository = restaurantTableRepository;
-                this.restaurantRepository = restaurantRepository;
-                this.userRepository = userRepository;
-                this.bookingRepository = bookingRepository;
-                this.geolocationService = geolocationService;
-                this.reviewRepository = reviewRepository;
-        }
+        private final ApplicationEventPublisher eventPublisher;
 
         private GetBookingHistoryResponseDTO mapToBookingHistoryDTO(Booking b) {
                 return GetBookingHistoryResponseDTO.builder()
@@ -311,6 +303,11 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
                 restaurantRepository.save(restaurant);
                 booking = bookingRepository.save(booking);
 
+                eventPublisher.publishEvent(RequestBookingEvent.builder()
+                                .bookingId(booking.getId())
+                                .customerName(user.getFullName())
+                                .build());
+
                 return mapToBookingResponseDTO(booking, restaurant, requestDTO);
 
         }
@@ -478,7 +475,7 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
                         throw new ResourceNotFoundException("Không tìm thấy nhà hàng với ID: " + restaurantId);
                 }
 
-                long totalReviews = reviewRepository.countByRestaurantId(restaurantId);
+                long totalElements = reviewRepository.countByRestaurantId(restaurantId);
 
                 int fetchLimit = request.limit() + 1;
                 Pageable pageable = PageRequest.of(0, fetchLimit);
@@ -514,9 +511,15 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
                                                 r.getCreatedAt()))
                                 .collect(Collectors.toList());
 
-                return new CursorPaginationResult<>(
-                                data,
-                                new CursorPaginationResult.CursorPaginationMeta(nextCursor, hasMore, totalReviews));
+                CursorPaginationResult.CursorPaginationMeta meta = CursorPaginationResult.CursorPaginationMeta.builder()
+                                .nextCursor(nextCursor)
+                                .hasMore(hasMore)
+                                .totalElements(totalElements)
+                                .build();
+                return CursorPaginationResult.<GetRestaurantReviewResponseDTO>builder()
+                                .data(data)
+                                .meta(meta)
+                                .build();
         }
 
         @Override

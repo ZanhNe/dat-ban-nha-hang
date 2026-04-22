@@ -3,14 +3,14 @@ import apiClient from './apiClient';
 export const mapService = {
   getCoordinates: async (address) => {
     if (!address) throw new Error("Vui lòng nhập địa chỉ");
-    const response = await apiClient.get('/geolocation/get-coordinates', {
+    const response = await apiClient.get('/customer/geolocation/get-coordinates', {
       params: { address },
     });
     return response;
   },
 
   searchRestaurants: async (params) => {
-    const response = await apiClient.get('/restaurants', {
+    const response = await apiClient.get('/customer/restaurants', {
       params: {
         origin: params.origin,
         cuisine: params.cuisine || undefined,
@@ -24,7 +24,7 @@ export const mapService = {
 
   getRestaurantDetail: async (id, origin) => {
     if (!id || !origin) throw new Error("Thiếu ID nhà hàng hoặc tọa độ người dùng");
-    const response = await apiClient.get(`/restaurants/${id}`, {
+    const response = await apiClient.get(`/customer/restaurants/${id}`, {
       params: { origin },
     });
     return response;

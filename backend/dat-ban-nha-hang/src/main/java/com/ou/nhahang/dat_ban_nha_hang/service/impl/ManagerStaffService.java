@@ -23,21 +23,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class ManagerStaffService implements IManagerStaffService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final RestaurantRepository restaurantRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public ManagerStaffService(UserRepository userRepository, RoleRepository roleRepository,
-            RestaurantRepository restaurantRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.restaurantRepository = restaurantRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     private Restaurant getRestaurantIfManager(Long restaurantId, Long managerId) {
         return restaurantRepository.findByIdAndManagerId(restaurantId, managerId)
