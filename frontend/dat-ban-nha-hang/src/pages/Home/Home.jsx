@@ -39,7 +39,7 @@ const Home = () => {
         return <Navigate to="/customer" replace />;
     }
 
-    if (user.roles?.includes("ROLE_ADMIN")) {
+    if (user.roles?.includes("ADMIN")) {
         return <Navigate to="/admin" replace />;
     }
 

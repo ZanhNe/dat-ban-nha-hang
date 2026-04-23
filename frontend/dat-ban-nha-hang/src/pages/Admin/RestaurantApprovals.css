@@ -1,0 +1,208 @@
+/* Container chung */
+.approvals-page {
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+/* --- TRẠNG THÁI DANH SÁCH --- */
+.empty-state {
+    padding: 50px;
+    text-align: center;
+    background: #fff;
+    border-radius: 8px;
+    color: #7f8c8d;
+    border: 1px dashed #bdc3c7;
+}
+
+.table-responsive {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.admin-table th {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+.admin-table tbody tr:hover {
+    background-color: #f9fbfd;
+}
+
+.badge.pending {
+    background-color: #f39c12;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.btn-view {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-view:hover {
+    background-color: #2980b9;
+}
+
+
+/* --- TRẠNG THÁI XEM CHI TIẾT --- */
+.btn-back {
+    background: none;
+    border: none;
+    color: #3498db;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 20px;
+    padding: 0;
+}
+
+.btn-back:hover {
+    text-decoration: underline;
+}
+
+.detail-container {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.detail-info {
+    flex: 1;
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.info-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-docs {
+    flex: 1.5;
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.doc-preview img {
+    width: 100%;
+    max-height: 500px;
+    object-fit: contain;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Các nút Action Duyệt/Từ chối */
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.btn-approve {
+    flex: 1;
+    background-color: #2ecc71;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.btn-approve:hover {
+    background-color: #27ae60;
+}
+
+.btn-reject {
+    flex: 1;
+    background-color: #e74c3c;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.btn-reject:hover {
+    background-color: #c0392b;
+}
+
+/* Form nhập lý do từ chối */
+.reject-form {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fdf2f0;
+    border-left: 4px solid #e74c3c;
+    border-radius: 4px;
+}
+
+.reject-form h3 {
+    margin-top: 0;
+    color: #c0392b;
+}
+
+.reject-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+}
+
+.reject-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-confirm-reject {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-cancel {
+    background-color: #95a5a6;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}

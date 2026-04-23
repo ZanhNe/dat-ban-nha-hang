@@ -37,7 +37,17 @@ const useLoginData = () => {
 
             setAuth(data);
             console.log('check', data);
-            navigate('/customer');
+
+            const roles = data.user?.roles || [];
+
+
+            if (roles.includes("ADMIN")) {
+                navigate("/admin");
+            } else if (roles.includes("CUSTOMER")) {
+                navigate("/customer");
+            } else {
+                navigate("/");
+            }
         } catch (err) {
             setError(err.response?.data?.message || 'Tên đăng nhập hoặc mật khẩu không đúng!');
         } finally {
