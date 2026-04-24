@@ -1,5 +1,6 @@
 package com.ou.nhahang.dat_ban_nha_hang.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,4 +32,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
     List<User> findAllByRoleName(@Param("roleName") String roleName);
+
+    @Query("""
+            SELECT COUNT(u) FROM User u
+            WHERE (:from IS NULL OR u.createdAt >= :from)
+              AND (:to IS NULL OR u.createdAt < :to)
+            """)
+    long countCreatedInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime toExclusive);
 }
