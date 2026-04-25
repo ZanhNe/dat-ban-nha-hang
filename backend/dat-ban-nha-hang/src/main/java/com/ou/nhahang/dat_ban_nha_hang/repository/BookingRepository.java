@@ -53,4 +53,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByBookingUser_IdAndStatus(Long userId, Booking.BookingStatus status);
 
     Page<Booking> findByBookingUser_Id(Long userId, Pageable pageable);
+
+    @Query("""
+            SELECT COUNT(b) FROM Booking b
+            WHERE (:from IS NULL OR b.createdAt >= :from)
+              AND (:to IS NULL OR b.createdAt < :to)
+            """)
+    long countCreatedInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime toExclusive);
 }
