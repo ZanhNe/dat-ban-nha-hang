@@ -24,14 +24,17 @@ public class Booking extends PaymentSource {
     private String note;
 
     public enum BookingStatus {
-        AWAITING_CONFIRMATION,
-        PENDING_PAYMENT,
-        CONFIRMED,
-        CUSTOMER_DID_NOT_ARRIVE,
-        COMPLETED,
-        REJECTED,
-        EXPIRED,
-        CANCELLED
+        AWAITING_CONFIRMATION, // Khi chờ lễ tân chấp nhận đặt bàn
+        PENDING_PAYMENT, // Khi đang chờ khách thanh toán
+        CONFIRMED, // Khi xác nhận đã đặt bàn
+        CUSTOMER_ARRIVED, // Khi khách đã đến nhà hàng
+        SERVING, // Khi nhân viên đang phục vụ
+        SERVED, // Khi nhân viên đã phục vụ xong
+        COMPLETED, // Khi đã hoàn thành thanh toán
+        REJECTED, // Khi bị từ chối
+        EXPIRED, // Khi hết thời gian chờ
+        CANCELLED, // Khi bị hủy
+        FAILED // Khi thanh toán thất bại
     }
 
     @Column(name = "deposit_amount", nullable = false)
@@ -41,7 +44,7 @@ public class Booking extends PaymentSource {
     @Column(name = "status", length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private BookingStatus status = BookingStatus.PENDING_PAYMENT;
+    private BookingStatus status = BookingStatus.AWAITING_CONFIRMATION;
 
     @ManyToOne
     @JoinColumn(name = "booking_user_id", nullable = false)

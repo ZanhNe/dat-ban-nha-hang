@@ -5,13 +5,18 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistConfirmBookingRe
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistRejectBookingResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Booking;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
-import com.ou.nhahang.dat_ban_nha_hang.event.dto.BookingCancelledEvent;
+import com.ou.nhahang.dat_ban_nha_hang.entity.Transaction;
+import com.ou.nhahang.dat_ban_nha_hang.event.dto.BookingExpiredEvent;
 import com.ou.nhahang.dat_ban_nha_hang.event.dto.BookingConfirmedEvent;
 import com.ou.nhahang.dat_ban_nha_hang.event.dto.BookingRejectedEvent;
+import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
 import com.ou.nhahang.dat_ban_nha_hang.exception.ResourceNotFoundException;
 import com.ou.nhahang.dat_ban_nha_hang.repository.BookingRepository;
+import com.ou.nhahang.dat_ban_nha_hang.repository.TransactionRepository;
 import com.ou.nhahang.dat_ban_nha_hang.service.IReceptionistBookingService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
@@ -19,12 +24,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReceptionistBookingService implements IReceptionistBookingService {
 
         private final BookingRepository bookingRepository;
+        private final TransactionRepository transactionRepository;
         private final ApplicationEventPublisher eventPublisher;
         private final ThreadPoolTaskScheduler threadPoolTaskScheduler;
 
@@ -35,15 +43,13 @@ public class ReceptionistBookingService implements IReceptionistBookingService {
                                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu đặt bàn"));
 
                 if (booking.getStatus() != Booking.BookingStatus.AWAITING_CONFIRMATION) {
-                        throw new IllegalStateException(
-                                        "Trạng thái đặt bàn không hợp lệ để xác nhận. Hiện tại là: "
-                                                        + booking.getStatus());
+                        throw new BusinessException("Yêu cầu đặt bàn hiện tại không ở trạng thái chờ xác nhận");
                 }
 
-                Long depositAmount = booking.calculateDepositAmount();
+                Long depositAmount = booking.getDepositAmount();
 
                 String message;
-                if (booking.getRestaurant().getDepositPolicy() == Restaurant.DepositType.NONE || depositAmount == 0L) {
+                if (booking.getRestaurant().getDepositPolicy() == Restaurant.DepositType.NONE) {
                         booking.setStatus(Booking.BookingStatus.CONFIRMED);
                         message = "Yêu cầu đặt bàn của bạn đã được xác nhận thành công. Hẹn gặp bạn tại nhà hàng!";
                 } else {
@@ -79,9 +85,7 @@ public class ReceptionistBookingService implements IReceptionistBookingService {
                                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu đặt bàn"));
 
                 if (booking.getStatus() != Booking.BookingStatus.AWAITING_CONFIRMATION) {
-                        throw new IllegalStateException(
-                                        "Trạng thái đặt bàn không hợp lệ để từ chối. Hiện tại là: "
-                                                        + booking.getStatus());
+                        throw new BusinessException("Yêu cầu đặt bàn hiện tại không ở trạng thái chờ xác nhận");
                 }
 
                 booking.setStatus(Booking.BookingStatus.REJECTED);
@@ -102,16 +106,35 @@ public class ReceptionistBookingService implements IReceptionistBookingService {
 
         @Transactional
         public void checkPaymentExpiration(Long bookingId) {
-                Booking booking = bookingRepository.findById(bookingId).orElse(null);
-                if (booking != null && booking.getStatus() == Booking.BookingStatus.PENDING_PAYMENT) {
-                        booking.setStatus(Booking.BookingStatus.CANCELLED);
-                        bookingRepository.save(booking);
+                log.info("Đang tìm kiếm giao dịch tiền cọc cho Booking ID: {}", bookingId);
+                Optional<Transaction> tx = transactionRepository
+                                .findByPaymentSourceIdAndTransactionTypeAndTransactionStatusForUpdate(bookingId,
+                                                Transaction.TransactionType.DEPOSIT,
+                                                Transaction.TransactionStatus.PENDING);
 
-                        eventPublisher.publishEvent(BookingCancelledEvent.builder()
-                                        .userId(booking.getBookingUser().getId())
-                                        .bookingId(booking.getId())
-                                        .customerName(booking.getBookingUser().getFullName())
+                log.info("Đang tìm kiếm yêu cầu đặt bàn ID: {}", bookingId);
+                Optional<Booking> bk = bookingRepository.findByIdForUpdate(bookingId);
+
+                if (bk.isPresent() && bk.get().getStatus() == Booking.BookingStatus.PENDING_PAYMENT) {
+                        bk.get().setStatus(Booking.BookingStatus.EXPIRED);
+                        bookingRepository.save(bk.get());
+                        log.debug("Đã hủy yêu cầu đặt bàn ID: {}", bookingId);
+
+                        eventPublisher.publishEvent(BookingExpiredEvent.builder()
+                                        .userId(bk.get().getBookingUser().getId())
+                                        .bookingId(bk.get().getId())
+                                        .customerName(bk.get().getBookingUser().getFullName())
                                         .build());
+                }
+
+                if (tx.isPresent()) {
+                        log.info("Scheduler: Phát hiện giao dịch cho Booking ID: {} hết hạn thanh toán. Đang tiến hành hủy...",
+                                        bookingId);
+                        tx.get().setTransactionStatus(Transaction.TransactionStatus.EXPIRED);
+                        transactionRepository.save(tx.get());
+
+                        log.debug("Đã hủy giao dịch tiền cọc ID: {}", tx.get().getId());
+
                 }
         }
 }

@@ -17,8 +17,7 @@ public class Transaction extends Base {
 
     public enum TransactionType {
         DEPOSIT,
-        FINAL_PAYMENT,
-        REFUND
+        FINAL_PAYMENT
     }
 
     public enum TransactionStatus {
@@ -26,14 +25,12 @@ public class Transaction extends Base {
         AUTHORIZED,
         CAPTURED,
         FAILED,
-        CANCELLED
+        CANCELLED,
+        EXPIRED
     }
 
-    @Column(name = "intent_id", nullable = true)
-    private String intentId;
-
-    @Column(name = "client_secret", nullable = true)
-    private String clientSecret;
+    @Column(name = "url_payment", length = 1000, nullable = true)
+    private String paymentUrl;
 
     @Column(name = "transaction_type", nullable = false)
     @Enumerated(EnumType.STRING)

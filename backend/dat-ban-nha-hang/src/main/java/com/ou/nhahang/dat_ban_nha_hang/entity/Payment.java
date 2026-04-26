@@ -32,20 +32,21 @@ public class Payment extends Base {
 
     @Column(name = "payment_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private PaymentType paymentType;
+    @Builder.Default
+    private PaymentType paymentType = PaymentType.PAYMENT;
 
     @Column(name = "payment_status", nullable = false)
     @Enumerated(EnumType.STRING)
-    private PaymentStatus paymentStatus;
+    @Builder.Default
+    private PaymentStatus paymentStatus = PaymentStatus.SUCCESS;
 
     @Column(name = "payment_method", nullable = false)
     @Enumerated(EnumType.STRING)
-    private PaymentMethod paymentMethod;
+    @Builder.Default
+    private PaymentMethod paymentMethod = PaymentMethod.CREDIT_CARD;
 
-    @Column(name = "gateway_ref", columnDefinition = "TEXT", nullable = true)
-    private String gatewayRef;
-
-    @Column(name = "log", columnDefinition = "TEXT", nullable = true)
-    private String log;
+    @ManyToOne
+    @JoinColumn(name = "transaction_id", nullable = false)
+    private Transaction transaction;
 
 }

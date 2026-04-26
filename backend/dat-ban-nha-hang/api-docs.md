@@ -645,7 +645,7 @@ Authorization: Bearer <JWT_TOKEN>
 }
 ```
 ### 3.6. Tạo thanh toán qua Stripe
-**`POST /api/v1/payments/create-intent`**
+**`POST /api/v1/bookings/{bookingId}/transactions/initiate-online`**
 
 | Thuộc tính   | Giá trị                    |
 | ------------ | -------------------------- |
@@ -654,23 +654,21 @@ Authorization: Bearer <JWT_TOKEN>
 | **Role**     | Customer           |
 
 
-**Request Body:**
-```json
-{
-  "order_id": 1054,             // (Int/UUID, Required) Mã đơn hàng đã được tạo trước đó trong DB
-  "currency": "vnd"             // (String, Optional) Mặc định Backend có thể set cứng là 'vnd' hoặc 'usd'
-}
-```
+**Path Parameters:**
+
+| Param | Type      | Required | Mô tả     |
+| ----- | --------- | -------- | ---------- |
+| `bookingId`  | `integer` | Yes       | ID của booking đặt trước đó |
+
 
 **Response `200 OK`:**
 
 ```json
 {
   "status": 200,
-  "message": "Payment intent created successfully",
+  "message": "Khởi tạo giao dịch thành công",
   "data": {
     "client_secret": "pi_3Mtw..._secret_...xyz", // (String) Chuỗi bí mật Stripe cấp, FE nạp vào thư viện Stripe.js
-    "payment_intent_id": "pi_3Mtw...",          // (String) ID của phiên giao dịch trên hệ thống Stripe
     "amount": 500000,                           // (Int) Tổng tiền BE đã tính toán (Trả về để FE hiển thị xác nhận lại cho khách)
     "currency": "vnd"
   }
@@ -694,7 +692,7 @@ HTTP Code,Error Code,Mô tả
 502,STRIPE_GATEWAY_ERROR,Lỗi kết nối với server của Stripe (Stripe bị sập hoặc sai API Key).
 
 ### 3.7. Xác nhận thanh toán qua Stripe
-**`POST /api/v1/webhooks/stripe`**
+**`POST /api/v1/transactions/webhook`**
 
 | Thuộc tính   | Giá trị                    |
 | ------------ | -------------------------- |
@@ -704,7 +702,7 @@ HTTP Code,Error Code,Mô tả
 
 
 1. Headers (Cực kỳ quan trọng để bảo mật)
-Stripe sẽ gửi kèm một Header tên là Stripe-Signature. Bạn BẮT BUỘC phải dùng thư viện của Stripe để kiểm tra xem request này có đúng là do Stripe gửi không, hay là của một hacker đang cố tình gọi API của bạn để hack trạng thái "Đã thanh toán".
+Stripe sẽ gửi kèm một Header tên là Stripe-Signature. BẮT BUỘC phải dùng thư viện của Stripe để kiểm tra xem request này có đúng là do Stripe gửi không, hay là của một hacker đang cố tình gọi API để hack trạng thái "Đã thanh toán".
 
 2. Body
 Stripe gửi một cấu trúc Event rất to, nhưng chỉ cần quan tâm đến 2 trường cốt lõi: type (Loại sự kiện) và data.object (Dữ liệu chi tiết).
@@ -721,7 +719,7 @@ Stripe gửi một cấu trúc Event rất to, nhưng chỉ cần quan tâm đ�
       "currency": "vnd",
       "status": "succeeded",
       "metadata": {
-        "order_id": "1054"            //Đây chính là cái order_id đã nhét vào ở bước trước
+        "booking_id": "1054"            //Đây chính là cái booking_id đã nhét vào ở bước trước
       }
     }
   }
@@ -732,7 +730,7 @@ Lưu ý: Nếu giao dịch thất bại (khách hết tiền, thẻ bị khóa),
 
 **Response `200 OK`:**
 
-- Stripe không quan tâm đến dữ liệu JSON trả về. Họ chỉ cần biết một điều duy nhất: "Server của anh đã nhận được thông báo chưa?"
+- Stripe không quan tâm đến dữ liệu JSON trả về. Chỉ cần biết một điều duy nhất: "Server của mình đã nhận được thông báo chưa?"
 
 ```json
 {
@@ -756,7 +754,7 @@ Lưu ý: Nếu giao dịch thất bại (khách hết tiền, thẻ bị khóa),
 
 HTTP Code,Mô tả
 400 Bad Request,Lỗi xác thực chữ ký (Signature mismatch) - Báo hiệu có kẻ đang giả mạo Stripe.
-500 Internal Server Error,Backend của đang bị lỗi (VD: không kết nối được Database để update trạng thái đơn). Stripe sẽ tự động gửi lại request này sau vài giờ.
+500 Internal Server Error,Backend bị lỗi (VD: không kết nối được Database để update trạng thái đơn). Stripe sẽ tự động gửi lại request này sau vài giờ.
 
 **Response `4xx`:**
 
