@@ -47,6 +47,7 @@ public class CustomerRestaurantController {
 
         private final CustomerRestaurantService restaurantService;
 
+
         @GetMapping
         public ResponseEntity<ApiResponse<List<SearchRestaurantResponseDTO>>> searchRestaurants(
                         @ModelAttribute @Valid SearchRestaurantRequestDTO requestDTO) {

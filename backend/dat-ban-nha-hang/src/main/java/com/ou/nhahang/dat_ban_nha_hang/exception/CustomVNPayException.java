@@ -4,10 +4,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
-public class StripeException extends RuntimeException {
+public class CustomVNPayException extends RuntimeException {
     private String code;
 
-    public StripeException(String message, String code) {
+    public CustomVNPayException(String message, String code) {
         super(message);
         this.code = code;
     }

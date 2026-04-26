@@ -38,7 +38,8 @@ public class Transaction extends Base {
 
     @Column(name = "transaction_status", nullable = false)
     @Enumerated(EnumType.STRING)
-    private TransactionStatus transactionStatus;
+    @Builder.Default
+    private TransactionStatus transactionStatus = TransactionStatus.PENDING;
 
     @ManyToOne
     @JoinColumn(name = "cashier_id", nullable = true)

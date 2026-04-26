@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record PaymentInitResponseDTO(
-                String clientSecret,
+                String url,
                 Long transactionId,
                 Long bookingId,
                 Long amount,

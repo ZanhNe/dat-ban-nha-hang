@@ -1,6 +1,5 @@
 package com.ou.nhahang.dat_ban_nha_hang.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;

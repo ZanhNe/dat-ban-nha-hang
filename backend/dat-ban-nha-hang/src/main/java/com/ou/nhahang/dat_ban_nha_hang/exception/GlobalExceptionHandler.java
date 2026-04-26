@@ -18,10 +18,10 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(CustomStripeException.class)
-    public ResponseEntity<ApiErrorResponse> handleStripeException(CustomStripeException ex) {
+    @ExceptionHandler(CustomVNPayException.class)
+    public ResponseEntity<ApiErrorResponse> handleVNPayException(CustomVNPayException ex) {
 
-        log.error("STRIPE_PAYMENT_ERROR: [{}] | Code: [{}]", ex.getMessage(), ex.getCode(), ex);
+        log.error("VNPay_PAYMENT_ERROR: [{}] | Code: [{}]", ex.getMessage(), ex.getCode(), ex);
 
         ApiErrorResponse response = ApiErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.value())

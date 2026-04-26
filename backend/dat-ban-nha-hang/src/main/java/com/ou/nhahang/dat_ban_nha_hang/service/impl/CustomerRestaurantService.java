@@ -40,7 +40,7 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantReviewResponseD
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.CursorPaginationResult;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Booking;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Cuisine;
-import com.ou.nhahang.dat_ban_nha_hang.entity.FoodGroup;
+// import com.ou.nhahang.dat_ban_nha_hang.entity.FoodGroup;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
 import com.ou.nhahang.dat_ban_nha_hang.entity.RestaurantTable;
 import com.ou.nhahang.dat_ban_nha_hang.entity.TableArea;
@@ -97,33 +97,34 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
                                 .build();
         }
 
-        private GetRestaurantReviewResponseDTO mapToReviewDTO(Review r) {
-                return GetRestaurantReviewResponseDTO.builder()
-                                .reviewId(r.getId())
-                                .userName(r.getUser().getFullName())
-                                .userAvatar(r.getUser().getAvatar())
-                                .rating(r.getRating())
-                                .comment(r.getComment())
-                                .createdAt(r.getCreatedAt())
-                                .build();
-        }
+        // private GetRestaurantReviewResponseDTO mapToReviewDTO(Review r) {
+        // return GetRestaurantReviewResponseDTO.builder()
+        // .reviewId(r.getId())
+        // .userName(r.getUser().getFullName())
+        // .userAvatar(r.getUser().getAvatar())
+        // .rating(r.getRating())
+        // .comment(r.getComment())
+        // .createdAt(r.getCreatedAt())
+        // .build();
+        // }
 
-        private GetRestaurantMenuResponseDTO.FoodGroupDTO mapToFoodGroupDTO(FoodGroup fg) {
-                return GetRestaurantMenuResponseDTO.FoodGroupDTO.builder()
-                                .groupId(fg.getId())
-                                .groupName(fg.getName())
-                                .groupDescription(fg.getDescription())
-                                .items(fg.getFoodDescriptions().stream()
-                                                .map(f -> GetRestaurantMenuResponseDTO.FoodDescriptionDTO.builder()
-                                                                .itemId(f.getId())
-                                                                .itemName(f.getName())
-                                                                .itemDescription(f.getDescription())
-                                                                .itemPrice(f.getPrice())
-                                                                .itemImage(f.getImage())
-                                                                .build())
-                                                .collect(Collectors.toList()))
-                                .build();
-        }
+        // private GetRestaurantMenuResponseDTO.FoodGroupDTO mapToFoodGroupDTO(FoodGroup
+        // fg) {
+        // return GetRestaurantMenuResponseDTO.FoodGroupDTO.builder()
+        // .groupId(fg.getId())
+        // .groupName(fg.getName())
+        // .groupDescription(fg.getDescription())
+        // .items(fg.getFoodDescriptions().stream()
+        // .map(f -> GetRestaurantMenuResponseDTO.FoodDescriptionDTO.builder()
+        // .itemId(f.getId())
+        // .itemName(f.getName())
+        // .itemDescription(f.getDescription())
+        // .itemPrice(f.getPrice())
+        // .itemImage(f.getImage())
+        // .build())
+        // .collect(Collectors.toList()))
+        // .build();
+        // }
 
         private SearchRestaurantResponseDTO mapToSearchRestaurantDTO(Restaurant restaurant, Point userLocation) {
                 return SearchRestaurantResponseDTO.builder()

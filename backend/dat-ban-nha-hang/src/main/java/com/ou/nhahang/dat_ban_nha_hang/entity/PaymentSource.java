@@ -16,4 +16,12 @@ import lombok.*;
 public abstract class PaymentSource extends Base {
     @OneToMany(mappedBy = "paymentSource")
     private List<Transaction> transactions = new ArrayList<>();
+
+
+    Transaction getDepositPendingTransaction() {
+        return this.transactions.stream()
+                .filter(t -> t.getTransactionType() == Transaction.TransactionType.DEPOSIT && t.getTransactionStatus() == Transaction.TransactionStatus.PENDING)
+                .findFirst()
+                .orElse(null);
+    }
 }
