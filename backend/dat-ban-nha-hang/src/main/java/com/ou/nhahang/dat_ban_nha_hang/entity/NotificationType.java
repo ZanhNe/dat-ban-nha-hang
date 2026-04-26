@@ -8,5 +8,6 @@ public enum NotificationType {
     BOOKING_CANCELLED, // Đã bị hủy
     BOOKING_EXPIRED, // Đã hết hạn
     PAYMENT_SUCCESS, // Thanh toán thành công
-    SYSTEM_MESSAGE // Thông báo hệ thống
+    SYSTEM_MESSAGE, // Thông báo hệ thống
+    SYSTEM_ALERT // Thông báo hệ thống (alert)
 }

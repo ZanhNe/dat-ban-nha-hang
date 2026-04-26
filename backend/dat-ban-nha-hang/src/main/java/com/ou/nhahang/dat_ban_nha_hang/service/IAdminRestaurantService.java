@@ -15,5 +15,7 @@ public interface IAdminRestaurantService {
     void updateRestaurantStatus(Long restaurantId, AdminRestaurantRequestDTO.UpdateStatus request);
 
     void updateRestaurantCommission(Long restaurantId, AdminRestaurantRequestDTO.UpdateCommission request);
+
+    void assignManager(Long restaurantId, Long userId);
 }
 

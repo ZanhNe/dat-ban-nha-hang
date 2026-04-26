@@ -9,6 +9,8 @@ import com.ou.nhahang.dat_ban_nha_hang.entity.User;
 import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
 import com.ou.nhahang.dat_ban_nha_hang.exception.ResourceNotFoundException;
 import com.ou.nhahang.dat_ban_nha_hang.repository.RestaurantRepository;
+import com.ou.nhahang.dat_ban_nha_hang.repository.RoleRepository;
+import com.ou.nhahang.dat_ban_nha_hang.repository.UserRepository;
 import com.ou.nhahang.dat_ban_nha_hang.service.IAdminRestaurantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,12 +20,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
 public class AdminRestaurantService implements IAdminRestaurantService {
 
     private final RestaurantRepository restaurantRepository;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
     private Restaurant getRestaurantOrThrow(Long restaurantId) {
         return restaurantRepository.findById(restaurantId)
@@ -135,6 +140,27 @@ public class AdminRestaurantService implements IAdminRestaurantService {
         Restaurant restaurant = getRestaurantOrThrow(restaurantId);
         restaurant.setCommissionType(Restaurant.CommissionType.valueOf(request.commissionType()));
         restaurant.setBaseCommissionValue(request.baseCommissionValue());
+        restaurantRepository.save(restaurant);
+    }
+
+    @Override
+    @Transactional
+    public void assignManager(Long restaurantId, Long userId) {
+        Restaurant restaurant = getRestaurantOrThrow(restaurantId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+
+        // Thăng cấp user -> MANAGER (set 1 role MANAGER)
+        var managerRole = roleRepository.findByName("MANAGER")
+                .orElseThrow(() -> new BusinessException("Role MANAGER không tồn tại"));
+        HashSet<com.ou.nhahang.dat_ban_nha_hang.entity.Role> roles = new HashSet<>();
+        roles.add(managerRole);
+        user.setRoles(roles);
+
+        user.setWorkplace(restaurant);
+        restaurant.setManager(user);
+
+        userRepository.save(user);
         restaurantRepository.save(restaurant);
     }
 }

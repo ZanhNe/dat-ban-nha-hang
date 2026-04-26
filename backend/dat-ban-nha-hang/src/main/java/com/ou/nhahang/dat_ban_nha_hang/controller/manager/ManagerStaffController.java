@@ -1,7 +1,9 @@
 package com.ou.nhahang.dat_ban_nha_hang.controller.manager;
 
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.ManagerStaffManagementRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.ManagerStaffRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ApiResponse;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.ManagerStaffManagementResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ManagerStaffResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.service.IManagerStaffService;
 import jakarta.validation.Valid;
@@ -25,6 +27,62 @@ import lombok.RequiredArgsConstructor;
 public class ManagerStaffController {
 
     private final IManagerStaffService managerStaffService;
+
+    // 4.6 - Staff management (workplace-scoped)
+
+    @GetMapping("/staffs")
+    public ResponseEntity<ApiResponse<List<ManagerStaffManagementResponseDTO>>> getStaffsByManager(
+            @Valid ManagerStaffManagementRequestDTO.ListStaffs requestDTO,
+            Authentication authentication) {
+        Long managerId = (Long) authentication.getCredentials();
+        Page<ManagerStaffManagementResponseDTO> dataPage = managerStaffService.getStaffsByManager(managerId, requestDTO);
+
+        Map<String, Object> meta = new HashMap<>();
+        meta.put("page", dataPage.getNumber());
+        meta.put("limit", dataPage.getSize());
+        meta.put("totalItems", dataPage.getTotalElements());
+        meta.put("totalPages", dataPage.getTotalPages());
+
+        ApiResponse<List<ManagerStaffManagementResponseDTO>> response = ApiResponse
+                .<List<ManagerStaffManagementResponseDTO>>builder()
+                .status(200)
+                .message("Thành công")
+                .data(dataPage.getContent())
+                .meta(meta)
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/staffs")
+    public ResponseEntity<ApiResponse<ManagerStaffManagementResponseDTO>> createStaffByManager(
+            @Valid @RequestBody ManagerStaffManagementRequestDTO.CreateStaff requestDTO,
+            Authentication authentication) {
+        Long managerId = (Long) authentication.getCredentials();
+        ManagerStaffManagementResponseDTO data = managerStaffService.createStaffByManager(managerId, requestDTO);
+
+        ApiResponse<ManagerStaffManagementResponseDTO> response = ApiResponse
+                .<ManagerStaffManagementResponseDTO>builder()
+                .status(201)
+                .message("Tạo tài khoản nhân viên thành công.")
+                .data(data)
+                .build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PatchMapping("/staffs/{staffId}/kick")
+    public ResponseEntity<ApiResponse<Void>> kickStaff(
+            @PathVariable Long staffId,
+            Authentication authentication) {
+        Long managerId = (Long) authentication.getCredentials();
+        managerStaffService.kickStaff(staffId, managerId);
+
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+                .status(200)
+                .message("Đã gỡ nhân viên khỏi nhà hàng thành công.")
+                .data(null)
+                .build();
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/restaurants/{restaurantId}/staffs")
     public ResponseEntity<ApiResponse<List<ManagerStaffResponseDTO>>> getStaffs(
