@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.ou.nhahang.dat_ban_nha_hang.event.dto.BookingCancelledEvent;
+import com.ou.nhahang.dat_ban_nha_hang.event.dto.BookingExpiredEvent;
 import com.ou.nhahang.dat_ban_nha_hang.event.dto.BookingConfirmedEvent;
 import com.ou.nhahang.dat_ban_nha_hang.entity.NotificationType;
 import com.ou.nhahang.dat_ban_nha_hang.entity.User;
@@ -68,13 +68,13 @@ public class NotificationListener {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleBookingCancelled(BookingCancelledEvent event) {
+    public void handleBookingExpired(BookingExpiredEvent event) {
         notificationService.sendNotificationToUser(
                 event.userId(),
-                "Hủy yêu cầu đặt bàn",
+                "Hết hạn yêu cầu đặt bàn",
                 "Chào " + event.customerName()
-                        + ", yêu cầu đặt bàn của bạn đã bị hủy do không thanh toán trong thời gian cho phép",
-                NotificationType.BOOKING_CANCELLED,
+                        + ", yêu cầu đặt bàn của bạn đã hết hạn do không thanh toán trong thời gian cho phép",
+                NotificationType.BOOKING_EXPIRED,
                 Map.of("bookingId", event.bookingId()));
     }
 }

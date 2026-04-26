@@ -281,11 +281,22 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
         public BookingResponseDTO bookingExecute(BookingRequestDTO requestDTO, Long userId, Long restaurantId) {
                 User user = userRepository.findById(userId)
                                 .orElseThrow(() -> new ResourceNotFoundException(
-                                                "Không tìm thấy người dùng với ID: " + userId));
+                                                "Không tìm thấy người dùng"));
 
                 Restaurant restaurant = restaurantRepository.findById(restaurantId)
                                 .orElseThrow(() -> new ResourceNotFoundException(
-                                                "Không tìm thấy nhà hàng với ID: " + restaurantId));
+                                                "Không tìm thấy nhà hàng"));
+
+                LocalDateTime requestedStartTime = requestDTO.bookingTime();
+                LocalDateTime requestedEndTime = requestedStartTime.plusHours(2);
+
+                boolean hasOverlappingBooking = bookingRepository.existsOverlappingBookingForUser(
+                                userId, requestedStartTime, requestedEndTime);
+
+                if (hasOverlappingBooking) {
+                        throw new BusinessException(
+                                        "Bạn đang có một lịch đặt bàn khác trong khoảng thời gian này có thể thuộc nhà hàng này hoặc nhà hàng khác. Vui lòng chọn thời gian khác (các lịch đặt phải cách nhau ít nhất 2 tiếng).");
+                }
 
                 List<RestaurantTable> tables = restaurantTableRepository.findAllById(requestDTO.tableIds());
                 if (tables.isEmpty()) {

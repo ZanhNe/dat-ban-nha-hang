@@ -2,7 +2,11 @@ package com.ou.nhahang.dat_ban_nha_hang.repository;
 
 import java.time.LocalDateTime;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Transaction;
+
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -11,15 +15,24 @@ import java.util.Optional;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
-    Optional<Transaction> findByIntentId(String intentId);
-    Optional<Transaction> findByPaymentSource_IdAndTransactionType(Long paymentSourceId, Transaction.TransactionType type);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT t FROM Transaction t WHERE t.id = :id")
+    Optional<Transaction> findByIdForUpdate(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT t FROM Transaction t WHERE t.paymentSource.id = :paymentSourceId AND t.transactionType = :type AND t.transactionStatus = :status")
+    Optional<Transaction> findByPaymentSourceIdAndTransactionTypeAndTransactionStatusForUpdate(
+            @Param("paymentSourceId") Long paymentSourceId, @Param("type") Transaction.TransactionType type,
+            @Param("status") Transaction.TransactionStatus status);
 
     /**
      * Doanh thu hoa hồng hệ thống (ước tính): chỉ tính trên các giao dịch CAPTURED.
      * - PERCENTAGE: amount * baseCommissionValue / 100
      * - FIXED: baseCommissionValue
      *
-     * Giao dịch hiện tại gắn với PaymentSource; Booking kế thừa PaymentSource nên có thể join theo id.
+     * Giao dịch hiện tại gắn với PaymentSource; Booking kế thừa PaymentSource nên
+     * có thể join theo id.
      */
     @Query("""
             SELECT COALESCE(SUM(
