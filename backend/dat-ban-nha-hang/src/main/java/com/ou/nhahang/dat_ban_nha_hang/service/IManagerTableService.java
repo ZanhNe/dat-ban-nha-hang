@@ -9,7 +9,12 @@ public interface IManagerTableService {
     // Table Area
     List<ManagerTableAreaResponseDTO> getTableAreas(Long restaurantId, Long managerId);
 
+    List<ManagerTableAreaResponseDTO> getTableAreasByManager(Long managerId);
+
     ManagerTableAreaResponseDTO createTableArea(Long restaurantId, Long managerId,
+            ManagerTableAreaRequestDTO.CreateOrUpdateTableArea requestDTO);
+
+    ManagerTableAreaResponseDTO createTableAreaByManager(Long managerId,
             ManagerTableAreaRequestDTO.CreateOrUpdateTableArea requestDTO);
 
     ManagerTableAreaResponseDTO updateTableArea(Long tableAreaId, Long managerId,

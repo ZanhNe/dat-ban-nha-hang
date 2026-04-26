@@ -7,11 +7,13 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.response.ManagerTableResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
 import com.ou.nhahang.dat_ban_nha_hang.entity.RestaurantTable;
 import com.ou.nhahang.dat_ban_nha_hang.entity.TableArea;
+import com.ou.nhahang.dat_ban_nha_hang.entity.User;
 import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
 import com.ou.nhahang.dat_ban_nha_hang.exception.ResourceNotFoundException;
 import com.ou.nhahang.dat_ban_nha_hang.repository.RestaurantRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.RestaurantTableRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.TableAreaRepository;
+import com.ou.nhahang.dat_ban_nha_hang.repository.UserRepository;
 import com.ou.nhahang.dat_ban_nha_hang.service.IManagerTableService;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class ManagerTableService implements IManagerTableService {
         private final RestaurantRepository restaurantRepository;
         private final TableAreaRepository tableAreaRepository;
         private final RestaurantTableRepository restaurantTableRepository;
+        private final UserRepository userRepository;
 
         private ManagerTableAreaResponseDTO mapToTableAreaDTO(TableArea area) {
                 return ManagerTableAreaResponseDTO.builder()
@@ -52,12 +55,29 @@ public class ManagerTableService implements IManagerTableService {
                                 .orElseThrow(() -> new BusinessException("Bạn không có quyền quản lý nhà hàng này"));
         }
 
+        private Restaurant getManagerWorkplaceOrThrow(Long managerId) {
+                User manager = userRepository.findById(managerId)
+                                .orElseThrow(() -> new BusinessException("Không tìm thấy Manager"));
+                if (manager.getWorkplace() == null) {
+                        throw new BusinessException("Manager chưa được gán nhà hàng làm việc");
+                }
+                return manager.getWorkplace();
+        }
+
         // Table Area
 
         @Override
         public List<ManagerTableAreaResponseDTO> getTableAreas(Long restaurantId, Long managerId) {
                 getRestaurantIfManager(restaurantId, managerId);
                 return tableAreaRepository.findByRestaurantId(restaurantId).stream()
+                                .map(this::mapToTableAreaDTO)
+                                .collect(Collectors.toList());
+        }
+
+        @Override
+        public List<ManagerTableAreaResponseDTO> getTableAreasByManager(Long managerId) {
+                Restaurant restaurant = getManagerWorkplaceOrThrow(managerId);
+                return tableAreaRepository.findByRestaurantId(restaurant.getId()).stream()
                                 .map(this::mapToTableAreaDTO)
                                 .collect(Collectors.toList());
         }
@@ -76,6 +96,16 @@ public class ManagerTableService implements IManagerTableService {
 
                 TableArea saved = tableAreaRepository.save(area);
                 return mapToTableAreaDTO(saved);
+        }
+
+        @Override
+        @Transactional
+        public ManagerTableAreaResponseDTO createTableAreaByManager(Long managerId,
+                        ManagerTableAreaRequestDTO.CreateOrUpdateTableArea requestDTO) {
+                Restaurant restaurant = getManagerWorkplaceOrThrow(managerId);
+                // verify actual manager rights for this restaurant too
+                getRestaurantIfManager(restaurant.getId(), managerId);
+                return createTableArea(restaurant.getId(), managerId, requestDTO);
         }
 
         @Override

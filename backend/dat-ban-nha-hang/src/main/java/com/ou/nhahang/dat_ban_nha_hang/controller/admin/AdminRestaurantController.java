@@ -1,6 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.controller.admin;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminRestaurantRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminUserRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminRestaurantDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminRestaurantListItemResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ApiResponse;
@@ -117,6 +118,19 @@ public class AdminRestaurantController {
                         "restaurantId", restaurantId,
                         "commissionType", request.commissionType(),
                         "baseCommissionValue", request.baseCommissionValue()))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{restaurantId}/manager")
+    public ResponseEntity<ApiResponse<Void>> assignManager(
+            @PathVariable Long restaurantId,
+            @Valid @RequestBody AdminUserRequestDTO.AssignManager request) {
+        adminRestaurantService.assignManager(restaurantId, request.userId());
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+                .status(200)
+                .message("Đã bổ nhiệm Manager cho nhà hàng thành công.")
+                .data(null)
                 .build();
         return ResponseEntity.ok(response);
     }

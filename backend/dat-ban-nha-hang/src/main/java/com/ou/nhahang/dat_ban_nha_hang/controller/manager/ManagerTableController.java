@@ -25,6 +25,38 @@ public class ManagerTableController {
 
         private final IManagerTableService managerTableService;
 
+        // 4.4 - Table areas (workplace-scoped endpoints without restaurantId)
+
+        @GetMapping("/table-areas")
+        public ResponseEntity<ApiResponse<List<ManagerTableAreaResponseDTO>>> getTableAreasByManager(
+                        Authentication authentication) {
+                Long managerId = (Long) authentication.getCredentials();
+                List<ManagerTableAreaResponseDTO> data = managerTableService.getTableAreasByManager(managerId);
+
+                ApiResponse<List<ManagerTableAreaResponseDTO>> response = ApiResponse
+                                .<List<ManagerTableAreaResponseDTO>>builder()
+                                .status(200)
+                                .message("Thành công")
+                                .data(data)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
+
+        @PostMapping("/table-areas")
+        public ResponseEntity<ApiResponse<ManagerTableAreaResponseDTO>> createTableAreaByManager(
+                        @Valid @RequestBody ManagerTableAreaRequestDTO.CreateOrUpdateTableArea requestDTO,
+                        Authentication authentication) {
+                Long managerId = (Long) authentication.getCredentials();
+                ManagerTableAreaResponseDTO data = managerTableService.createTableAreaByManager(managerId, requestDTO);
+
+                ApiResponse<ManagerTableAreaResponseDTO> response = ApiResponse.<ManagerTableAreaResponseDTO>builder()
+                                .status(201)
+                                .message("Thêm khu vực bàn ăn thành công")
+                                .data(data)
+                                .build();
+                return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        }
+
         @GetMapping("/restaurants/{restaurantId}/table-areas")
         public ResponseEntity<ApiResponse<List<ManagerTableAreaResponseDTO>>> getTableAreas(
                         @PathVariable Long restaurantId,
