@@ -15,7 +15,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FoodOrder extends PaymentSource {
+public class FoodOrder extends Base {
 
     public enum FoodOrderStatus {
         TAKING_ORDER,
@@ -24,6 +24,10 @@ public class FoodOrder extends PaymentSource {
         COMPLETED,
         CLOSED
     }
+
+    @Column(name = "total_price", nullable = false)
+    @Builder.Default
+    private Long totalPrice = 0L;
 
     @Column(name = "status", length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
@@ -36,5 +40,23 @@ public class FoodOrder extends PaymentSource {
     @OneToMany(mappedBy = "foodOrder")
     @Builder.Default
     private List<FoodItem> foodItems = new ArrayList<>();
+
+    public Long calculatePrice() {
+        Long price = 0L;
+        if (this.foodItems != null) {
+            price = this.foodItems.stream()
+                    .mapToLong(FoodItem::calculatePrice)
+                    .sum();
+        }
+        this.totalPrice = price;
+        return this.totalPrice;
+    }
+
+    @PrePersist
+    @PreUpdate
+    protected void onUpdate() {
+        super.onUpdate();
+        calculatePrice();
+    }
 
 }

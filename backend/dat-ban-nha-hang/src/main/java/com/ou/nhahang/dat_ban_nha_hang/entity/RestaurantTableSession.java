@@ -13,14 +13,18 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RestaurantTableSession extends Base {
+public class RestaurantTableSession extends PaymentSource {
 
     public enum TableSessionStatus {
         ACTIVE,
         SERVING,
+        SERVED,
         PAYING,
         COMPLETED
     }
+
+    @Column(name = "total", nullable = false)
+    private Long total = 0L;
 
     @Column(name = "status", length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
@@ -41,5 +45,16 @@ public class RestaurantTableSession extends Base {
     @OneToMany(mappedBy = "tableSession")
     @Builder.Default
     private List<FoodOrder> foodOrders = new ArrayList<>();
+
+    public Long calculatePrice() {
+        Long price = 0L;
+        if (this.foodOrders != null) {
+            price = this.foodOrders.stream()
+                    .mapToLong(FoodOrder::getTotalPrice)
+                    .sum();
+        }
+        this.total = price;
+        return this.total;
+    }
 
 }

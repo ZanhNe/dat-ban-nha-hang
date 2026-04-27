@@ -3,16 +3,16 @@ package com.ou.nhahang.dat_ban_nha_hang.service.impl;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.BookingResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.PaymentInitResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Booking;
-import com.ou.nhahang.dat_ban_nha_hang.entity.Payment;
+// import com.ou.nhahang.dat_ban_nha_hang.entity.Payment;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Transaction;
 import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
 import com.ou.nhahang.dat_ban_nha_hang.exception.ResourceNotFoundException;
 import com.ou.nhahang.dat_ban_nha_hang.repository.BookingRepository;
-import com.ou.nhahang.dat_ban_nha_hang.repository.PaymentRepository;
+// import com.ou.nhahang.dat_ban_nha_hang.repository.PaymentRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.TransactionRepository;
 import com.ou.nhahang.dat_ban_nha_hang.service.IPaymentService;
 import com.ou.nhahang.dat_ban_nha_hang.service.port.IVNPayGateway;
-import com.ou.nhahang.dat_ban_nha_hang.utils.VNPayUtil;
+// import com.ou.nhahang.dat_ban_nha_hang.utils.VNPayUtil;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +33,7 @@ public class PaymentService implements IPaymentService {
         private final BookingRepository bookingRepository;
         private final TransactionRepository transactionRepository;
         private final IVNPayGateway vnpayGateway;
-        private final PaymentRepository paymentRepository;
+        // private final PaymentRepository paymentRepository;
 
         @Override
         @Transactional
@@ -119,6 +119,7 @@ public class PaymentService implements IPaymentService {
         }
 
         @Override
+        @Transactional(readOnly = true)
         public List<BookingResponseDTO> getPendingBookingsForUser(Long userId) { // Dùng để lấy ra các booking của user
                                                                                  // chờ thanh toán
                 List<Booking> bookings = bookingRepository.findByBookingUser_IdAndStatus(userId,
