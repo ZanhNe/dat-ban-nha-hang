@@ -29,7 +29,7 @@ public class CashierController {
         }
 
         @GetMapping("/sessions")
-        @PreAuthorize("hasAnyAuthority('ROLE_CASHIER', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<Page<CashierSessionListResponseDTO>>> getServedSessions(
                         @ModelAttribute @Valid CashierGetServedSessionsRequestDTO request) {
                 Page<CashierSessionListResponseDTO> data = cashierService.getServedSessions(getCurrentUserId(),
@@ -42,7 +42,7 @@ public class CashierController {
         }
 
         @GetMapping("/sessions/paying")
-        @PreAuthorize("hasAnyAuthority('ROLE_CASHIER', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<Page<CashierSessionListResponseDTO>>> getPayingSessions(
                         @ModelAttribute @Valid CashierGetPayingSessionsRequestDTO request) {
                 Page<CashierSessionListResponseDTO> data = cashierService.getPayingSessions(getCurrentUserId(),
@@ -55,7 +55,7 @@ public class CashierController {
         }
 
         @GetMapping("/sessions/{sessionId}")
-        @PreAuthorize("hasAnyAuthority('ROLE_CASHIER', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<CashierSessionDetailResponseDTO>> getSessionDetailForPayment(
                         @PathVariable("sessionId") Long sessionId) {
                 CashierSessionDetailResponseDTO data = cashierService.getSessionDetailForPayment(getCurrentUserId(),
@@ -68,7 +68,7 @@ public class CashierController {
         }
 
         @PostMapping("/sessions/{sessionId}/payments")
-        @PreAuthorize("hasAnyAuthority('ROLE_CASHIER', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<CashierInitiatePaymentResponseDTO>> initiatePayment(
                         @PathVariable("sessionId") Long sessionId) {
                 CashierInitiatePaymentResponseDTO data = cashierService.initiatePayment(getCurrentUserId(), sessionId);
@@ -80,7 +80,7 @@ public class CashierController {
         }
 
         @PatchMapping("/sessions/{sessionId}/payments/complete")
-        @PreAuthorize("hasAnyAuthority('ROLE_CASHIER', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<CashierCompletePaymentResponseDTO>> completePayment(
                         @PathVariable("sessionId") Long sessionId,
                         @RequestBody @Valid CashierCompletePaymentRequestDTO request) {
