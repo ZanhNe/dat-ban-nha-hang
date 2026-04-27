@@ -8,10 +8,15 @@ import com.ou.nhahang.dat_ban_nha_hang.service.ICashierService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/cashier")
@@ -22,29 +27,45 @@ public class CashierController {
 
         @GetMapping("/sessions")
         @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
-        public ResponseEntity<ApiResponse<Page<CashierSessionListResponseDTO>>> getServedSessions(
+        public ResponseEntity<ApiResponse<List<CashierSessionListResponseDTO>>> getServedSessions(
                         @ModelAttribute @Valid CashierGetServedSessionsRequestDTO request,
                         Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
-                Page<CashierSessionListResponseDTO> data = cashierService.getServedSessions(userId, request);
-                return ResponseEntity.ok(ApiResponse.<Page<CashierSessionListResponseDTO>>builder()
+                Page<CashierSessionListResponseDTO> dataPage = cashierService.getServedSessions(userId, request);
+
+                Map<String, Object> meta = new HashMap<>();
+                meta.put("page", dataPage.getNumber());
+                meta.put("limit", dataPage.getSize());
+                meta.put("totalItems", dataPage.getTotalElements());
+                meta.put("totalPages", dataPage.getTotalPages());
+
+                return ResponseEntity.ok(ApiResponse.<List<CashierSessionListResponseDTO>>builder()
                                 .status(200)
-                                .message("Lấy danh sách phiên bàn chờ thanh toán thành công")
-                                .data(data)
+                                .message("Thành công")
+                                .data(dataPage.getContent())
+                                .meta(meta)
                                 .build());
         }
 
         @GetMapping("/sessions/paying")
         @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
-        public ResponseEntity<ApiResponse<Page<CashierSessionListResponseDTO>>> getPayingSessions(
+        public ResponseEntity<ApiResponse<List<CashierSessionListResponseDTO>>> getPayingSessions(
                         @ModelAttribute @Valid CashierGetPayingSessionsRequestDTO request,
                         Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
-                Page<CashierSessionListResponseDTO> data = cashierService.getPayingSessions(userId, request);
-                return ResponseEntity.ok(ApiResponse.<Page<CashierSessionListResponseDTO>>builder()
+                Page<CashierSessionListResponseDTO> dataPage = cashierService.getPayingSessions(userId, request);
+
+                Map<String, Object> meta = new HashMap<>();
+                meta.put("page", dataPage.getNumber());
+                meta.put("limit", dataPage.getSize());
+                meta.put("totalItems", dataPage.getTotalElements());
+                meta.put("totalPages", dataPage.getTotalPages());
+
+                return ResponseEntity.ok(ApiResponse.<List<CashierSessionListResponseDTO>>builder()
                                 .status(200)
                                 .message("Lấy danh sách phiên bàn đang thanh toán thành công")
-                                .data(data)
+                                .data(dataPage.getContent())
+                                .meta(meta)
                                 .build());
         }
 
@@ -67,9 +88,9 @@ public class CashierController {
                         @PathVariable("sessionId") Long sessionId, Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
                 CashierInitiatePaymentResponseDTO data = cashierService.initiatePayment(userId, sessionId);
-                return ResponseEntity.ok(ApiResponse.<CashierInitiatePaymentResponseDTO>builder()
+                return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<CashierInitiatePaymentResponseDTO>builder()
                                 .status(201)
-                                .message("Khởi tạo thanh toán thành công")
+                                .message("Đã chuyển sang trạng thái chờ thanh toán")
                                 .data(data)
                                 .build());
         }
@@ -84,8 +105,8 @@ public class CashierController {
                                 request);
                 return ResponseEntity.ok(ApiResponse.<CashierCompletePaymentResponseDTO>builder()
                                 .status(200)
-                                .message("Hoàn tất thanh toán thành công")
+                                .message("Thanh toán hoàn tất, bàn đã trống.")
                                 .data(data)
                                 .build());
         }
-}
+}

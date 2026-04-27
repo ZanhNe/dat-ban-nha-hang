@@ -19,6 +19,6 @@ public record CashierSessionDetailResponseDTO(
             String foodName,
             Long quantity,
             Long price,
-            Long subtotal
+            Long totalItemPrice
     ) {}
 }

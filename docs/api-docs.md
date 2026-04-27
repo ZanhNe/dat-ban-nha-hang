@@ -4090,7 +4090,7 @@ Admin có toàn quyền quản trị tài khoản và điều phối nhân sự 
 ```
 
 ### 10.3. Khởi tạo thanh toán
-**`PATCH /api/v1/cashier/sessions/{sessionId}/initiate-payment`**
+**`POST /api/v1/cashier/sessions/{sessionId}/payments`**
 
 | Thuộc tính | Giá trị |
 | --- | --- |
@@ -4111,7 +4111,7 @@ Admin có toàn quyền quản trị tài khoản và điều phối nhân sự 
 ```
 
 ### 10.4. Hoàn tất hóa đơn (Thanh toán xong)
-**`POST /api/v1/cashier/sessions/{sessionId}/complete`**
+**`PATCH /api/v1/cashier/sessions/{sessionId}/payments/complete`**
 
 | Thuộc tính | Giá trị |
 | --- | --- |

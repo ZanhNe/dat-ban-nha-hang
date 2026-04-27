@@ -99,7 +99,7 @@ public class CashierService implements ICashierService {
                                     .foodName(item.getFoodDescription().getName())
                                     .quantity(item.getQuantity())
                                     .price(itemPrice / item.getQuantity())
-                                    .subtotal(itemPrice)
+                                            .totalItemPrice(itemPrice)
                                     .build());
                         }
                     }
