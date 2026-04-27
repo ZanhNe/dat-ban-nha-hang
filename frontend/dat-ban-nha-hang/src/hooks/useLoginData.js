@@ -45,8 +45,8 @@ const useLoginData = () => {
                 navigate("/admin");
             } else if (roles.includes("CUSTOMER")) {
                 navigate("/customer");
-            } else {
-                navigate("/");
+            } else if (roles.includes("MANAGER")) {
+                navigate("/manager");
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Tên đăng nhập hoặc mật khẩu không đúng!');

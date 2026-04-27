@@ -10,8 +10,8 @@ import lombok.*;
 @Table(name = "food_order")
 @Getter
 @Setter
-@DiscriminatorValue("FOOD_ORDER")
-@PrimaryKeyJoinColumn(name = "food_order_id")
+// @DiscriminatorValue("FOOD_ORDER")
+// @PrimaryKeyJoinColumn(name = "food_order_id")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

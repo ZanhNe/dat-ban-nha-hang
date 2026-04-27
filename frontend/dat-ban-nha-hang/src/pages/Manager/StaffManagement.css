@@ -1,0 +1,39 @@
+.staff-page .req {
+    color: #e74c3c;
+}
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.text-gray {
+    color: #7f8c8d;
+}
+
+.role-tag {
+    display: inline-block;
+    background: #e1f5fe;
+    color: #0288d1;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.btn-warning {
+    background-color: transparent;
+    color: #f39c12;
+    border: 1px solid #f39c12;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background-color: #f39c12;
+    color: white;
+}

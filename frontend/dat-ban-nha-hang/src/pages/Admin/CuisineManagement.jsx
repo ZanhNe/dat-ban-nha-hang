@@ -1,65 +1,66 @@
+
 import React, { useState } from 'react';
+import useCuisineManagement from '../../hooks/admin/useCuisineManagement';
 import './CuisineManagement.css';
 
 function CuisineManagement() {
-    // 1. Mock Data: Danh mục ẩm thực
-    const [cuisines, setCuisines] = useState([
-        { id: "C01", name: "Lẩu (Hotpot)", description: "Các món lẩu truyền thống và hiện đại", isActive: true },
-        { id: "C02", name: "Đồ Nướng (BBQ)", description: "Thịt nướng Hàn Quốc, Nhật Bản, BBQ Á Âu", isActive: true },
-        { id: "C03", name: "Hải sản", description: "Các món ăn từ hải sản tươi sống", isActive: true },
-        { id: "C04", name: "Món Chay", description: "Ẩm thực chay thanh đạm, tốt cho sức khỏe", isActive: false },
-    ]);
+
+    const {
+        cuisines,
+        isLoading,
+        isActionLoading,
+        createCuisine,
+        updateCuisine,
+        deleteCuisine
+    } = useCuisineManagement();
 
     const [searchTerm, setSearchTerm] = useState("");
 
-    // State cho Form Modal (Thêm/Sửa)
+
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingCuisine, setEditingCuisine] = useState(null); // null = Đang Thêm Mới
+    const [editingCuisine, setEditingCuisine] = useState(null);
     const [formData, setFormData] = useState({ name: "", description: "", isActive: true });
 
-    // Mở form Thêm mới
+
     const handleAddNew = () => {
         setEditingCuisine(null);
         setFormData({ name: "", description: "", isActive: true });
         setIsModalOpen(true);
     };
 
-    // Mở form Chỉnh sửa
     const handleEdit = (cuisine) => {
         setEditingCuisine(cuisine);
-        setFormData({ name: cuisine.name, description: cuisine.description, isActive: cuisine.isActive });
+        setFormData({
+            name: cuisine.name,
+            description: cuisine.description || "",
+            isActive: cuisine.isActive
+        });
         setIsModalOpen(true);
     };
 
-    // Lưu dữ liệu (Thêm hoặc Sửa)
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
         if (!formData.name.trim()) return alert("Vui lòng nhập tên danh mục!");
 
+        let success = false;
         if (editingCuisine) {
-            // Lưu khi SỬA
-            setCuisines(prev => prev.map(c =>
-                c.id === editingCuisine.id ? { ...c, ...formData } : c
-            ));
+
+            success = await updateCuisine(editingCuisine.cuisineId, formData);
         } else {
-            // Lưu khi THÊM MỚI
-            const newId = "C" + Math.floor(Math.random() * 1000).toString().padStart(2, '0');
-            setCuisines([...cuisines, { id: newId, ...formData }]);
-        }
-        setIsModalOpen(false);
-    };
 
-    // Xóa danh mục
-    const handleDelete = (id, name) => {
-        if (window.confirm(`Xác nhận XÓA danh mục "${name}"? Lưu ý: Hành động này có thể ảnh hưởng đến các nhà hàng đang sử dụng danh mục này.`)) {
-            setCuisines(prev => prev.filter(c => c.id !== id));
+            success = await createCuisine(formData);
+        }
+
+        if (success) {
+            setIsModalOpen(false);
         }
     };
 
-    // Lọc dữ liệu theo Search
     const filteredCuisines = cuisines.filter(c =>
         c.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    if (isLoading) return <div className="admin-page"><p>Đang tải danh mục ẩm thực...</p></div>;
 
     return (
         <div className="admin-page cuisine-page">
@@ -76,7 +77,7 @@ function CuisineManagement() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <button className="btn-add-new" onClick={handleAddNew}>
+                    <button className="btn-add-new" onClick={handleAddNew} disabled={isActionLoading}>
                         + Thêm Danh mục
                     </button>
                 </div>
@@ -95,8 +96,8 @@ function CuisineManagement() {
                     </thead>
                     <tbody>
                         {filteredCuisines.map((cuisine) => (
-                            <tr key={cuisine.id} className={!cuisine.isActive ? "row-disabled" : ""}>
-                                <td><strong>{cuisine.id}</strong></td>
+                            <tr key={cuisine.cuisineId} className={!cuisine.isActive ? "row-disabled" : ""}>
+                                <td><strong>{cuisine.cuisineId}</strong></td>
                                 <td>{cuisine.name}</td>
                                 <td><span className="text-truncate">{cuisine.description}</span></td>
                                 <td>
@@ -106,8 +107,8 @@ function CuisineManagement() {
                                 </td>
                                 <td>
                                     <div className="action-group">
-                                        <button className="btn-edit" onClick={() => handleEdit(cuisine)}> Sửa </button>
-                                        <button className="btn-delete" onClick={() => handleDelete(cuisine.id, cuisine.name)}> Xóa </button>
+                                        <button className="btn-edit" onClick={() => handleEdit(cuisine)} disabled={isActionLoading}> Sửa </button>
+                                        <button className="btn-delete" onClick={() => deleteCuisine(cuisine.cuisineId, cuisine.name)} disabled={isActionLoading}> Xóa </button>
                                     </div>
                                 </td>
                             </tr>
@@ -119,7 +120,7 @@ function CuisineManagement() {
                 </table>
             </div>
 
-            {/* Modal Thêm/Sửa Danh Mục */}
+
             {isModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal-content">
@@ -134,6 +135,7 @@ function CuisineManagement() {
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     required
+                                    disabled={isActionLoading}
                                 />
                             </div>
 
@@ -144,6 +146,7 @@ function CuisineManagement() {
                                     rows="3"
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    disabled={isActionLoading}
                                 />
                             </div>
 
@@ -153,16 +156,17 @@ function CuisineManagement() {
                                         type="checkbox"
                                         checked={formData.isActive}
                                         onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                                        disabled={isActionLoading}
                                     />
                                     Hiển thị danh mục này cho Khách hàng
                                 </label>
                             </div>
 
                             <div className="modal-actions">
-                                <button type="submit" className="btn-save">
-                                    {editingCuisine ? "Cập nhật" : "Tạo mới"}
+                                <button type="submit" className="btn-save" disabled={isActionLoading}>
+                                    {isActionLoading ? "Đang lưu..." : (editingCuisine ? "Cập nhật" : "Tạo mới")}
                                 </button>
-                                <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)}>
+                                <button type="button" className="btn-cancel" onClick={() => setIsModalOpen(false)} disabled={isActionLoading}>
                                     Hủy
                                 </button>
                             </div>
