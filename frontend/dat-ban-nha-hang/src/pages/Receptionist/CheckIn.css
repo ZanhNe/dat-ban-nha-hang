@@ -1,0 +1,117 @@
+/* src/pages/receptionist/CheckIn.css */
+
+.checkin-page .search-container {
+    margin-bottom: 25px;
+}
+
+.checkin-page .search-container input {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 30px;
+    /* Bo tròn kiểu thanh tìm kiếm hiện đại */
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s;
+}
+
+.checkin-page .search-container input:focus {
+    border-color: #3f51b5;
+    box-shadow: 0 4px 10px rgba(63, 81, 181, 0.1);
+}
+
+.checkin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.checkin-card {
+    background: white;
+    padding: 20px 25px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-left: 6px solid #4caf50;
+    /* Màu xanh lá biểu thị sự sẵn sàng */
+    transition: 0.2s;
+}
+
+.checkin-card:hover {
+    transform: scale(1.01);
+}
+
+.checkin-info {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    flex: 1;
+}
+
+.time-badge {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    min-width: 70px;
+    text-align: center;
+}
+
+.customer-detail h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    color: #2c3e50;
+}
+
+.customer-detail span {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.booking-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.booking-detail span {
+    font-weight: 500;
+    color: #34495e;
+}
+
+.btn-checkin-action {
+    background: #3f51b5;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-checkin-action:hover:not(:disabled) {
+    background: #303f9f;
+    box-shadow: 0 4px 12px rgba(63, 81, 181, 0.3);
+}
+
+.btn-checkin-action:disabled {
+    background: #9fa8da;
+    cursor: not-allowed;
+}
+
+.btn-refresh {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-refresh:hover {
+    background: #f8f9fa;
+}

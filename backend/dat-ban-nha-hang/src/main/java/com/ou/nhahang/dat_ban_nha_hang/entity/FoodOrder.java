@@ -10,6 +10,7 @@ import lombok.*;
 @Table(name = "food_order")
 @Getter
 @Setter
+
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

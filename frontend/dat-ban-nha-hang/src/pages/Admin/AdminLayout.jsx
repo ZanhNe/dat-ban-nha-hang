@@ -39,6 +39,9 @@ function AdminLayout() {
                     <NavLink to="/admin/broadcast" className={({ isActive }) => isActive ? "active" : ""}>
                         Gửi thông báo
                     </NavLink>
+                    <NavLink to="/admin/user-management" className={({ isActive }) => isActive ? "active" : ""}>
+                        Quản lý người dùng
+                    </NavLink>
                 </nav>
                 <div className="sidebar-footer">
                     <button onClick={handleLogout} className="btn-logout-admin">Đăng xuất</button>

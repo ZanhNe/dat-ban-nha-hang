@@ -42,6 +42,18 @@ const Home = () => {
     if (user.roles?.includes("ADMIN")) {
         return <Navigate to="/admin" replace />;
     }
+    if (user.roles?.includes("MANAGER")) {
+        return <Navigate to="/manager" replace />;
+    }
+    if (user.roles?.includes("RECEPTIONIST")) {
+        return <Navigate to="/receptionist" replace />;
+    }
+    if (user.roles?.includes("WAITER")) {
+        return <Navigate to="/waiter" replace />;
+    }
+    if (user.roles?.includes("CASHIER")) {
+        return <Navigate to="/cashier" replace />;
+    }
 
 
     const staffRoles = [

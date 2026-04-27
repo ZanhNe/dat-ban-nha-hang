@@ -3,7 +3,7 @@ const USE_MOCK = true;
 const BASE_URL = 'http://localhost:8080/api/v1/admin';
 
 const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     return {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -178,7 +178,187 @@ const adminService = {
             body: JSON.stringify(payload)
         });
         return response.json();
+    },
+
+    // 7.7. QUẢN LÝ DANH MỤC ẨM THỰC (CUISINES)
+
+
+    getAllCuisines: async () => {
+        if (USE_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 300));
+            return {
+                status: 200,
+                message: "Thành công",
+                data: [
+                    { cuisineId: 1, name: "Lẩu (Hotpot)", description: "Các món lẩu truyền thống và hiện đại", isActive: true },
+                    { cuisineId: 2, name: "Đồ Nướng (BBQ)", description: "Thịt nướng Hàn Quốc, Nhật Bản", isActive: true },
+                    { cuisineId: 3, name: "Hải sản", description: "Các món ăn từ hải sản tươi sống", isActive: true },
+                    { cuisineId: 4, name: "Món Chay", description: "Ẩm thực chay thanh đạm", isActive: false },
+                ]
+            };
+        }
+        const response = await fetch(`${BASE_URL}/cuisines`, { method: 'GET', headers: getAuthHeaders() });
+        return response.json();
+    },
+
+    createCuisine: async (payload) => {
+        if (USE_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return {
+                status: 201,
+                message: "Tạo danh mục thành công (MOCK)",
+                data: { cuisineId: Math.floor(Math.random() * 1000), ...payload }
+            };
+        }
+        const response = await fetch(`${BASE_URL}/cuisines`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+        return response.json();
+    },
+
+    updateCuisine: async (id, payload) => {
+        if (USE_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return {
+                status: 200,
+                message: "Cập nhật thành công (MOCK)",
+                data: { cuisineId: id, ...payload }
+            };
+        }
+        const response = await fetch(`${BASE_URL}/cuisines/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+        return response.json();
+    },
+
+    deleteCuisine: async (id) => {
+        if (USE_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return { status: 200, message: "Xóa thành công (MOCK)", data: null };
+        }
+        const response = await fetch(`${BASE_URL}/cuisines/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        return response.json();
+    },
+
+    // 7.8. BÁO CÁO TOÀN HỆ THỐNG (DASHBOARD)
+
+    getDashboardMetrics: async (fromDate = null, toDate = null) => {
+        if (USE_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const isFiltered = fromDate || toDate;
+            return {
+                status: 200,
+                message: "Lấy dữ liệu dashboard thành công (MOCK)",
+                data: {
+                    totalRevenue: isFiltered ? 5000000 : 15000000,
+                    totalBookings: isFiltered ? 320 : 1250,
+                    totalRestaurants: 45, // Tổng nhà hàng thường cố định
+                    totalNewUsers: isFiltered ? 45 : 120
+                }
+            };
+        }
+
+
+        let url = `${BASE_URL}/reports/dashboard`;
+        const params = new URLSearchParams();
+        if (fromDate) params.append('fromDate', fromDate);
+        if (toDate) params.append('toDate', toDate);
+
+        const queryString = params.toString();
+        if (queryString) {
+            url += `?${queryString}`;
+        }
+
+        const response = await fetch(url, { method: 'GET', headers: getAuthHeaders() });
+        return response.json();
+    },
+
+    // 7.10. QUẢN LÝ NGƯỜI DÙNG (USER MANAGEMENT)
+
+    //  Lấy danh sách người dùng
+    getAllUsers: async (params = {}) => {
+        if (USE_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 400));
+            return {
+                status: 200,
+                data: [
+                    { userId: 201, fullName: "Nguyễn Văn B", username: "waiter_b", email: "b@example.com", phone: "0981234567", roles: [{ id: 2, name: "ROLE_WAITER" }], status: "ACTIVE" },
+                    { userId: 202, fullName: "Lê Thị C", username: "manager_c", email: "c@example.com", phone: "0912345678", roles: [{ id: 1, name: "ROLE_MANAGER" }], status: "ACTIVE" },
+                    { userId: 203, fullName: "Khách hàng D", username: "customer_d", email: "d@example.com", phone: "0900000000", roles: [{ id: 3, name: "ROLE_CUSTOMER" }], status: "BANNED" }
+                ],
+                meta: { totalItems: 50, totalPages: 5, page: 0, limit: 10 }
+            };
+        }
+        const query = new URLSearchParams(params).toString();
+        const response = await fetch(`${BASE_URL}/users?${query}`, { method: 'GET', headers: getAuthHeaders() });
+        return response.json();
+    },
+
+    //  Tạo / Cập nhật người dùng
+    saveUser: async (payload, userId = null) => {
+        if (USE_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return { status: userId ? 200 : 201, message: "Thành công (MOCK)", data: { userId: userId || 999, ...payload } };
+        }
+        const url = userId ? `${BASE_URL}/users/${userId}` : `${BASE_URL}/users`;
+        const method = userId ? 'PUT' : 'POST';
+        const response = await fetch(url, { method, headers: getAuthHeaders(), body: JSON.stringify(payload) });
+        return response.json();
+    },
+
+    // Điều chuyển nhân sự (Gán workplace)
+    assignWorkplace: async (userId, restaurantId, roleId) => {
+        if (USE_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return { status: 200, message: "Điều chuyển nhân sự thành công (MOCK)" };
+        }
+        const response = await fetch(`${BASE_URL}/users/${userId}/workplace`, {
+            method: 'PATCH',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ restaurantId, roleId })
+        });
+        return response.json();
+    },
+    // TRUNG TÂM THÔNG BÁO
+
+    // Gửi thông báo chung (Broadcast / Role)
+    sendBroadcastNotification: async (payload) => {
+        // payload: { title, content, type, targetRole? }
+        if (USE_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 600));
+            return { status: 200, message: "Đã đưa vào hàng đợi gửi thông báo chung (MOCK)" };
+        }
+        const response = await fetch(`${BASE_URL}/notifications/broadcast`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+        return response.json();
+    },
+
+    //  Gửi thông báo cá nhân
+    sendPersonalNotification: async (payload) => {
+        // payload: { userId, title, content, type }
+        if (USE_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 600));
+            return { status: 200, message: `Đã gửi thông báo cá nhân tới User ID ${payload.userId} thành công (MOCK)` };
+        }
+        const response = await fetch(`${BASE_URL}/notifications/send`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+        return response.json();
     }
+
 };
 
 export default adminService;

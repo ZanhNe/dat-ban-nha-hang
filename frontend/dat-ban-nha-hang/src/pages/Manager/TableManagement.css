@@ -1,0 +1,117 @@
+.table-mgmt .area-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
+
+.area-tab {
+    padding: 10px 20px;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #eee;
+    border-bottom: none;
+    transition: 0.3s;
+}
+
+.area-tab.active {
+    background: #3498db;
+    color: white;
+    border-color: #3498db;
+}
+
+.area-actions button {
+    background: none;
+    border: none;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* GRID BÀN */
+.tables-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.table-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border-top: 5px solid #ccc;
+    transition: 0.3s;
+}
+
+.table-card:hover {
+    transform: translateY(-5px);
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-bottom: 10px;
+}
+
+.table-icon {
+    font-size: 40px;
+    margin: 10px 0;
+}
+
+.table-name {
+    margin: 5px 0;
+    font-size: 18px;
+}
+
+.status-label {
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+}
+
+/* Màu sắc theo trạng thái */
+.table-card.available {
+    border-top-color: #2ecc71;
+}
+
+.table-card.available .status-label {
+    background: #e8f8f5;
+    color: #27ae60;
+}
+
+.table-card.occupied {
+    border-top-color: #e74c3c;
+}
+
+.table-card.occupied .status-label {
+    background: #fdedec;
+    color: #c0392b;
+}
+
+.table-card.reserved {
+    border-top-color: #f1c40f;
+}
+
+.table-card.reserved .status-label {
+    background: #fef9e7;
+    color: #f39c12;
+}
+
+.table-card.cleaning {
+    border-top-color: #3498db;
+}
+
+.table-card.cleaning .status-label {
+    background: #ebf5fb;
+    color: #3498db;
+}
