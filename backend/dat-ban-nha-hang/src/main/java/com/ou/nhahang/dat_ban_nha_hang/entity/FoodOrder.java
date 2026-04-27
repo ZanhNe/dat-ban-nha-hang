@@ -10,8 +10,6 @@ import lombok.*;
 @Table(name = "food_order")
 @Getter
 @Setter
-@DiscriminatorValue("FOOD_ORDER")
-@PrimaryKeyJoinColumn(name = "food_order_id")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,7 +29,8 @@ public class FoodOrder extends Base {
 
     @Column(name = "status", length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
-    private FoodOrderStatus status;
+    @Builder.Default
+    private FoodOrderStatus status = FoodOrderStatus.TAKING_ORDER;
 
     @ManyToOne
     @JoinColumn(name = "table_session_id", nullable = false)

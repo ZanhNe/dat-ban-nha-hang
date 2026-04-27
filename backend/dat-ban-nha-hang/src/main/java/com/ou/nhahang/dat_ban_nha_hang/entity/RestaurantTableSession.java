@@ -24,6 +24,7 @@ public class RestaurantTableSession extends PaymentSource {
     }
 
     @Column(name = "total", nullable = false)
+    @Builder.Default
     private Long total = 0L;
 
     @Column(name = "status", length = 50, nullable = false)
@@ -35,9 +36,9 @@ public class RestaurantTableSession extends PaymentSource {
     @JoinColumn(name = "waiter_id", nullable = false)
     private User waiter;
 
-    @ManyToOne
-    @JoinColumn(name = "table_id", nullable = false)
-    private RestaurantTable table;
+    // @ManyToOne
+    // @JoinColumn(name = "table_id", nullable = false)
+    // private RestaurantTable table;
 
     @OneToOne(mappedBy = "tableSession")
     private Booking booking;

@@ -75,6 +75,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
         Page<Booking> findByBookingUser_Id(Long userId, Pageable pageable);
 
+        Page<Booking> findByRestaurant_IdAndStatus(Long restaurantId, Booking.BookingStatus status, Pageable pageable);
+
         @Query("""
                         SELECT COUNT(b) FROM Booking b
                         WHERE (:from IS NULL OR b.createdAt >= :from)
