@@ -9,29 +9,30 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterGetAvailableSessionsReq
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterGetMySessionsRequestDTO;
 
 public interface IWaiterService {
-    Page<WaiterSessionListResponseDTO> getAvailableSessions(Long waiterId,
-            WaiterGetAvailableSessionsRequestDTO request);
+        Page<WaiterSessionListResponseDTO> getAvailableSessions(Long waiterId,
+                        WaiterGetAvailableSessionsRequestDTO request);
 
-    Page<WaiterSessionListResponseDTO> getMyServingSessions(Long waiterId, WaiterGetMySessionsRequestDTO request);
+        Page<WaiterSessionListResponseDTO> getMyServingSessions(Long waiterId, WaiterGetMySessionsRequestDTO request);
 
-    WaiterAssignSessionResponseDTO assignSession(Long waiterId, Long sessionId);
+        WaiterAssignSessionResponseDTO assignSession(Long waiterId, Long sessionId);
 
-    WaiterSessionDetailResponseDTO getSessionDetail(Long waiterId, Long sessionId);
+        WaiterSessionDetailResponseDTO getSessionDetail(Long waiterId, Long sessionId);
 
-    WaiterMenuResponseDTO getMenu(Long waiterId);
+        WaiterMenuResponseDTO getMenu(Long waiterId);
 
-    WaiterCreateOrderResponseDTO createFoodOrder(Long waiterId, Long sessionId);
+        WaiterCreateOrderResponseDTO createFoodOrder(Long waiterId, Long sessionId);
 
-    WaiterFoodOrderDetailResponseDTO getFoodOrderDetail(Long waiterId, Long orderId);
+        WaiterFoodOrderDetailResponseDTO getFoodOrderDetail(Long waiterId, Long orderId);
 
-    WaiterConfirmOrderResponseDTO confirmFoodOrder(Long waiterId, Long orderId, WaiterConfirmOrderRequestDTO request);
+        WaiterConfirmOrderResponseDTO confirmFoodOrder(Long waiterId, Long orderId,
+                        WaiterConfirmOrderRequestDTO request);
 
-    WaiterUpdateFoodItemStatusResponseDTO updateFoodItemStatus(Long waiterId, Long itemId,
-            WaiterUpdateFoodItemStatusRequestDTO request);
+        WaiterUpdateFoodItemStatusResponseDTO updateFoodItemStatus(Long waiterId, Long itemId,
+                        WaiterUpdateFoodItemStatusRequestDTO request);
 
-    WaiterFoodOrderDetailResponseDTO completeFoodOrder(Long waiterId, Long orderId);
+        WaiterFoodOrderDetailResponseDTO completeFoodOrder(Long waiterId, Long orderId);
 
-    WaiterCancelOrderResponseDTO cancelFoodOrder(Long waiterId, Long orderId, WaiterCancelOrderRequestDTO request);
+        WaiterCancelOrderResponseDTO cancelFoodOrder(Long waiterId, Long orderId, WaiterCancelOrderRequestDTO request);
 
-    WaiterServeCompleteResponseDTO completeServiceSession(Long waiterId, Long sessionId);
+        WaiterServeCompleteResponseDTO completeServiceSession(Long waiterId, Long sessionId);
 }

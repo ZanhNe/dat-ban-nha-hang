@@ -4,7 +4,6 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.request.CashierGetServedSessionsReque
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.CashierGetPayingSessionsRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.CashierCompletePaymentRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.*;
-import com.ou.nhahang.dat_ban_nha_hang.entity.User;
 import com.ou.nhahang.dat_ban_nha_hang.service.ICashierService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,7 +23,8 @@ public class CashierController {
         @GetMapping("/sessions")
         @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<Page<CashierSessionListResponseDTO>>> getServedSessions(
-                        @ModelAttribute @Valid CashierGetServedSessionsRequestDTO request, Authentication authentication) {
+                        @ModelAttribute @Valid CashierGetServedSessionsRequestDTO request,
+                        Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
                 Page<CashierSessionListResponseDTO> data = cashierService.getServedSessions(userId, request);
                 return ResponseEntity.ok(ApiResponse.<Page<CashierSessionListResponseDTO>>builder()
@@ -38,7 +37,8 @@ public class CashierController {
         @GetMapping("/sessions/paying")
         @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<Page<CashierSessionListResponseDTO>>> getPayingSessions(
-                        @ModelAttribute @Valid CashierGetPayingSessionsRequestDTO request, Authentication authentication) {
+                        @ModelAttribute @Valid CashierGetPayingSessionsRequestDTO request,
+                        Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
                 Page<CashierSessionListResponseDTO> data = cashierService.getPayingSessions(userId, request);
                 return ResponseEntity.ok(ApiResponse.<Page<CashierSessionListResponseDTO>>builder()
