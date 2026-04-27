@@ -5,10 +5,12 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.response.ManagerRevenueChartPointResp
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ManagerTopFoodResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Transaction;
+import com.ou.nhahang.dat_ban_nha_hang.entity.User;
 import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
+import com.ou.nhahang.dat_ban_nha_hang.exception.ResourceNotFoundException;
 import com.ou.nhahang.dat_ban_nha_hang.repository.FoodItemRepository;
-import com.ou.nhahang.dat_ban_nha_hang.repository.RestaurantRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.TransactionRepository;
+import com.ou.nhahang.dat_ban_nha_hang.repository.UserRepository;
 import com.ou.nhahang.dat_ban_nha_hang.service.IManagerReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -27,19 +29,24 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ManagerReportService implements IManagerReportService {
 
-    private final RestaurantRepository restaurantRepository;
+    private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
     private final FoodItemRepository foodItemRepository;
 
-    private Restaurant getRestaurantIfManager(Long restaurantId, Long managerId) {
-        return restaurantRepository.findByIdAndManagerId(restaurantId, managerId)
-                .orElseThrow(() -> new BusinessException("Bạn không có quyền quản lý nhà hàng này"));
+    private Restaurant getManagerWorkplaceOrThrow(Long managerId) {
+        User manager = userRepository.findById(managerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Manager"));
+        if (manager.getWorkplace() == null) {
+            throw new BusinessException("Manager chưa được gán nhà hàng làm việc");
+        }
+        return manager.getWorkplace();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ManagerReportOverviewResponseDTO getOverview(Long restaurantId, Long managerId, LocalDateTime from, LocalDateTime toExclusive) {
-        getRestaurantIfManager(restaurantId, managerId);
+    public ManagerReportOverviewResponseDTO getOverview(Long managerId, LocalDateTime from, LocalDateTime toExclusive) {
+        Restaurant restaurant = getManagerWorkplaceOrThrow(managerId);
+        Long restaurantId = restaurant.getId();
 
         long totalRevenue = transactionRepository.sumCapturedRevenueByRestaurant(restaurantId, from, toExclusive);
         long commission = transactionRepository.sumCommissionByRestaurant(restaurantId, from, toExclusive);
@@ -60,12 +67,13 @@ public class ManagerReportService implements IManagerReportService {
     @Override
     @Transactional(readOnly = true)
     public List<ManagerRevenueChartPointResponseDTO> getRevenueChart(
-            Long restaurantId,
             Long managerId,
             LocalDateTime from,
             LocalDateTime toExclusive,
             String timeUnit) {
-        getRestaurantIfManager(restaurantId, managerId);
+        Restaurant restaurant = getManagerWorkplaceOrThrow(managerId);
+        Long restaurantId = restaurant.getId();
+
         if (from == null || toExclusive == null) {
             throw new BusinessException("fromDate và toDate là bắt buộc");
         }
@@ -105,9 +113,11 @@ public class ManagerReportService implements IManagerReportService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ManagerTopFoodResponseDTO> getTopFoods(Long restaurantId, Long managerId, LocalDateTime from,
+    public List<ManagerTopFoodResponseDTO> getTopFoods(Long managerId, LocalDateTime from,
                                                         LocalDateTime toExclusive, int limit) {
-        getRestaurantIfManager(restaurantId, managerId);
+        Restaurant restaurant = getManagerWorkplaceOrThrow(managerId);
+        Long restaurantId = restaurant.getId();
+
         int actualLimit = limit <= 0 ? 5 : Math.min(limit, 50);
         return foodItemRepository.findTopFoodsByRestaurant(restaurantId, from, toExclusive, PageRequest.of(0, actualLimit))
                 .stream()
@@ -128,4 +138,5 @@ public class ManagerReportService implements IManagerReportService {
         };
     }
 }
+
 

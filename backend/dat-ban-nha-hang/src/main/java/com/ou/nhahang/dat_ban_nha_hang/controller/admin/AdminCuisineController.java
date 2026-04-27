@@ -68,4 +68,3 @@ public class AdminCuisineController {
         return ResponseEntity.ok(response);
     }
 }
-

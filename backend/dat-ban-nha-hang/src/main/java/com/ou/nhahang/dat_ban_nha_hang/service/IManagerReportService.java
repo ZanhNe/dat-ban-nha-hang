@@ -8,15 +8,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface IManagerReportService {
-    ManagerReportOverviewResponseDTO getOverview(Long restaurantId, Long managerId, LocalDateTime from, LocalDateTime toExclusive);
+    ManagerReportOverviewResponseDTO getOverview(Long managerId, LocalDateTime from, LocalDateTime toExclusive);
 
     List<ManagerRevenueChartPointResponseDTO> getRevenueChart(
-            Long restaurantId,
             Long managerId,
             LocalDateTime from,
             LocalDateTime toExclusive,
             String timeUnit);
 
-    List<ManagerTopFoodResponseDTO> getTopFoods(Long restaurantId, Long managerId, LocalDateTime from, LocalDateTime toExclusive, int limit);
+    List<ManagerTopFoodResponseDTO> getTopFoods(Long managerId, LocalDateTime from, LocalDateTime toExclusive, int limit);
 }
 
