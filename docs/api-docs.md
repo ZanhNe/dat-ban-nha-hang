@@ -2866,6 +2866,112 @@ HTTP Code,Mô tả
 }
 ```
 
+
+### 6.4 Lấy ra danh sách các Booking đã đặt tại nhà hàng (Confirmed)
+**`GET /api/v1/receptionist/bookings`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy ra danh sách booking đã xác nhận và đang chờ khách đến (phân trang, sắp xếp). |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | RECEPTIONIST / MANAGER |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `page` | `integer` | No | `0` | Số trang |
+| `limit` | `integer` | No | `10` | Số phần tử/trang |
+| `status` | `string` | No | `CONFIRMED` | Mặc định là CONFIRMED (có thể lọc trạng thái khác nếu muốn) |
+| `sort` | `string` | No | `bookingTime.startTime,asc` | Sắp xếp để xem khách nào đến sớm nhất |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Lấy danh sách booking thành công",
+  "data": [
+    {
+      "bookingId": 1234,
+      "customerName": "Nguyễn Văn A",
+      "customerPhone": "0987654321",
+      "bookingTime": "2026-02-15T19:00:00",
+      "numberOfPeople": 4,
+      "status": "CONFIRMED"
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "limit": 10,
+    "totalItems": 5,
+    "totalPages": 1
+  }
+}
+```
+
+### 6.5. Xem chi tiết Booking đã Confirmed
+**`GET /api/v1/receptionist/bookings/{bookingId}`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Xem thông tin chi tiết của Booking (để đối chiếu thông tin với khách). |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | RECEPTIONIST / MANAGER |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": {
+    "bookingId": 1234,
+    "customer": {
+      "userId": 5,
+      "fullName": "Nguyễn Văn A",
+      "phone": "0987654321"
+    },
+    "bookingTime": "2026-02-15T19:00:00",
+    "numberOfPeople": 4,
+    "note": "Khách thích ngồi cạnh cửa sổ",
+    "depositAmount": 500000,
+    "status": "CONFIRMED",
+    "assignedTables": [
+      {
+        "tableId": 1,
+        "label": "Bàn VIP 01"
+      }
+    ]
+  }
+}
+```
+
+### 6.6. Hủy Booking do khách không đến
+**`PATCH /api/v1/receptionist/bookings/{bookingId}/cancel`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Hủy bỏ các Booking khi đã quá thời gian dự kiến nhưng khách vẫn chưa đến để chừa bàn cho khách khác. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | RECEPTIONIST / MANAGER |
+
+**Request Body:**
+```json
+{
+  "reason": "Khách quá giờ 30 phút không đến và không liên lạc được"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã hủy booking thành công",
+  "data": {
+    "bookingId": 1234,
+    "status": "CANCELLED"
+  }
+}
+```
+
 ---
 
 ## 7. Module: Admin API
@@ -3203,7 +3309,7 @@ HTTP Code,Mô tả
 - **Table (Bàn)**: 
   `AVAILABLE` (Trống) ➔ `OCCUPIED` (Có khách) ➔ `MAINTENANCE` (Bảo trì)
 - **RestaurantTableSession (Phiên bàn)**: 
-  `ACTIVE` (Mới mở, Lễ tân thao tác) ➔ `SERVING` (Đang phục vụ, Phục vụ đảm nhận) ➔ `PAYING` (Đang thanh toán, Khóa order) ➔ `COMPLETED` (Hoàn tất, Bàn trống).
+  `ACTIVE` (Mới mở, Lễ tân thao tác) ➔ `SERVING` (Đang phục vụ, Phục vụ đảm nhận) ➔ `SERVED` (Phục vụ hoàn tất) ➔ `PAYING` (Đang thanh toán, Khóa order) ➔ `COMPLETED` (Hoàn tất, Bàn trống).
 - **FoodOrder (Đơn gọi món)**: 
   `TAKING_ORDER` (Đang ghi món nháp) ➔ `CONFIRMED` (Đã chốt món gửi bếp) ➔ `COMPLETED` (Đã bưng xong hết) hoặc `CANCELLED` (Hủy).
 - **FoodItem (Món ăn chi tiết)**: 
@@ -3345,11 +3451,282 @@ HTTP Code,Mô tả
 }
 ```
 
----
+### 9.6. Lấy danh sách phiên bàn chờ phục vụ
+**`GET /api/v1/waiter/sessions`**
 
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy ra danh sách phiên bàn hiện đang có và chưa ai đảm nhận. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `page` | `integer` | No | `0` | Số trang |
+| `limit` | `integer` | No | `10` | Số phần tử/trang |
+| `status` | `string` | No | `ACTIVE` | Lọc theo trạng thái phiên bàn |
+| `unassigned` | `boolean` | No | `true` | Lọc những bàn chưa có phục vụ nào đảm nhận |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Lấy danh sách phiên bàn thành công",
+  "data": [
+    {
+      "sessionId": 1001,
+      "tableLabels": ["Bàn 01", "Bàn 02"],
+      "customerName": "Nguyễn Văn A",
+      "numberOfPeople": 4,
+      "status": "ACTIVE",
+      "createdAt": "2026-04-20T19:05:00"
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "limit": 10,
+    "totalItems": 5,
+    "totalPages": 1
+  }
+}
+```
+
+### 9.7. Xem chi tiết phiên bàn
+**`GET /api/v1/waiter/sessions/{sessionId}`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Xem thông tin chi tiết của TableSession bao gồm bàn, số lượng người, và danh sách FoodOrders tóm tắt. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": {
+    "sessionId": 1001,
+    "tables": [
+      { "tableId": 1, "label": "Bàn 01" }
+    ],
+    "numberOfPeople": 4,
+    "status": "SERVING",
+    "foodOrders": [
+      {
+        "orderId": 5001,
+        "status": "CONFIRMED",
+        "itemsCount": 3,
+        "createdAt": "2026-04-20T19:10:00"
+      }
+    ]
+  }
+}
+```
+
+### 9.8. Lấy thực đơn nhà hàng (Dành cho ghi món)
+**`GET /api/v1/waiter/menu`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy toàn bộ thực đơn kèm chi tiết OptionGroups và Options để phục vụ chọn món trên App. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Lấy menu thành công",
+  "data": [
+    {
+      "groupId": 1,
+      "groupName": "Món Chính",
+      "items": [
+        {
+          "foodDescriptionId": 12,
+          "name": "Bò Wagyu Nướng",
+          "price": 500000,
+          "optionGroups": [
+            {
+              "optionGroupId": 5,
+              "name": "Độ chín",
+              "options": [
+                { "optionId": 21, "name": "Medium Rare", "price": 0 },
+                { "optionId": 22, "name": "Well Done", "price": 0 }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 9.9. Xem chi tiết FoodOrder
+**`GET /api/v1/waiter/orders/{orderId}`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Xem chi tiết các món trong một FoodOrder để kiểm tra / bưng bê. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": {
+    "orderId": 5001,
+    "status": "CONFIRMED",
+    "items": [
+      {
+        "itemId": 8001,
+        "foodName": "Bò Wagyu Nướng",
+        "quantity": 1,
+        "selectedOptions": ["Medium Rare"],
+        "status": "PENDING"
+      }
+    ]
+  }
+}
+```
+
+### 9.10. Hủy FoodOrder
+**`PATCH /api/v1/waiter/orders/{orderId}/cancel`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Hủy bỏ FoodOrder đã xác nhận và gửi bếp. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Request Body:**
+```json
+{
+  "reason": "Khách muốn đổi món khác hoàn toàn"
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã hủy order thành công",
+  "data": {
+    "orderId": 5001,
+    "status": "CANCELLED"
+  }
+}
+```
+
+### 9.11. Xác nhận hoàn tất phiên phục vụ
+**`PATCH /api/v1/waiter/sessions/{sessionId}/serve-complete`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Chuyển trạng thái TableSession sang `SERVED` và Booking sang `SERVED` để Thu ngân có thể bắt đầu tính tiền. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Hoàn tất phục vụ, chờ thanh toán",
+  "data": {
+    "sessionId": 1001,
+    "status": "SERVED"
+  }
+}
+```
+
+---
 ## 10. Module: Cashier API (Thu ngân)
 
-### 10.1. Khởi tạo thanh toán
+### 10.1. Lấy danh sách phiên bàn chờ thanh toán
+**`GET /api/v1/cashier/sessions`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy ra danh sách các TableSession đã phục vụ xong (SERVED) để Thu ngân chuẩn bị thanh toán. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | CASHIER, MANAGER |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `page` | `integer` | No | `0` | Số trang |
+| `limit` | `integer` | No | `10` | Số phần tử/trang |
+| `status` | `string` | No | `SERVED` | Lọc theo trạng thái phiên bàn |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "sessionId": 1001,
+      "tableLabels": ["Bàn 01"],
+      "customerName": "Nguyễn Văn A",
+      "numberOfPeople": 4,
+      "status": "SERVED"
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "limit": 10,
+    "totalItems": 1,
+    "totalPages": 1
+  }
+}
+```
+
+### 10.2. Xem chi tiết phiên bàn để thanh toán
+**`GET /api/v1/cashier/sessions/{sessionId}`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy chi tiết toàn bộ các món ăn, giá tiền, tổng tiền và tiền cọc của Session. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | CASHIER, MANAGER |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": {
+    "sessionId": 1001,
+    "tableLabels": ["Bàn 01"],
+    "customerName": "Nguyễn Văn A",
+    "numberOfPeople": 4,
+    "depositAmount": 500000,
+    "totalAmount": 1500000,
+    "status": "SERVED",
+    "items": [
+      {
+        "foodName": "Bò Wagyu Nướng",
+        "quantity": 2,
+        "price": 500000,
+        "totalItemPrice": 1000000
+      },
+      {
+        "foodName": "Lẩu Thái",
+        "quantity": 1,
+        "price": 500000,
+        "totalItemPrice": 500000
+      }
+    ]
+  }
+}
+```
+
+### 10.3. Khởi tạo thanh toán
 **`PATCH /api/v1/cashier/sessions/{sessionId}/initiate-payment`**
 
 | Thuộc tính | Giá trị |
@@ -3370,12 +3747,12 @@ HTTP Code,Mô tả
 }
 ```
 
-### 10.2. Hoàn tất hóa đơn (Thanh toán xong)
+### 10.4. Hoàn tất hóa đơn (Thanh toán xong)
 **`POST /api/v1/cashier/sessions/{sessionId}/complete`**
 
 | Thuộc tính | Giá trị |
 | --- | --- |
-| **Summary** | (Bước 6) Thu ngân thu tiền. Chuyển TableSession sang `COMPLETED` và giải phóng Table về `AVAILABLE`. |
+| **Summary** | (Bước 6) Thu ngân thu tiền. Chuyển TableSession sang `COMPLETED` và giải phóng Table về `AVAILABLE`. Thanh toán tại quán dùng Tiền mặt (CASH). |
 | **Auth** | Yes (Bearer Token) |
 | **Role** | CASHIER, MANAGER |
 
@@ -3383,7 +3760,7 @@ HTTP Code,Mô tả
 ```json
 {
   "paymentMethod": "CASH",
-  "totalAmount": 550000
+  "totalAmount": 1000000 
 }
 ```
 

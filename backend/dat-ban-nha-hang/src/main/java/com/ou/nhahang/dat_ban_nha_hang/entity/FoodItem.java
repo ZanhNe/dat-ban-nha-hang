@@ -45,4 +45,13 @@ public class FoodItem extends Base {
     @Builder.Default
     private List<FoodOption> selectedOptions = new ArrayList<>();
 
+    public Long calculatePrice() {
+        Long price = this.foodDescription.getPrice() * this.quantity;
+        if (this.selectedOptions != null) {
+            price += this.selectedOptions.stream()
+                    .mapToLong(FoodOption::getPrice)
+                    .sum();
+        }
+        return price;
+    }
 }

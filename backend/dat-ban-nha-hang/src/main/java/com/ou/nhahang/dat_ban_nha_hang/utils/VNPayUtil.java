@@ -43,9 +43,9 @@ public class VNPayUtil {
                     && !fieldName.equals("vnp_SecureHashType")) {
 
                 try {
-                    hashData.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
+                    hashData.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()));
                     hashData.append('=');
-                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));
                     hashData.append('&');
                 } catch (UnsupportedEncodingException e) {
                     throw new RuntimeException("Lỗi băm mã VNPay", e);
