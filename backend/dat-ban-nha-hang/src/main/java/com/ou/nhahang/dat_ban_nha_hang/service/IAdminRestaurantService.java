@@ -1,6 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.service;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminRestaurantRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminRestaurantSearchRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminRestaurantDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminRestaurantListItemResponseDTO;
 import org.springframework.data.domain.Page;
@@ -8,7 +9,7 @@ import org.springframework.data.domain.Page;
 public interface IAdminRestaurantService {
     void approveRestaurant(Long restaurantId, AdminRestaurantRequestDTO.Approval request);
 
-    Page<AdminRestaurantListItemResponseDTO> getRestaurants(int page, int limit, String status, String search);
+    Page<AdminRestaurantListItemResponseDTO> getRestaurants(AdminRestaurantSearchRequestDTO request);
 
     AdminRestaurantDetailResponseDTO getRestaurantDetail(Long restaurantId);
 

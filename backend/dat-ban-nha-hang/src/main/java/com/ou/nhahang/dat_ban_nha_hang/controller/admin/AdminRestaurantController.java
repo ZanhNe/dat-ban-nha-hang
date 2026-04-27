@@ -1,6 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.controller.admin;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminRestaurantRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminRestaurantSearchRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminUserRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminRestaurantDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminRestaurantListItemResponseDTO;
@@ -49,13 +50,9 @@ public class AdminRestaurantController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<AdminRestaurantListItemResponseDTO>>> getRestaurants(
-            @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @RequestParam(name = "limit", defaultValue = "10") Integer limit,
-            @RequestParam(name = "status", required = false) String status,
-            @RequestParam(name = "search", required = false) String search) {
+            @ModelAttribute @Valid AdminRestaurantSearchRequestDTO request) {
 
-        Page<AdminRestaurantListItemResponseDTO> dataPage = adminRestaurantService.getRestaurants(page, limit, status,
-                search);
+        Page<AdminRestaurantListItemResponseDTO> dataPage = adminRestaurantService.getRestaurants(request);
 
         Map<String, Object> meta = new HashMap<>();
         meta.put("page", dataPage.getNumber());

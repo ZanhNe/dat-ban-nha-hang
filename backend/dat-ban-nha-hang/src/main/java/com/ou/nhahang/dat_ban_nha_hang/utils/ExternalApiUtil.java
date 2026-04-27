@@ -2,7 +2,6 @@ package com.ou.nhahang.dat_ban_nha_hang.utils;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -14,11 +13,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class ExternalApiUtil {
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
     public <T> T sendGetRequest(String baseUrl, Map<String, Object> params, Class<T> responseType) {
         try {

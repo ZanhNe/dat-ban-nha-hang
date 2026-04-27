@@ -1,6 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.service.impl;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminRestaurantRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminRestaurantSearchRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminRestaurantDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminRestaurantListItemResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.entity.LegalDoc;
@@ -82,8 +83,19 @@ public class AdminRestaurantService implements IAdminRestaurantService {
         Restaurant restaurant = getRestaurantOrThrow(restaurantId);
 
         if ("APPROVED".equalsIgnoreCase(request.status())) {
-            // Hiện entity không có enum APPROVED, map APPROVED -> OPENING
             restaurant.setStatus(Restaurant.RestaurantStatus.OPENING);
+            
+            // Nâng cấp khách hàng (manager) thành MANAGER ROLE
+            User manager = restaurant.getManager();
+            if (manager != null) {
+                var managerRole = roleRepository.findByName("MANAGER")
+                        .orElseThrow(() -> new BusinessException("Role MANAGER không tồn tại"));
+                manager.getRoles().clear();
+                manager.getRoles().add(managerRole);
+                manager.setWorkplace(restaurant);
+                userRepository.save(manager);
+            }
+            
             restaurantRepository.save(restaurant);
             return;
         }
@@ -102,19 +114,19 @@ public class AdminRestaurantService implements IAdminRestaurantService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AdminRestaurantListItemResponseDTO> getRestaurants(int page, int limit, String status, String search) {
-        Pageable pageable = PageRequest.of(page, limit);
+    public Page<AdminRestaurantListItemResponseDTO> getRestaurants(AdminRestaurantSearchRequestDTO request) {
+        Pageable pageable = PageRequest.of(request.page(), request.limit());
         Restaurant.RestaurantStatus st = null;
-        if (status != null && !status.isBlank()) {
-            if ("APPROVED".equalsIgnoreCase(status)) {
+        if (request.status() != null && !request.status().isBlank()) {
+            if ("APPROVED".equalsIgnoreCase(request.status())) {
                 st = Restaurant.RestaurantStatus.OPENING;
             } else {
-                st = Restaurant.RestaurantStatus.valueOf(status);
+                st = Restaurant.RestaurantStatus.valueOf(request.status().toUpperCase());
             }
         }
 
         Page<Restaurant> dataPage = restaurantRepository.adminSearchRestaurants(st,
-                (search == null || search.isBlank()) ? null : search,
+                (request.search() == null || request.search().isBlank()) ? null : request.search(),
                 pageable);
         return dataPage.map(this::mapToListItem);
     }
@@ -153,11 +165,10 @@ public class AdminRestaurantService implements IAdminRestaurantService {
         // Thăng cấp user -> MANAGER (set 1 role MANAGER)
         var managerRole = roleRepository.findByName("MANAGER")
                 .orElseThrow(() -> new BusinessException("Role MANAGER không tồn tại"));
-        HashSet<com.ou.nhahang.dat_ban_nha_hang.entity.Role> roles = new HashSet<>();
-        roles.add(managerRole);
-        user.setRoles(roles);
-
+        user.getRoles().clear();
+        user.getRoles().add(managerRole);
         user.setWorkplace(restaurant);
+
         restaurant.setManager(user);
 
         userRepository.save(user);

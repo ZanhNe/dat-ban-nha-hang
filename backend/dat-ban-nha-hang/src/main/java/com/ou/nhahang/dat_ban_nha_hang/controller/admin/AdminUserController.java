@@ -1,6 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.controller.admin;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminUserRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminUserSearchRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminUserDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminUserResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ApiResponse;
@@ -27,14 +28,9 @@ public class AdminUserController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<AdminUserResponseDTO>>> getUsers(
-            @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @RequestParam(name = "limit", defaultValue = "10") Integer limit,
-            @RequestParam(name = "role", required = false) String role,
-            @RequestParam(name = "restaurantId", required = false) Long restaurantId,
-            @RequestParam(name = "status", required = false) String status,
-            @RequestParam(name = "search", required = false) String search) {
+            @ModelAttribute @Valid AdminUserSearchRequestDTO request) {
 
-        Page<AdminUserResponseDTO> dataPage = adminUserService.getUsers(page, limit, role, restaurantId, status, search);
+        Page<AdminUserResponseDTO> dataPage = adminUserService.getUsers(request);
 
         Map<String, Object> meta = new HashMap<>();
         meta.put("page", dataPage.getNumber());

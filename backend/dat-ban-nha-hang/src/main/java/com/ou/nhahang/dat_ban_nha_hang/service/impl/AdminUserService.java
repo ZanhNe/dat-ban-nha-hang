@@ -1,6 +1,7 @@
 package com.ou.nhahang.dat_ban_nha_hang.service.impl;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminUserRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminUserSearchRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminUserDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminUserResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
@@ -81,14 +82,13 @@ public class AdminUserService implements IAdminUserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AdminUserResponseDTO> getUsers(int page, int limit, String role, Long restaurantId, String status,
-            String search) {
-        Pageable pageable = PageRequest.of(page, limit);
-        String roleName = (role == null || role.isBlank()) ? null : role.replace("ROLE_", "").toUpperCase();
-        User.UserStatus st = (status == null || status.isBlank()) ? null : User.UserStatus.valueOf(status.toUpperCase());
-        String q = (search == null || search.isBlank()) ? null : search;
+    public Page<AdminUserResponseDTO> getUsers(AdminUserSearchRequestDTO request) {
+        Pageable pageable = PageRequest.of(request.page(), request.limit());
+        String roleName = (request.role() == null || request.role().isBlank()) ? null : request.role().replace("ROLE_", "").toUpperCase();
+        User.UserStatus st = (request.status() == null || request.status().isBlank()) ? null : User.UserStatus.valueOf(request.status().toUpperCase());
+        String q = (request.search() == null || request.search().isBlank()) ? null : request.search();
 
-        return userRepository.adminSearchUsers(roleName, restaurantId, st, q, pageable).map(this::mapToDTO);
+        return userRepository.adminSearchUsers(roleName, request.restaurantId(), st, q, pageable).map(this::mapToDTO);
     }
 
     @Override
@@ -159,9 +159,8 @@ public class AdminUserService implements IAdminUserService {
         user.setPhone(request.phone());
         user.setStatus(User.UserStatus.valueOf(request.status().toUpperCase()));
 
-        HashSet<Role> roles = new HashSet<>();
-        roles.add(role);
-        user.setRoles(roles);
+        user.getRoles().clear();
+        user.getRoles().add(role);
 
         User saved = userRepository.save(user);
         return mapToDTO(saved);
@@ -176,9 +175,8 @@ public class AdminUserService implements IAdminUserService {
         Role role = roleRepository.findById(request.roleId())
                 .orElseThrow(() -> new BusinessException("Role không tồn tại"));
 
-        HashSet<Role> roles = new HashSet<>();
-        roles.add(role);
-        user.setRoles(roles);
+        user.getRoles().clear();
+        user.getRoles().add(role);
 
         if (request.restaurantId() == null) {
             user.setWorkplace(null);

@@ -9,13 +9,12 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.stereotype.Service;
 
+import com.ou.nhahang.dat_ban_nha_hang.config.GoongConfig;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GeoCoordinateResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GeoDirectionResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
 import com.ou.nhahang.dat_ban_nha_hang.service.port.IGeolocationService;
 import com.ou.nhahang.dat_ban_nha_hang.utils.ExternalApiUtil;
-
-import org.springframework.beans.factory.annotation.Value;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,20 +23,16 @@ import lombok.RequiredArgsConstructor;
 public class GoongGeolocationService implements IGeolocationService {
 
     private final ExternalApiUtil externalApiUtil;
-
-    @Value("${goong.api-key}")
-    private String apiKey;
-
-    @Value("${goong.url}")
-    private String baseUrl;
+    private final GoongConfig goongConfig;
 
     @Override
     public Point getPointFromAddress(String address) {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put("address", address);
-            params.put("api_key", apiKey);
-            GeoCoordinateResponseDTO response = externalApiUtil.sendGetRequest(baseUrl + "geocode", params,
+            params.put("api_key", goongConfig.getApiKey());
+            GeoCoordinateResponseDTO response = externalApiUtil.sendGetRequest(goongConfig.getBaseUrl() + "geocode",
+                    params,
                     GeoCoordinateResponseDTO.class);
             if (response.status().equals("OK")) {
                 GeoCoordinateResponseDTO.Result result = response.results()[0];
@@ -58,13 +53,12 @@ public class GoongGeolocationService implements IGeolocationService {
     @Override
     public GeoDirectionResponseDTO getDirection(Point start, Point end) {
         try {
-            System.out.println("Vào trong hàm Get Direction");
             Map<String, Object> params = new HashMap<>();
             params.put("origin", start.getY() + "," + start.getX());
             params.put("destination", end.getY() + "," + end.getX());
-            params.put("api_key", apiKey);
+            params.put("api_key", goongConfig.getApiKey());
 
-            String finalUrl = baseUrl + "direction";
+            String finalUrl = goongConfig.getBaseUrl() + "direction";
             GeoDirectionResponseDTO response = externalApiUtil.sendGetRequest(finalUrl, params,
                     GeoDirectionResponseDTO.class);
             if (response.routes().length > 0) {
@@ -83,8 +77,9 @@ public class GoongGeolocationService implements IGeolocationService {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put("address", address);
-            params.put("api_key", apiKey);
-            GeoCoordinateResponseDTO response = externalApiUtil.sendGetRequest(baseUrl + "geocode", params,
+            params.put("api_key", goongConfig.getApiKey());
+            GeoCoordinateResponseDTO response = externalApiUtil.sendGetRequest(goongConfig.getBaseUrl() + "geocode",
+                    params,
                     GeoCoordinateResponseDTO.class);
             if (response.status().equals("OK")) {
                 GeoCoordinateResponseDTO.Result result = response.results()[0];

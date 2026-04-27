@@ -83,14 +83,6 @@ public class ManagerTableService implements IManagerTableService {
         // Table Area
 
         @Override
-        public List<ManagerTableAreaResponseDTO> getTableAreas(Long restaurantId, Long managerId) {
-                getRestaurantIfManager(restaurantId, managerId);
-                return tableAreaRepository.findByRestaurantId(restaurantId).stream()
-                                .map(this::mapToTableAreaDTO)
-                                .collect(Collectors.toList());
-        }
-
-        @Override
         public List<ManagerTableAreaResponseDTO> getTableAreasByManager(Long managerId) {
                 Restaurant restaurant = getManagerWorkplaceOrThrow(managerId);
                 return tableAreaRepository.findByRestaurantId(restaurant.getId()).stream()
@@ -98,11 +90,12 @@ public class ManagerTableService implements IManagerTableService {
                                 .collect(Collectors.toList());
         }
 
-        @Override
+
         @Transactional
-        public ManagerTableAreaResponseDTO createTableArea(Long restaurantId, Long managerId,
+        public ManagerTableAreaResponseDTO createTableAreaByManager(Long managerId,
                         ManagerTableAreaRequestDTO.CreateOrUpdateTableArea requestDTO) {
-                Restaurant restaurant = getRestaurantIfManager(restaurantId, managerId);
+                Restaurant restaurant = getManagerWorkplaceOrThrow(managerId);
+                getRestaurantIfManager(restaurant.getId(), managerId); // Verify authority
 
                 TableArea area = TableArea.builder()
                                 .name(requestDTO.name())
@@ -112,16 +105,6 @@ public class ManagerTableService implements IManagerTableService {
 
                 TableArea saved = tableAreaRepository.save(area);
                 return mapToTableAreaDTO(saved);
-        }
-
-        @Override
-        @Transactional
-        public ManagerTableAreaResponseDTO createTableAreaByManager(Long managerId,
-                        ManagerTableAreaRequestDTO.CreateOrUpdateTableArea requestDTO) {
-                Restaurant restaurant = getManagerWorkplaceOrThrow(managerId);
-                // verify actual manager rights for this restaurant too
-                getRestaurantIfManager(restaurant.getId(), managerId);
-                return createTableArea(restaurant.getId(), managerId, requestDTO);
         }
 
         @Override

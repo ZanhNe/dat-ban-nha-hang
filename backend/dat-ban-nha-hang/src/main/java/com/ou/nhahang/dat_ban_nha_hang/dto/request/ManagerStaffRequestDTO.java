@@ -16,7 +16,7 @@ public record ManagerStaffRequestDTO() {
 
                         @NotBlank(message = "Họ và tên không được để trống") String fullName,
 
-                        @NotBlank(message = "Email không được để trống") @Email(message = "Email không hợp lệ") String email,
+                        String email,
 
                         @NotBlank(message = "Số điện thoại không được để trống") String phone,
 
@@ -40,7 +40,7 @@ public record ManagerStaffRequestDTO() {
         public record UpdateStaff(
                         @NotBlank(message = "Họ và tên không được để trống") String fullName,
 
-                        @NotBlank(message = "Email không được để trống") @Email(message = "Email không hợp lệ") String email,
+                        String email,
 
                         @NotBlank(message = "Số điện thoại không được để trống") String phone,
 

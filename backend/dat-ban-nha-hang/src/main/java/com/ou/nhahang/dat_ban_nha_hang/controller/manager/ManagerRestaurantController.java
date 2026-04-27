@@ -13,21 +13,19 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/manager/restaurants")
+@RequestMapping("/api/v1/manager/restaurant")
 @PreAuthorize("hasAnyAuthority('ROLE_MANAGER')")
 @RequiredArgsConstructor
 public class ManagerRestaurantController {
 
         private final IManagerRestaurantService managerRestaurantService;
 
-        @GetMapping("/{restaurantId}")
+        @GetMapping
         public ResponseEntity<ApiResponse<ManagerRestaurantResponseDTO>> getRestaurantInfo(
-                        @PathVariable Long restaurantId,
                         Authentication authentication) {
 
                 Long managerId = (Long) authentication.getCredentials();
-                ManagerRestaurantResponseDTO data = managerRestaurantService.getRestaurantDetail(restaurantId,
-                                managerId);
+                ManagerRestaurantResponseDTO data = managerRestaurantService.getRestaurantDetail(managerId);
 
                 ApiResponse<ManagerRestaurantResponseDTO> response = ApiResponse.<ManagerRestaurantResponseDTO>builder()
                                 .status(200)
@@ -37,14 +35,13 @@ public class ManagerRestaurantController {
                 return ResponseEntity.ok(response);
         }
 
-        @PutMapping("/{restaurantId}")
+        @PutMapping
         public ResponseEntity<ApiResponse<ManagerRestaurantResponseDTO>> updateRestaurantInfo(
-                        @PathVariable Long restaurantId,
                         @Valid @RequestBody ManagerRestaurantRequestDTO.UpdateRestaurant requestDTO,
                         Authentication authentication) {
 
                 Long managerId = (Long) authentication.getCredentials();
-                ManagerRestaurantResponseDTO data = managerRestaurantService.updateRestaurant(restaurantId, managerId,
+                ManagerRestaurantResponseDTO data = managerRestaurantService.updateRestaurant(managerId,
                                 requestDTO);
 
                 ApiResponse<ManagerRestaurantResponseDTO> response = ApiResponse.<ManagerRestaurantResponseDTO>builder()
@@ -55,13 +52,12 @@ public class ManagerRestaurantController {
                 return ResponseEntity.ok(response);
         }
 
-        @DeleteMapping("/{restaurantId}")
+        @DeleteMapping
         public ResponseEntity<ApiResponse<Void>> deleteRestaurant(
-                        @PathVariable Long restaurantId,
                         Authentication authentication) {
 
                 Long managerId = (Long) authentication.getCredentials();
-                managerRestaurantService.deleteRestaurant(restaurantId, managerId);
+                managerRestaurantService.deleteRestaurant(managerId);
 
                 ApiResponse<Void> response = ApiResponse.<Void>builder()
                                 .status(200)

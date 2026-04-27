@@ -3,9 +3,13 @@ package com.ou.nhahang.dat_ban_nha_hang.service.impl;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.ManagerRestaurantRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ManagerRestaurantResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant;
+import com.ou.nhahang.dat_ban_nha_hang.entity.User;
 import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
+import com.ou.nhahang.dat_ban_nha_hang.exception.ResourceNotFoundException;
 import com.ou.nhahang.dat_ban_nha_hang.repository.RestaurantRepository;
+import com.ou.nhahang.dat_ban_nha_hang.repository.UserRepository;
 import com.ou.nhahang.dat_ban_nha_hang.service.IManagerRestaurantService;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,12 +20,7 @@ import org.springframework.stereotype.Service;
 public class ManagerRestaurantService implements IManagerRestaurantService {
 
     private final RestaurantRepository restaurantRepository;
-
-    private Restaurant getRestaurantIfManager(Long restaurantId, Long managerId) {
-        return restaurantRepository.findByIdAndManagerId(restaurantId, managerId)
-                .orElseThrow(() -> new BusinessException(
-                        "Bạn không có quyền quản lý nhà hàng này hoặc nhà hàng không tồn tại"));
-    }
+    private final UserRepository userRepository;
 
     private ManagerRestaurantResponseDTO mapToDTO(Restaurant restaurant) {
         return ManagerRestaurantResponseDTO.builder()
@@ -38,15 +37,27 @@ public class ManagerRestaurantService implements IManagerRestaurantService {
     }
 
     @Override
-    public ManagerRestaurantResponseDTO getRestaurantDetail(Long restaurantId, Long managerId) {
-        Restaurant restaurant = getRestaurantIfManager(restaurantId, managerId);
+    @Transactional(readOnly = true)
+    public ManagerRestaurantResponseDTO getRestaurantDetail(Long managerId) {
+        User manager = userRepository.findById(managerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Manager không tồn tại"));
+        Restaurant restaurant = manager.getWorkplace();
+        if (restaurant == null) {
+            throw new BusinessException("Manager này chưa được phân công nhà hàng nào");
+        }
         return mapToDTO(restaurant);
     }
 
     @Override
-    public ManagerRestaurantResponseDTO updateRestaurant(Long restaurantId, Long managerId,
+    @Transactional
+    public ManagerRestaurantResponseDTO updateRestaurant(Long managerId,
             ManagerRestaurantRequestDTO.UpdateRestaurant requestDTO) {
-        Restaurant restaurant = getRestaurantIfManager(restaurantId, managerId);
+        User manager = userRepository.findById(managerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Manager không tồn tại"));
+        Restaurant restaurant = manager.getWorkplace();
+        if (restaurant == null) {
+            throw new BusinessException("Manager này chưa được phân công nhà hàng nào");
+        }
 
         restaurant.setName(requestDTO.name());
         if (requestDTO.logo() != null) {
@@ -63,8 +74,15 @@ public class ManagerRestaurantService implements IManagerRestaurantService {
     }
 
     @Override
-    public void deleteRestaurant(Long restaurantId, Long managerId) {
-        Restaurant restaurant = getRestaurantIfManager(restaurantId, managerId);
+    @Transactional
+    public void deleteRestaurant(Long managerId) {
+        User manager = userRepository.findById(managerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Manager không tồn tại"));
+        Restaurant restaurant = manager.getWorkplace();
+        if (restaurant == null) {
+            throw new BusinessException("Manager này chưa được phân công nhà hàng nào");
+        }
+
         restaurant.setStatus(Restaurant.RestaurantStatus.CLOSED);
         restaurantRepository.save(restaurant);
     }

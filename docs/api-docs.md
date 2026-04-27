@@ -1100,19 +1100,13 @@ HTTP Code,Mô tả
 
 ### 4.1. Thông tin nhà hàng
 
-**`GET /api/v1/manager/restaurants/{restaurantId}`**
+**`GET /api/v1/manager/restaurant`**
 
 | Thuộc tính   | Giá trị                    |
 | ------------ | -------------------------- |
 | **Summary**  | Lấy thông tin nhà hàng đang được quản lý bởi user hiện tại |
 | **Auth**     | Yes (Bearer Token)       |
 | **Role**     | Manager                    |
-
-**Path Parameters:**
-
-| Param | Type      | Required | Mô tả     |
-| ----- | --------- | -------- | ---------- |
-| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
 
 **Response `200 OK`:**
 
@@ -1146,19 +1140,13 @@ HTTP Code,Mô tả
 
 ---
 
-**`PUT /api/v1/manager/restaurants/{restaurantId}`**
+**`PUT /api/v1/manager/restaurant`**
 
 | Thuộc tính   | Giá trị                    |
 | ------------ | -------------------------- |
 | **Summary**  | Cập nhật thông tin cơ bản của nhà hàng |
 | **Auth**     | Yes (Bearer Token)       |
 | **Role**     | Manager                    |
-
-**Path Parameters:**
-
-| Param | Type      | Required | Mô tả     |
-| ----- | --------- | -------- | ---------- |
-| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
 
 **Request Body:**
 
@@ -1206,19 +1194,13 @@ HTTP Code,Mô tả
 
 ---
 
-**`DELETE /api/v1/manager/restaurants/{restaurantId}`**
+**`DELETE /api/v1/manager/restaurant`**
 
 | Thuộc tính   | Giá trị                    |
 | ------------ | -------------------------- |
 | **Summary**  | Xóa nhà hàng |
 | **Auth**     | Yes (Bearer Token)       |
 | **Role**     | Manager                    |
-
-**Path Parameters:**
-
-| Param | Type      | Required | Mô tả     |
-| ----- | --------- | -------- | ---------- |
-| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
 
 **Response `200 OK`:**
 
@@ -1244,19 +1226,13 @@ HTTP Code,Mô tả
 
 ### 4.2. Quản lý Nhân sự (Staff)
 
-**`GET /api/v1/manager/restaurants/{restaurantId}/staffs`**
+**`GET /api/v1/manager/staffs`**
 
 | Thuộc tính   | Giá trị                    |
 | ------------ | -------------------------- |
 | **Summary**  | Lấy danh sách nhân viên của nhà hàng |
 | **Auth**     | Yes (Bearer Token)       |
 | **Role**     | Manager                    |
-
-**Path Parameters:**
-
-| Param | Type      | Required | Mô tả     |
-| ----- | --------- | -------- | ---------- |
-| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
 
 **Query Parameters:**
 
@@ -1309,19 +1285,13 @@ HTTP Code,Mô tả
 
 ---
 
-**`POST /api/v1/manager/restaurants/{restaurantId}/staffs`**
+**`POST /api/v1/manager/staffs`**
 
 | Thuộc tính   | Giá trị                    |
 | ------------ | -------------------------- |
 | **Summary**  | Thêm nhân viên mới vào nhà hàng |
 | **Auth**     | Yes (Bearer Token)       |
 | **Role**     | Manager                    |
-
-**Path Parameters:**
-
-| Param | Type      | Required | Mô tả     |
-| ----- | --------- | -------- | ---------- |
-| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
 
 **Request Body:**
 
@@ -1465,6 +1435,26 @@ HTTP Code,Mô tả
   "errors": { }
 }
 ```
+
+
+**`PATCH /api/v1/manager/staffs/{staffId}/kick`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Gỡ nhân viên khỏi nhà hàng (Set `workplace = null` và `role = CUSTOMER`). Lịch sử dữ liệu được giữ nguyên. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | MANAGER |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã gỡ nhân viên khỏi nhà hàng thành công.",
+  "data": null
+}
+```
+
+
 
 
 ---
@@ -1922,19 +1912,13 @@ HTTP Code,Mô tả
 
 ---
 
-**`GET /api/v1/manager/restaurants/{restaurantId}/option-groups`**
+**`GET /api/v1/manager/option-groups`**
 
 | Thuộc tính   | Giá trị                    |
 | ------------ | -------------------------- |
 | **Summary**  | Lấy danh sách tất cả nhóm tùy chọn đang có trong nhà hàng |
 | **Auth**     | Yes (Bearer Token)       |
 | **Role**     | Manager                    |
-
-**Path Parameters:**
-
-| Param | Type      | Required | Mô tả     |
-| ----- | --------- | -------- | ---------- |
-| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
 
 **Response `200 OK`:**
 
@@ -1955,19 +1939,13 @@ HTTP Code,Mô tả
 
 ---
 
-**`POST /api/v1/manager/restaurants/{restaurantId}/option-groups`**
+**`POST /api/v1/manager/option-groups`**
 
 | Thuộc tính   | Giá trị                    |
 | ------------ | -------------------------- |
 | **Summary**  | Tạo nhóm tùy chọn mới (áp dụng chung, chưa móc vào món ăn) |
 | **Auth**     | Yes (Bearer Token)       |
 | **Role**     | Manager                    |
-
-**Path Parameters:**
-
-| Param | Type      | Required | Mô tả     |
-| ----- | --------- | -------- | ---------- |
-| `restaurantId`  | `integer` | Yes       | ID của nhà hàng |
 
 **Request Body:**
 
@@ -2560,7 +2538,7 @@ HTTP Code,Mô tả
 
 ### 4.5. Báo cáo doanh thu (Revenue Report)
 
-**`GET /api/v1/manager/restaurants/{restaurantId}/reports/overview`**
+**`GET /api/v1/manager/reports/overview`**
 
 | Thuộc tính | Giá trị |
 | --- | --- |
@@ -2589,7 +2567,7 @@ HTTP Code,Mô tả
 }
 ```
 
-**`GET /api/v1/manager/restaurants/{restaurantId}/reports/revenue-chart`**
+**`GET /api/v1/manager/reports/revenue-chart`**
 
 | Thuộc tính | Giá trị |
 | --- | --- |
@@ -2626,7 +2604,7 @@ HTTP Code,Mô tả
 }
 ```
 
-**`GET /api/v1/manager/restaurants/{restaurantId}/reports/top-foods`**
+**`GET /api/v1/manager/reports/top-foods`**
 
 | Thuộc tính | Giá trị |
 | --- | --- |
@@ -2662,6 +2640,8 @@ HTTP Code,Mô tả
   ]
 }
 ```
+
+
 
 ---
 
@@ -3335,6 +3315,269 @@ HTTP Code,Mô tả
 {
   "status": 200,
   "message": "Đã gửi thông báo thành công",
+  "data": null
+}
+```
+
+
+
+### 7.10. Quản lý Người dùng (User Management)
+
+Admin có toàn quyền quản trị tài khoản và điều phối nhân sự trên toàn bộ hệ thống.
+
+#### 7.10.1. Lấy danh sách toàn bộ người dùng
+**`GET /api/v1/admin/users`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Danh sách tài khoản hệ thống |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `page` | `integer` | No | `0` | Số trang |
+| `limit` | `integer` | No | `10` | Số phần tử/trang |
+| `role` | `string` | No | `null` | Lọc theo Role |
+| `restaurantId` | `integer` | No | `null` | Lọc nhân sự theo nhà hàng |
+| `status` | `string` | No | `null` | BANNED / ACTIVE |
+| `search` | `string` | No | `null` | Tìm kiếm theo tên/username/email |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": [
+    {
+      "userId": 201,
+      "fullName": "Nguyễn Văn B",
+      "username": "waiter_b",
+      "email": "b@example.com",
+      "phone": "0981234567",
+      "roles": [
+        {
+          "id": 2,
+          "name": "ROLE_WAITER"
+        }
+      ],
+      "status": "ACTIVE"
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "limit": 10,
+    "totalItems": 50,
+    "totalPages": 5
+  }
+}
+```
+
+#### 7.10.2. Lấy thông tin chi tiết một người dùng
+**`GET /api/v1/admin/users/{userId}`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy thông tin chi tiết của một tài khoản |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Thành công",
+  "data": {
+      "userId": 201,
+      "fullName": "Nguyễn Văn B",
+      "username": "waiter_b",
+      "email": "b@example.com",
+      "phone": "0981234567",
+      "roles": [
+        {
+          "id": 2,
+          "name": "ROLE_WAITER"
+        }
+      ],
+      "status": "ACTIVE",
+      "address": "Hà Nội",
+      "avatar": "https://example.com/avatar.jpg",
+      "workplace": { //Nếu có workplace thì sẽ trả về object này, nếu không thì null
+        "restaurantId": 1,
+        "name": "Nhà hàng A",
+        "status": "ACTIVE",
+        "avatar": "https://example.com/avatar.jpg"
+      }
+    }
+}
+```
+
+#### 7.10.3. Tạo tài khoản (Admin)
+**`POST /api/v1/admin/users`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Tạo tài khoản bất kỳ (Có thể chọn Role thoải mái) |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Request Body:**
+
+```json
+{
+  "username": "string, required",
+  "password": "string, required",
+  "fullName": "string, required",
+  "email": "Nếu không có thì backend tự tạo email dummy trước",
+  "phone": "string, required",
+  "roleId": "Long, required"
+}
+```
+
+**Response `201 Created`:**
+
+```json
+{
+  "status": 201,
+  "message": "Thêm nhân viên thành công",
+  "data": {
+      "userId": 201,
+      "fullName": "Nguyễn Văn B",
+      "username": "waiter_b",
+      "email": "b@example.com",
+      "phone": "0981234567",
+      "roles": [
+        {
+          "id": 2,
+          "name": "ROLE_WAITER"
+        }
+      ],
+      "status": "ACTIVE"
+    }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+#### 7.10.4. Cập nhật thông tin cá nhân
+**`PUT /api/v1/admin/users/{userId}`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Sửa thông tin tài khoản |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Request Body:**
+
+```json
+{
+  "fullName": "string, required",
+  "email": "string, required",
+  "phone": "string, required",
+  "status": "ACTIVE | BANNED, required",
+  "roleId": "Long, required"
+}
+```
+
+**Response `200 OK`:**
+
+```json
+{
+  "status": 200,
+  "message": "Cập nhật nhân viên thành công",
+  "data": {
+      "userId": 201,
+      "fullName": "Nguyễn Văn B",
+      "username": "waiter_b",
+      "email": "b@example.com",
+      "phone": "0981234567",
+      "roles": [
+        {
+          "id": 2,
+          "name": "ROLE_WAITER"
+        }
+      ],
+      "status": "ACTIVE"
+    }
+}
+```
+
+**Response `4xx`:**
+
+```json
+{
+  "status": 400,
+  "message": "Mô tả lỗi",
+  "errors": { }
+}
+```
+
+
+
+#### 7.10.7. Gán / Đổi Quản lý (Manager) cho Nhà hàng
+**`PATCH /api/v1/admin/restaurants/{restaurantId}/manager`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Gán một tài khoản làm Manager chính thức cho nhà hàng. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Logic xử lý backend:**
+1. Thăng cấp User lên `MANAGER`.
+2. Cập nhật `workplace_restaurant_id = {restaurantId}` cho User.
+3. Cập nhật `manager_id = {userId}` cho Restaurant.
+
+**Request Body:**
+```json
+{
+  "userId": 123
+}
+```
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã bổ nhiệm Manager cho nhà hàng thành công.",
+  "data": null
+}
+```
+
+#### 7.10.8. Gán / Gỡ Nhân sự (Staff) cho Nhà hàng
+**`PATCH /api/v1/admin/users/{userId}/workplace`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Điều chuyển nhân viên vào làm việc tại một nhà hàng, hoặc gỡ nhân viên khỏi nhà hàng. |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | ADMIN |
+
+**Request Body:**
+```json
+{
+  "restaurantId": 456,
+  "roleId": 2
+}
+```
+
+> **Lưu ý Gỡ nhân viên:** Truyền `restaurantId = null` và `roleId = 3` nếu muốn rút nhân viên khỏi nhà hàng.
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Đã điều chuyển nhân sự thành công.",
   "data": null
 }
 ```

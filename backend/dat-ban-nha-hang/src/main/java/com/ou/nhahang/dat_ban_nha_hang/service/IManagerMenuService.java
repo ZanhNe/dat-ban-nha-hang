@@ -39,9 +39,9 @@ public interface IManagerMenuService {
         void deleteFood(Long foodId, Long managerId);
 
         // Option Group
-        List<ManagerOptionGroupResponseDTO> getOptionGroups(Long restaurantId, Long managerId);
+        List<ManagerOptionGroupResponseDTO> getOptionGroups(Long managerId);
 
-        ManagerOptionGroupResponseDTO createOptionGroup(Long restaurantId, Long managerId,
+        ManagerOptionGroupResponseDTO createOptionGroup(Long managerId,
                         ManagerOptionGroupRequestDTO.CreateOrUpdateOptionGroup requestDTO);
 
         ManagerOptionGroupResponseDTO updateOptionGroup(Long optionGroupId, Long managerId,

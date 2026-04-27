@@ -215,12 +215,11 @@ public class ManagerMenuController {
 
         // Option Group
 
-        @GetMapping("/restaurants/{restaurantId}/option-groups")
+        @GetMapping("/option-groups")
         public ResponseEntity<ApiResponse<List<ManagerOptionGroupResponseDTO>>> getOptionGroups(
-                        @PathVariable Long restaurantId,
                         Authentication authentication) {
                 Long managerId = (Long) authentication.getCredentials();
-                List<ManagerOptionGroupResponseDTO> data = managerMenuService.getOptionGroups(restaurantId, managerId);
+                List<ManagerOptionGroupResponseDTO> data = managerMenuService.getOptionGroups(managerId);
 
                 ApiResponse<List<ManagerOptionGroupResponseDTO>> response = ApiResponse
                                 .<List<ManagerOptionGroupResponseDTO>>builder()
@@ -231,13 +230,12 @@ public class ManagerMenuController {
                 return ResponseEntity.ok(response);
         }
 
-        @PostMapping("/restaurants/{restaurantId}/option-groups")
+        @PostMapping("/option-groups")
         public ResponseEntity<ApiResponse<ManagerOptionGroupResponseDTO>> createOptionGroup(
-                        @PathVariable Long restaurantId,
                         @Valid @RequestBody ManagerOptionGroupRequestDTO.CreateOrUpdateOptionGroup requestDTO,
                         Authentication authentication) {
                 Long managerId = (Long) authentication.getCredentials();
-                ManagerOptionGroupResponseDTO data = managerMenuService.createOptionGroup(restaurantId, managerId,
+                ManagerOptionGroupResponseDTO data = managerMenuService.createOptionGroup(managerId,
                                 requestDTO);
 
                 ApiResponse<ManagerOptionGroupResponseDTO> response = ApiResponse

@@ -272,13 +272,10 @@ public class ManagerMenuService implements IManagerMenuService {
         // Option Group
 
         @Override
-        public List<ManagerOptionGroupResponseDTO> getOptionGroups(Long restaurantId, Long managerId) {
+        public List<ManagerOptionGroupResponseDTO> getOptionGroups(Long managerId) {
                 Restaurant restaurant = getMenuRestaurant(managerId);
-                if (!restaurant.getId().equals(restaurantId)) {
-                        throw new ResourceNotFoundException("Không có quyền quản lý nhóm tùy chọn này.");
-                }
 
-                return foodOptionGroupRepository.findByRestaurantId(restaurantId).stream()
+                return foodOptionGroupRepository.findByRestaurantId(restaurant.getId()).stream()
                                 .map(og -> ManagerOptionGroupResponseDTO.builder()
                                                 .optionGroupId(og.getId())
                                                 .name(og.getName())
@@ -290,12 +287,9 @@ public class ManagerMenuService implements IManagerMenuService {
 
         @Override
         @Transactional
-        public ManagerOptionGroupResponseDTO createOptionGroup(Long restaurantId, Long managerId,
+        public ManagerOptionGroupResponseDTO createOptionGroup(Long managerId,
                         ManagerOptionGroupRequestDTO.CreateOrUpdateOptionGroup requestDTO) {
                 Restaurant restaurant = getMenuRestaurant(managerId);
-                if (!restaurant.getId().equals(restaurantId)) {
-                        throw new ResourceNotFoundException("Không có quyền quản lý.");
-                }
 
                 FoodOptionGroup og = new FoodOptionGroup();
                 og.setName(requestDTO.name());
