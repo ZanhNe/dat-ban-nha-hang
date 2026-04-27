@@ -11,6 +11,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistCancelBookingRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistGetBookingsRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistGetAwaitingBookingsRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistBookingListResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistBookingDetailResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistCancelBookingResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistCheckInResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 @RestController
 @RequestMapping("/api/v1/receptionist/bookings")
 @RequiredArgsConstructor
@@ -19,7 +31,7 @@ public class ReceptionistBookingController {
         private final IReceptionistBookingService receptionistBookingService;
 
         @PatchMapping("/{bookingId}/confirm")
-        @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
         public ResponseEntity<ApiResponse<ReceptionistConfirmBookingResponseDTO>> confirmBooking(
                         @PathVariable("bookingId") Long bookingId) {
 
@@ -39,7 +51,7 @@ public class ReceptionistBookingController {
         }
 
         @PatchMapping("/{bookingId}/reject")
-        @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST', 'ROLE_MANAGER')")
+        @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
         public ResponseEntity<ApiResponse<ReceptionistRejectBookingResponseDTO>> rejectBooking(
                         @PathVariable("bookingId") Long bookingId,
                         @RequestBody @Valid ReceptionistRejectBookingRequestDTO request) {
@@ -54,5 +66,80 @@ public class ReceptionistBookingController {
                                 .data(data)
                                 .build();
                 return ResponseEntity.ok(response);
+        }
+
+        private Long getCurrentUserId() {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                User user = (User) authentication.getPrincipal();
+                return user.getId();
+        }
+
+        @GetMapping
+        @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
+        public ResponseEntity<ApiResponse<Page<ReceptionistBookingListResponseDTO>>> getBookings(
+                        @ModelAttribute @Valid ReceptionistGetBookingsRequestDTO request) {
+
+                Page<ReceptionistBookingListResponseDTO> data = receptionistBookingService
+                                .getBookings(getCurrentUserId(), request);
+
+                return ResponseEntity.ok(ApiResponse.<Page<ReceptionistBookingListResponseDTO>>builder()
+                                .status(200)
+                                .message("Lấy danh sách booking thành công")
+                                .data(data)
+                                .build());
+        }
+
+        @GetMapping("/awaiting-confirmation")
+        @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
+        public ResponseEntity<ApiResponse<Page<ReceptionistBookingListResponseDTO>>> getAwaitingConfirmationBookings(
+                        @ModelAttribute @Valid ReceptionistGetAwaitingBookingsRequestDTO request) {
+                Page<ReceptionistBookingListResponseDTO> data = receptionistBookingService
+                                .getAwaitingBookings(getCurrentUserId(), request);
+
+                return ResponseEntity.ok(ApiResponse.<Page<ReceptionistBookingListResponseDTO>>builder()
+                                .status(200)
+                                .message("Lấy danh sách yêu cầu đặt bàn chờ xác nhận thành công")
+                                .data(data)
+                                .build());
+        }
+
+        @GetMapping("/{bookingId}")
+        @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
+        public ResponseEntity<ApiResponse<ReceptionistBookingDetailResponseDTO>> getBookingDetail(
+                        @PathVariable("bookingId") Long bookingId) {
+                ReceptionistBookingDetailResponseDTO data = receptionistBookingService
+                                .getBookingDetail(getCurrentUserId(), bookingId);
+                return ResponseEntity.ok(ApiResponse.<ReceptionistBookingDetailResponseDTO>builder()
+                                .status(200)
+                                .message("Thành công")
+                                .data(data)
+                                .build());
+        }
+
+        @PatchMapping("/{bookingId}/check-in")
+        @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
+        public ResponseEntity<ApiResponse<ReceptionistCheckInResponseDTO>> checkInBooking(
+                        @PathVariable("bookingId") Long bookingId) {
+                ReceptionistCheckInResponseDTO data = receptionistBookingService.checkInBooking(getCurrentUserId(),
+                                bookingId);
+                return ResponseEntity.ok(ApiResponse.<ReceptionistCheckInResponseDTO>builder()
+                                .status(200)
+                                .message("Check-in thành công")
+                                .data(data)
+                                .build());
+        }
+
+        @PatchMapping("/{bookingId}/cancel")
+        @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
+        public ResponseEntity<ApiResponse<ReceptionistCancelBookingResponseDTO>> cancelBooking(
+                        @PathVariable("bookingId") Long bookingId,
+                        @RequestBody @Valid ReceptionistCancelBookingRequestDTO request) {
+                ReceptionistCancelBookingResponseDTO data = receptionistBookingService.cancelBooking(getCurrentUserId(),
+                                bookingId, request);
+                return ResponseEntity.ok(ApiResponse.<ReceptionistCancelBookingResponseDTO>builder()
+                                .status(200)
+                                .message("Đã hủy booking thành công")
+                                .data(data)
+                                .build());
         }
 }

@@ -2867,12 +2867,12 @@ HTTP Code,Mô tả
 ```
 
 
-### 6.4 Lấy ra danh sách các Booking đã đặt tại nhà hàng (Confirmed)
+### 6.4 Lấy danh sách Booking (lọc theo trạng thái)
 **`GET /api/v1/receptionist/bookings`**
 
 | Thuộc tính | Giá trị |
 | --- | --- |
-| **Summary** | Lấy ra danh sách booking đã xác nhận và đang chờ khách đến (phân trang, sắp xếp). |
+| **Summary** | Lấy ra danh sách booking theo trạng thái (phân trang, sắp xếp). |
 | **Auth** | Yes (Bearer Token) |
 | **Role** | RECEPTIONIST / MANAGER |
 
@@ -2881,7 +2881,7 @@ HTTP Code,Mô tả
 | --- | --- | --- | --- | --- |
 | `page` | `integer` | No | `0` | Số trang |
 | `limit` | `integer` | No | `10` | Số phần tử/trang |
-| `status` | `string` | No | `CONFIRMED` | Mặc định là CONFIRMED (có thể lọc trạng thái khác nếu muốn) |
+| `status` | `string` | No | `CONFIRMED` | Mặc định là CONFIRMED (có thể lọc trạng thái khác nếu muốn, ví dụ: AWAITING_CONFIRMATION) |
 | `sort` | `string` | No | `bookingTime.startTime,asc` | Sắp xếp để xem khách nào đến sớm nhất |
 
 **Response `200 OK`:**
@@ -2903,6 +2903,45 @@ HTTP Code,Mô tả
     "page": 0,
     "limit": 10,
     "totalItems": 5,
+    "totalPages": 1
+  }
+}
+```
+
+### 6.5 Lấy danh sách Booking chờ xác nhận
+**`GET /api/v1/receptionist/bookings/awaiting-confirmation`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy ra danh sách booking đang chờ xác nhận (status = AWAITING_CONFIRMATION). |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | RECEPTIONIST / MANAGER |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `page` | `integer` | No | `0` | Số trang |
+| `limit` | `integer` | No | `10` | Số phần tử/trang |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Lấy danh sách yêu cầu đặt bàn chờ xác nhận thành công",
+  "data": [
+    {
+      "bookingId": 1235,
+      "customerName": "Trần Thị B",
+      "customerPhone": "0123456789",
+      "bookingTime": "2026-02-15T20:00:00",
+      "numberOfPeople": 2,
+      "status": "AWAITING_CONFIRMATION"
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "limit": 10,
+    "totalItems": 2,
     "totalPages": 1
   }
 }
@@ -3492,7 +3531,46 @@ HTTP Code,Mô tả
 }
 ```
 
-### 9.7. Xem chi tiết phiên bàn
+### 9.7. Lấy danh sách phiên bàn đang phục vụ
+**`GET /api/v1/waiter/sessions/me`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy ra danh sách các phiên bàn đang được đảm nhận bởi nhân viên phục vụ hiện tại (status = SERVING, waiter_id = currentUserId). |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | WAITER |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `page` | `integer` | No | `0` | Số trang |
+| `limit` | `integer` | No | `10` | Số phần tử/trang |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Lấy danh sách bàn đang phục vụ thành công",
+  "data": [
+    {
+      "sessionId": 1001,
+      "tableLabels": ["Bàn 01", "Bàn 02"],
+      "customerName": "Nguyễn Văn A",
+      "numberOfPeople": 4,
+      "status": "SERVING",
+      "createdAt": "2026-04-20T19:05:00"
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "limit": 10,
+    "totalItems": 5,
+    "totalPages": 1
+  }
+}
+```
+
+### 9.8. Xem chi tiết phiên bàn
 **`GET /api/v1/waiter/sessions/{sessionId}`**
 
 | Thuộc tính | Giá trị |
@@ -3539,29 +3617,33 @@ HTTP Code,Mô tả
 {
   "status": 200,
   "message": "Lấy menu thành công",
-  "data": [
-    {
-      "groupId": 1,
-      "groupName": "Món Chính",
-      "items": [
-        {
-          "foodDescriptionId": 12,
-          "name": "Bò Wagyu Nướng",
-          "price": 500000,
-          "optionGroups": [
-            {
-              "optionGroupId": 5,
-              "name": "Độ chín",
-              "options": [
-                { "optionId": 21, "name": "Medium Rare", "price": 0 },
-                { "optionId": 22, "name": "Well Done", "price": 0 }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
+  "data": {
+    "menuId": 1,
+    "menuName": "Thực Đơn Mùa Hè",
+    "foodGroups": [
+      {
+        "groupId": 1,
+        "name": "Món Chính",
+        "foods": [
+          {
+            "foodDescriptionId": 12,
+            "name": "Bò Wagyu Nướng",
+            "price": 500000,
+            "optionGroups": [
+              {
+                "optionGroupId": 5,
+                "name": "Độ chín",
+                "options": [
+                  { "optionId": 21, "name": "Medium Rare", "price": 0 },
+                  { "optionId": 22, "name": "Well Done", "price": 0 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 
@@ -3686,7 +3768,45 @@ HTTP Code,Mô tả
 }
 ```
 
-### 10.2. Xem chi tiết phiên bàn để thanh toán
+### 10.2. Lấy danh sách phiên bàn đang chờ thanh toán
+**`GET /api/v1/cashier/sessions/paying`**
+
+| Thuộc tính | Giá trị |
+| --- | --- |
+| **Summary** | Lấy ra danh sách các TableSession đã khởi tạo thanh toán (đang ở trạng thái PAYING). |
+| **Auth** | Yes (Bearer Token) |
+| **Role** | CASHIER, MANAGER |
+
+**Query Parameters:**
+| Param | Type | Required | Default | Mô tả |
+| --- | --- | --- | --- | --- |
+| `page` | `integer` | No | `0` | Số trang |
+| `limit` | `integer` | No | `10` | Số phần tử/trang |
+
+**Response `200 OK`:**
+```json
+{
+  "status": 200,
+  "message": "Lấy danh sách phiên bàn đang thanh toán thành công",
+  "data": [
+    {
+      "sessionId": 1001,
+      "tableLabels": ["Bàn 01"],
+      "customerName": "Nguyễn Văn A",
+      "numberOfPeople": 4,
+      "status": "PAYING"
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "limit": 10,
+    "totalItems": 1,
+    "totalPages": 1
+  }
+}
+```
+
+### 10.3. Xem chi tiết phiên bàn để thanh toán
 **`GET /api/v1/cashier/sessions/{sessionId}`**
 
 | Thuộc tính | Giá trị |
