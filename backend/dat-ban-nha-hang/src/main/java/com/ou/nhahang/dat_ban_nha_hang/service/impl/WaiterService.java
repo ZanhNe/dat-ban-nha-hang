@@ -328,6 +328,14 @@ public class WaiterService implements IWaiterService {
             throw new BusinessException("Trạng thái món ăn không hợp lệ");
         }
 
+        if (newStatus != FoodItem.FoodItemStatus.SERVED && newStatus != FoodItem.FoodItemStatus.CANCELLED) {
+            throw new BusinessException("Chỉ được cập nhật trạng thái SERVED hoặc CANCELLED");
+        }
+
+        if (item.getStatus() != FoodItem.FoodItemStatus.PENDING) {
+            throw new BusinessException("Chỉ có thể cập nhật món ăn đang ở trạng thái PENDING");
+        }
+
         item.setStatus(newStatus);
         foodItemRepository.save(item);
 

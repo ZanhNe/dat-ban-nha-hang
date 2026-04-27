@@ -10,10 +10,15 @@ import com.ou.nhahang.dat_ban_nha_hang.service.IWaiterService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/waiter")
@@ -24,29 +29,45 @@ public class WaiterController {
 
         @GetMapping("/sessions")
         @PreAuthorize("hasAuthority('ROLE_WAITER')")
-        public ResponseEntity<ApiResponse<Page<WaiterSessionListResponseDTO>>> getAvailableSessions(
+        public ResponseEntity<ApiResponse<List<WaiterSessionListResponseDTO>>> getAvailableSessions(
                         @ModelAttribute @Valid WaiterGetAvailableSessionsRequestDTO request,
                         Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
-                Page<WaiterSessionListResponseDTO> data = waiterService.getAvailableSessions(userId, request);
-                return ResponseEntity.ok(ApiResponse.<Page<WaiterSessionListResponseDTO>>builder()
+                Page<WaiterSessionListResponseDTO> dataPage = waiterService.getAvailableSessions(userId, request);
+
+                Map<String, Object> meta = new HashMap<>();
+                meta.put("page", dataPage.getNumber());
+                meta.put("limit", dataPage.getSize());
+                meta.put("totalItems", dataPage.getTotalElements());
+                meta.put("totalPages", dataPage.getTotalPages());
+
+                return ResponseEntity.ok(ApiResponse.<List<WaiterSessionListResponseDTO>>builder()
                                 .status(200)
                                 .message("Lấy danh sách phiên bàn thành công")
-                                .data(data)
+                                .data(dataPage.getContent())
+                                .meta(meta)
                                 .build());
         }
 
         @GetMapping("/sessions/me")
         @PreAuthorize("hasAuthority('ROLE_WAITER')")
-        public ResponseEntity<ApiResponse<Page<WaiterSessionListResponseDTO>>> getMyServingSessions(
+        public ResponseEntity<ApiResponse<List<WaiterSessionListResponseDTO>>> getMyServingSessions(
                         @ModelAttribute @Valid WaiterGetMySessionsRequestDTO request,
                         Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
-                Page<WaiterSessionListResponseDTO> data = waiterService.getMyServingSessions(userId, request);
-                return ResponseEntity.ok(ApiResponse.<Page<WaiterSessionListResponseDTO>>builder()
+                Page<WaiterSessionListResponseDTO> dataPage = waiterService.getMyServingSessions(userId, request);
+
+                Map<String, Object> meta = new HashMap<>();
+                meta.put("page", dataPage.getNumber());
+                meta.put("limit", dataPage.getSize());
+                meta.put("totalItems", dataPage.getTotalElements());
+                meta.put("totalPages", dataPage.getTotalPages());
+
+                return ResponseEntity.ok(ApiResponse.<List<WaiterSessionListResponseDTO>>builder()
                                 .status(200)
                                 .message("Lấy danh sách bàn đang phục vụ thành công")
-                                .data(data)
+                                .data(dataPage.getContent())
+                                .meta(meta)
                                 .build());
         }
 
@@ -94,7 +115,7 @@ public class WaiterController {
                         @PathVariable("sessionId") Long sessionId, Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
                 WaiterCreateOrderResponseDTO data = waiterService.createFoodOrder(userId, sessionId);
-                return ResponseEntity.ok(ApiResponse.<WaiterCreateOrderResponseDTO>builder()
+                return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<WaiterCreateOrderResponseDTO>builder()
                                 .status(201)
                                 .message("Tạo Order thành công")
                                 .data(data)

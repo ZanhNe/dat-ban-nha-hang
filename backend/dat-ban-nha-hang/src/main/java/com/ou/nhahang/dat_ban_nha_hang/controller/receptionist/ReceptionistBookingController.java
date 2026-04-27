@@ -21,6 +21,10 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistCheckInResponseD
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/v1/receptionist/bookings")
 @RequiredArgsConstructor
@@ -31,9 +35,12 @@ public class ReceptionistBookingController {
         @PatchMapping("/{bookingId}/confirm")
         @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
         public ResponseEntity<ApiResponse<ReceptionistConfirmBookingResponseDTO>> confirmBooking(
-                        @PathVariable("bookingId") Long bookingId) {
+                        @PathVariable("bookingId") Long bookingId,
+                        Authentication authentication) {
 
-                ReceptionistConfirmBookingResponseDTO data = receptionistBookingService.confirmBooking(bookingId);
+                Long userId = (Long) authentication.getCredentials();
+                ReceptionistConfirmBookingResponseDTO data = receptionistBookingService.confirmBooking(userId,
+                                bookingId);
 
                 String message = data.depositAmount() == 0L
                                 ? "Đã xác nhận yêu cầu đặt bàn (Không yêu cầu cọc)."
@@ -52,10 +59,12 @@ public class ReceptionistBookingController {
         @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
         public ResponseEntity<ApiResponse<ReceptionistRejectBookingResponseDTO>> rejectBooking(
                         @PathVariable("bookingId") Long bookingId,
-                        @RequestBody @Valid ReceptionistRejectBookingRequestDTO request) {
+                        @RequestBody @Valid ReceptionistRejectBookingRequestDTO request,
+                        Authentication authentication) {
 
-                ReceptionistRejectBookingResponseDTO data = receptionistBookingService.rejectBooking(bookingId,
-                                request);
+                Long userId = (Long) authentication.getCredentials();
+                ReceptionistRejectBookingResponseDTO data = receptionistBookingService.rejectBooking(userId,
+                                bookingId, request);
 
                 ApiResponse<ReceptionistRejectBookingResponseDTO> response = ApiResponse
                                 .<ReceptionistRejectBookingResponseDTO>builder()
@@ -68,33 +77,47 @@ public class ReceptionistBookingController {
 
         @GetMapping
         @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
-        public ResponseEntity<ApiResponse<Page<ReceptionistBookingListResponseDTO>>> getBookings(
+        public ResponseEntity<ApiResponse<List<ReceptionistBookingListResponseDTO>>> getBookings(
                         @ModelAttribute @Valid ReceptionistGetBookingsRequestDTO request,
                         Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
-                Page<ReceptionistBookingListResponseDTO> data = receptionistBookingService
+                Page<ReceptionistBookingListResponseDTO> dataPage = receptionistBookingService
                                 .getBookings(userId, request);
 
-                return ResponseEntity.ok(ApiResponse.<Page<ReceptionistBookingListResponseDTO>>builder()
+                Map<String, Object> meta = new HashMap<>();
+                meta.put("page", dataPage.getNumber());
+                meta.put("limit", dataPage.getSize());
+                meta.put("totalItems", dataPage.getTotalElements());
+                meta.put("totalPages", dataPage.getTotalPages());
+
+                return ResponseEntity.ok(ApiResponse.<List<ReceptionistBookingListResponseDTO>>builder()
                                 .status(200)
                                 .message("Lấy danh sách booking thành công")
-                                .data(data)
+                                .data(dataPage.getContent())
+                                .meta(meta)
                                 .build());
         }
 
         @GetMapping("/awaiting-confirmation")
         @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
-        public ResponseEntity<ApiResponse<Page<ReceptionistBookingListResponseDTO>>> getAwaitingConfirmationBookings(
+        public ResponseEntity<ApiResponse<List<ReceptionistBookingListResponseDTO>>> getAwaitingConfirmationBookings(
                         @ModelAttribute @Valid ReceptionistGetAwaitingBookingsRequestDTO request,
                         Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
-                Page<ReceptionistBookingListResponseDTO> data = receptionistBookingService
+                Page<ReceptionistBookingListResponseDTO> dataPage = receptionistBookingService
                                 .getAwaitingBookings(userId, request);
 
-                return ResponseEntity.ok(ApiResponse.<Page<ReceptionistBookingListResponseDTO>>builder()
+                Map<String, Object> meta = new HashMap<>();
+                meta.put("page", dataPage.getNumber());
+                meta.put("limit", dataPage.getSize());
+                meta.put("totalItems", dataPage.getTotalElements());
+                meta.put("totalPages", dataPage.getTotalPages());
+
+                return ResponseEntity.ok(ApiResponse.<List<ReceptionistBookingListResponseDTO>>builder()
                                 .status(200)
                                 .message("Lấy danh sách yêu cầu đặt bàn chờ xác nhận thành công")
-                                .data(data)
+                                .data(dataPage.getContent())
+                                .meta(meta)
                                 .build());
         }
 
@@ -142,3 +165,4 @@ public class ReceptionistBookingController {
                                 .build());
         }
 }
+

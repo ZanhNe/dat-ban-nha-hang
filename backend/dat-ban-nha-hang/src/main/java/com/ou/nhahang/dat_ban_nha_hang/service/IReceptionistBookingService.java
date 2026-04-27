@@ -14,9 +14,9 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistGetBookingsReques
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistGetAwaitingBookingsRequestDTO;
 
 public interface IReceptionistBookingService {
-    ReceptionistConfirmBookingResponseDTO confirmBooking(Long bookingId);
+    ReceptionistConfirmBookingResponseDTO confirmBooking(Long userId, Long bookingId);
 
-    ReceptionistRejectBookingResponseDTO rejectBooking(Long bookingId, ReceptionistRejectBookingRequestDTO request);
+    ReceptionistRejectBookingResponseDTO rejectBooking(Long userId, Long bookingId, ReceptionistRejectBookingRequestDTO request);
 
     Page<ReceptionistBookingListResponseDTO> getBookings(Long userId, ReceptionistGetBookingsRequestDTO request);
 

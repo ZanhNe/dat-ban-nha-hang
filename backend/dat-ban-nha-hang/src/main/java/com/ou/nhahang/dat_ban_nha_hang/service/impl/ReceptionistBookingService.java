@@ -61,9 +61,14 @@ public class ReceptionistBookingService implements IReceptionistBookingService {
 
         @Override
         @Transactional
-        public ReceptionistConfirmBookingResponseDTO confirmBooking(Long bookingId) {
+        public ReceptionistConfirmBookingResponseDTO confirmBooking(Long userId, Long bookingId) {
+                Restaurant workplace = getWorkplace(userId);
                 Booking booking = bookingRepository.findById(bookingId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu đặt bàn"));
+
+                if (!booking.getRestaurant().getId().equals(workplace.getId())) {
+                        throw new BusinessException("Không có quyền truy cập yêu cầu đặt bàn của nhà hàng khác");
+                }
 
                 if (booking.getStatus() != Booking.BookingStatus.AWAITING_CONFIRMATION) {
                         throw new BusinessException("Yêu cầu đặt bàn hiện tại không ở trạng thái chờ xác nhận");
@@ -102,10 +107,15 @@ public class ReceptionistBookingService implements IReceptionistBookingService {
 
         @Override
         @Transactional
-        public ReceptionistRejectBookingResponseDTO rejectBooking(Long bookingId,
+        public ReceptionistRejectBookingResponseDTO rejectBooking(Long userId, Long bookingId,
                         ReceptionistRejectBookingRequestDTO request) {
+                Restaurant workplace = getWorkplace(userId);
                 Booking booking = bookingRepository.findById(bookingId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu đặt bàn"));
+
+                if (!booking.getRestaurant().getId().equals(workplace.getId())) {
+                        throw new BusinessException("Không có quyền truy cập yêu cầu đặt bàn của nhà hàng khác");
+                }
 
                 if (booking.getStatus() != Booking.BookingStatus.AWAITING_CONFIRMATION) {
                         throw new BusinessException("Yêu cầu đặt bàn hiện tại không ở trạng thái chờ xác nhận");
