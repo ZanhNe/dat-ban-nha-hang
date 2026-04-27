@@ -13,7 +13,7 @@ public record ManagerTableAreaRequestDTO() {
             String description,
 
             @NotBlank(message = "Trạng thái không được để trống")
-            @Pattern(regexp = "^(ACTIVE|CLOSED|MAINTENANCE|PRIVATE_EVENT)$", message = "Trạng thái không hợp lệ")
+            @Pattern(regexp = "^(ACTIVE|INACTIVE|CLOSED|MAINTENANCE|PRIVATE_EVENT)$", message = "Trạng thái không hợp lệ")
             String status
     ) {}
 }

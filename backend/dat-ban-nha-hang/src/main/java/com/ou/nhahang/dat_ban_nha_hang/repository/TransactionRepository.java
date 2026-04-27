@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
@@ -51,4 +52,87 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
               AND (:to IS NULL OR t.createdAt < :to)
             """)
     long sumCommissionRevenueCaptured(@Param("from") LocalDateTime from, @Param("to") LocalDateTime toExclusive);
+
+    @Query("""
+            SELECT COALESCE(SUM(t.amount), 0)
+            FROM Transaction t
+            JOIN t.paymentSource ps
+            JOIN Booking b ON b.id = ps.id
+            WHERE b.restaurant.id = :restaurantId
+              AND t.transactionStatus = com.ou.nhahang.dat_ban_nha_hang.entity.Transaction$TransactionStatus.CAPTURED
+              AND (:from IS NULL OR t.createdAt >= :from)
+              AND (:to IS NULL OR t.createdAt < :to)
+            """)
+    long sumCapturedRevenueByRestaurant(
+            @Param("restaurantId") Long restaurantId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime toExclusive);
+
+    @Query("""
+            SELECT COALESCE(SUM(
+                CASE
+                    WHEN r.commissionType = com.ou.nhahang.dat_ban_nha_hang.entity.Restaurant$CommissionType.PERCENTAGE
+                        THEN (t.amount * r.baseCommissionValue) / 100
+                    ELSE r.baseCommissionValue
+                END
+            ), 0)
+            FROM Transaction t
+            JOIN t.paymentSource ps
+            JOIN Booking b ON b.id = ps.id
+            JOIN b.restaurant r
+            WHERE b.restaurant.id = :restaurantId
+              AND t.transactionStatus = com.ou.nhahang.dat_ban_nha_hang.entity.Transaction$TransactionStatus.CAPTURED
+              AND (:from IS NULL OR t.createdAt >= :from)
+              AND (:to IS NULL OR t.createdAt < :to)
+            """)
+    long sumCommissionByRestaurant(
+            @Param("restaurantId") Long restaurantId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime toExclusive);
+
+    @Query("""
+            SELECT COUNT(DISTINCT b.id)
+            FROM Transaction t
+            JOIN t.paymentSource ps
+            JOIN Booking b ON b.id = ps.id
+            WHERE b.restaurant.id = :restaurantId
+              AND t.transactionStatus = com.ou.nhahang.dat_ban_nha_hang.entity.Transaction$TransactionStatus.CAPTURED
+              AND (:from IS NULL OR t.createdAt >= :from)
+              AND (:to IS NULL OR t.createdAt < :to)
+            """)
+    long countCapturedBookingsByRestaurant(
+            @Param("restaurantId") Long restaurantId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime toExclusive);
+
+    @Query("""
+            SELECT COUNT(DISTINCT b.bookingUser.id)
+            FROM Transaction t
+            JOIN t.paymentSource ps
+            JOIN Booking b ON b.id = ps.id
+            WHERE b.restaurant.id = :restaurantId
+              AND t.transactionStatus = com.ou.nhahang.dat_ban_nha_hang.entity.Transaction$TransactionStatus.CAPTURED
+              AND (:from IS NULL OR t.createdAt >= :from)
+              AND (:to IS NULL OR t.createdAt < :to)
+            """)
+    long countDistinctCustomersByRestaurant(
+            @Param("restaurantId") Long restaurantId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime toExclusive);
+
+    @Query("""
+            SELECT t
+            FROM Transaction t
+            JOIN t.paymentSource ps
+            JOIN Booking b ON b.id = ps.id
+            WHERE b.restaurant.id = :restaurantId
+              AND t.transactionStatus = com.ou.nhahang.dat_ban_nha_hang.entity.Transaction$TransactionStatus.CAPTURED
+              AND (:from IS NULL OR t.createdAt >= :from)
+              AND (:to IS NULL OR t.createdAt < :to)
+            ORDER BY t.createdAt ASC
+            """)
+    List<Transaction> findCapturedByRestaurant(
+            @Param("restaurantId") Long restaurantId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime toExclusive);
 }

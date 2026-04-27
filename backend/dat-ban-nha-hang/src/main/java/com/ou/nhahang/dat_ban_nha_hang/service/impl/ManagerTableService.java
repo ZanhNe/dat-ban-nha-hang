@@ -50,6 +50,22 @@ public class ManagerTableService implements IManagerTableService {
                                 .build();
         }
 
+        private TableArea.TableAreaStatus parseTableAreaStatus(String status) {
+                String s = status.toUpperCase();
+                if ("INACTIVE".equals(s)) {
+                        return TableArea.TableAreaStatus.CLOSED;
+                }
+                return TableArea.TableAreaStatus.valueOf(s);
+        }
+
+        private RestaurantTable.TableStatus parseTableStatus(String status) {
+                String s = status.toUpperCase();
+                if ("RESERVED".equals(s) || "CLEANING".equals(s)) {
+                        return RestaurantTable.TableStatus.MAINTENANCE;
+                }
+                return RestaurantTable.TableStatus.valueOf(s);
+        }
+
         private Restaurant getRestaurantIfManager(Long restaurantId, Long managerId) {
                 return restaurantRepository.findByIdAndManagerId(restaurantId, managerId)
                                 .orElseThrow(() -> new BusinessException("Bạn không có quyền quản lý nhà hàng này"));
@@ -90,7 +106,7 @@ public class ManagerTableService implements IManagerTableService {
 
                 TableArea area = TableArea.builder()
                                 .name(requestDTO.name())
-                                .status(TableArea.TableAreaStatus.valueOf(requestDTO.status().toUpperCase()))
+                                .status(parseTableAreaStatus(requestDTO.status()))
                                 .restaurant(restaurant)
                                 .build();
 
@@ -117,7 +133,7 @@ public class ManagerTableService implements IManagerTableService {
                 getRestaurantIfManager(area.getRestaurant().getId(), managerId);
 
                 area.setName(requestDTO.name());
-                area.setStatus(TableArea.TableAreaStatus.valueOf(requestDTO.status().toUpperCase()));
+                area.setStatus(parseTableAreaStatus(requestDTO.status()));
 
                 TableArea saved = tableAreaRepository.save(area);
                 return mapToTableAreaDTO(saved);
@@ -157,7 +173,7 @@ public class ManagerTableService implements IManagerTableService {
                 RestaurantTable table = RestaurantTable.builder()
                                 .name(requestDTO.name())
                                 .capacity((long) requestDTO.capacity())
-                                .status(RestaurantTable.TableStatus.valueOf(requestDTO.status().toUpperCase()))
+                                .status(parseTableStatus(requestDTO.status()))
                                 .tableArea(area)
                                 .build();
 
@@ -175,7 +191,7 @@ public class ManagerTableService implements IManagerTableService {
 
                 table.setName(requestDTO.name());
                 table.setCapacity((long) requestDTO.capacity());
-                table.setStatus(RestaurantTable.TableStatus.valueOf(requestDTO.status().toUpperCase()));
+                table.setStatus(parseTableStatus(requestDTO.status()));
 
                 RestaurantTable saved = restaurantTableRepository.save(table);
                 return mapToTableDTO(saved);
