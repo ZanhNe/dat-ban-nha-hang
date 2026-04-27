@@ -22,18 +22,12 @@ public class CashierController {
 
         private final ICashierService cashierService;
 
-        private Long getCurrentUserId() {
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                User user = (User) authentication.getPrincipal();
-                return user.getId();
-        }
-
         @GetMapping("/sessions")
         @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<Page<CashierSessionListResponseDTO>>> getServedSessions(
-                        @ModelAttribute @Valid CashierGetServedSessionsRequestDTO request) {
-                Page<CashierSessionListResponseDTO> data = cashierService.getServedSessions(getCurrentUserId(),
-                                request);
+                        @ModelAttribute @Valid CashierGetServedSessionsRequestDTO request, Authentication authentication) {
+                Long userId = (Long) authentication.getCredentials();
+                Page<CashierSessionListResponseDTO> data = cashierService.getServedSessions(userId, request);
                 return ResponseEntity.ok(ApiResponse.<Page<CashierSessionListResponseDTO>>builder()
                                 .status(200)
                                 .message("Lấy danh sách phiên bàn chờ thanh toán thành công")
@@ -44,9 +38,9 @@ public class CashierController {
         @GetMapping("/sessions/paying")
         @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<Page<CashierSessionListResponseDTO>>> getPayingSessions(
-                        @ModelAttribute @Valid CashierGetPayingSessionsRequestDTO request) {
-                Page<CashierSessionListResponseDTO> data = cashierService.getPayingSessions(getCurrentUserId(),
-                                request);
+                        @ModelAttribute @Valid CashierGetPayingSessionsRequestDTO request, Authentication authentication) {
+                Long userId = (Long) authentication.getCredentials();
+                Page<CashierSessionListResponseDTO> data = cashierService.getPayingSessions(userId, request);
                 return ResponseEntity.ok(ApiResponse.<Page<CashierSessionListResponseDTO>>builder()
                                 .status(200)
                                 .message("Lấy danh sách phiên bàn đang thanh toán thành công")
@@ -57,9 +51,9 @@ public class CashierController {
         @GetMapping("/sessions/{sessionId}")
         @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<CashierSessionDetailResponseDTO>> getSessionDetailForPayment(
-                        @PathVariable("sessionId") Long sessionId) {
-                CashierSessionDetailResponseDTO data = cashierService.getSessionDetailForPayment(getCurrentUserId(),
-                                sessionId);
+                        @PathVariable("sessionId") Long sessionId, Authentication authentication) {
+                Long userId = (Long) authentication.getCredentials();
+                CashierSessionDetailResponseDTO data = cashierService.getSessionDetailForPayment(userId, sessionId);
                 return ResponseEntity.ok(ApiResponse.<CashierSessionDetailResponseDTO>builder()
                                 .status(200)
                                 .message("Thành công")
@@ -70,8 +64,9 @@ public class CashierController {
         @PostMapping("/sessions/{sessionId}/payments")
         @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<CashierInitiatePaymentResponseDTO>> initiatePayment(
-                        @PathVariable("sessionId") Long sessionId) {
-                CashierInitiatePaymentResponseDTO data = cashierService.initiatePayment(getCurrentUserId(), sessionId);
+                        @PathVariable("sessionId") Long sessionId, Authentication authentication) {
+                Long userId = (Long) authentication.getCredentials();
+                CashierInitiatePaymentResponseDTO data = cashierService.initiatePayment(userId, sessionId);
                 return ResponseEntity.ok(ApiResponse.<CashierInitiatePaymentResponseDTO>builder()
                                 .status(201)
                                 .message("Khởi tạo thanh toán thành công")
@@ -83,8 +78,9 @@ public class CashierController {
         @PreAuthorize("hasAnyAuthority('ROLE_CASHIER')")
         public ResponseEntity<ApiResponse<CashierCompletePaymentResponseDTO>> completePayment(
                         @PathVariable("sessionId") Long sessionId,
-                        @RequestBody @Valid CashierCompletePaymentRequestDTO request) {
-                CashierCompletePaymentResponseDTO data = cashierService.completePayment(getCurrentUserId(), sessionId,
+                        @RequestBody @Valid CashierCompletePaymentRequestDTO request, Authentication authentication) {
+                Long userId = (Long) authentication.getCredentials();
+                CashierCompletePaymentResponseDTO data = cashierService.completePayment(userId, sessionId,
                                 request);
                 return ResponseEntity.ok(ApiResponse.<CashierCompletePaymentResponseDTO>builder()
                                 .status(200)

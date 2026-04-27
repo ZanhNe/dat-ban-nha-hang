@@ -18,10 +18,8 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistBookingListRespo
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistBookingDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistCancelBookingResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistCheckInResponseDTO;
-import com.ou.nhahang.dat_ban_nha_hang.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/api/v1/receptionist/bookings")
@@ -68,19 +66,14 @@ public class ReceptionistBookingController {
                 return ResponseEntity.ok(response);
         }
 
-        private Long getCurrentUserId() {
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                User user = (User) authentication.getPrincipal();
-                return user.getId();
-        }
-
         @GetMapping
         @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
         public ResponseEntity<ApiResponse<Page<ReceptionistBookingListResponseDTO>>> getBookings(
-                        @ModelAttribute @Valid ReceptionistGetBookingsRequestDTO request) {
-
+                        @ModelAttribute @Valid ReceptionistGetBookingsRequestDTO request,
+                        Authentication authentication) {
+                Long userId = (Long) authentication.getCredentials();
                 Page<ReceptionistBookingListResponseDTO> data = receptionistBookingService
-                                .getBookings(getCurrentUserId(), request);
+                                .getBookings(userId, request);
 
                 return ResponseEntity.ok(ApiResponse.<Page<ReceptionistBookingListResponseDTO>>builder()
                                 .status(200)
@@ -92,9 +85,11 @@ public class ReceptionistBookingController {
         @GetMapping("/awaiting-confirmation")
         @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
         public ResponseEntity<ApiResponse<Page<ReceptionistBookingListResponseDTO>>> getAwaitingConfirmationBookings(
-                        @ModelAttribute @Valid ReceptionistGetAwaitingBookingsRequestDTO request) {
+                        @ModelAttribute @Valid ReceptionistGetAwaitingBookingsRequestDTO request,
+                        Authentication authentication) {
+                Long userId = (Long) authentication.getCredentials();
                 Page<ReceptionistBookingListResponseDTO> data = receptionistBookingService
-                                .getAwaitingBookings(getCurrentUserId(), request);
+                                .getAwaitingBookings(userId, request);
 
                 return ResponseEntity.ok(ApiResponse.<Page<ReceptionistBookingListResponseDTO>>builder()
                                 .status(200)
@@ -106,9 +101,10 @@ public class ReceptionistBookingController {
         @GetMapping("/{bookingId}")
         @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
         public ResponseEntity<ApiResponse<ReceptionistBookingDetailResponseDTO>> getBookingDetail(
-                        @PathVariable("bookingId") Long bookingId) {
+                        @PathVariable("bookingId") Long bookingId, Authentication authentication) {
+                Long userId = (Long) authentication.getCredentials();
                 ReceptionistBookingDetailResponseDTO data = receptionistBookingService
-                                .getBookingDetail(getCurrentUserId(), bookingId);
+                                .getBookingDetail(userId, bookingId);
                 return ResponseEntity.ok(ApiResponse.<ReceptionistBookingDetailResponseDTO>builder()
                                 .status(200)
                                 .message("Thành công")
@@ -119,8 +115,9 @@ public class ReceptionistBookingController {
         @PatchMapping("/{bookingId}/check-in")
         @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
         public ResponseEntity<ApiResponse<ReceptionistCheckInResponseDTO>> checkInBooking(
-                        @PathVariable("bookingId") Long bookingId) {
-                ReceptionistCheckInResponseDTO data = receptionistBookingService.checkInBooking(getCurrentUserId(),
+                        @PathVariable("bookingId") Long bookingId, Authentication authentication) {
+                Long userId = (Long) authentication.getCredentials();
+                ReceptionistCheckInResponseDTO data = receptionistBookingService.checkInBooking(userId,
                                 bookingId);
                 return ResponseEntity.ok(ApiResponse.<ReceptionistCheckInResponseDTO>builder()
                                 .status(200)
@@ -133,8 +130,10 @@ public class ReceptionistBookingController {
         @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
         public ResponseEntity<ApiResponse<ReceptionistCancelBookingResponseDTO>> cancelBooking(
                         @PathVariable("bookingId") Long bookingId,
-                        @RequestBody @Valid ReceptionistCancelBookingRequestDTO request) {
-                ReceptionistCancelBookingResponseDTO data = receptionistBookingService.cancelBooking(getCurrentUserId(),
+                        @RequestBody @Valid ReceptionistCancelBookingRequestDTO request,
+                        Authentication authentication) {
+                Long userId = (Long) authentication.getCredentials();
+                ReceptionistCancelBookingResponseDTO data = receptionistBookingService.cancelBooking(userId,
                                 bookingId, request);
                 return ResponseEntity.ok(ApiResponse.<ReceptionistCancelBookingResponseDTO>builder()
                                 .status(200)

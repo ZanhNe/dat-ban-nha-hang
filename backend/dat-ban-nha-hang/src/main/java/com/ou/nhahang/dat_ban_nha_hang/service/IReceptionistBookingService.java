@@ -10,7 +10,6 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistBookingDetailRes
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistCancelBookingResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistCheckInResponseDTO;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistGetBookingsRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistGetAwaitingBookingsRequestDTO;
 
@@ -21,11 +20,13 @@ public interface IReceptionistBookingService {
 
     Page<ReceptionistBookingListResponseDTO> getBookings(Long userId, ReceptionistGetBookingsRequestDTO request);
 
-    Page<ReceptionistBookingListResponseDTO> getAwaitingBookings(Long userId, ReceptionistGetAwaitingBookingsRequestDTO request);
+    Page<ReceptionistBookingListResponseDTO> getAwaitingBookings(Long userId,
+            ReceptionistGetAwaitingBookingsRequestDTO request);
 
     ReceptionistBookingDetailResponseDTO getBookingDetail(Long userId, Long bookingId);
 
     ReceptionistCheckInResponseDTO checkInBooking(Long userId, Long bookingId);
 
-    ReceptionistCancelBookingResponseDTO cancelBooking(Long userId, Long bookingId, ReceptionistCancelBookingRequestDTO request);
+    ReceptionistCancelBookingResponseDTO cancelBooking(Long userId, Long bookingId,
+            ReceptionistCancelBookingRequestDTO request);
 }
