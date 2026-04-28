@@ -23,6 +23,7 @@ import jakarta.validation.Valid;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.BookingRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.CreateRestaurantReviewRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetBookingHistoryRequestDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.RegisterRestaurantRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetRestaurantDetailRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.SearchRestaurantRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.TableSearchRequestDTO;
@@ -198,5 +199,22 @@ public class CustomerRestaurantController {
                                 .meta(meta)
                                 .build();
                 return ResponseEntity.ok(response);
+        }
+
+        @PostMapping(value = "/register", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+        @PreAuthorize("hasAnyAuthority('ROLE_CUSTOMER')")
+        public ResponseEntity<ApiResponse<Object>> registerRestaurant(
+                        @ModelAttribute @Valid RegisterRestaurantRequestDTO requestDTO,
+                        Authentication authentication) {
+                
+                Long userId = (Long) authentication.getCredentials();
+                restaurantService.registerRestaurantExecute(userId, requestDTO);
+
+                ApiResponse<Object> response = ApiResponse.builder()
+                                .status(201)
+                                .message("Đã gửi yêu cầu đăng ký nhà hàng thành công. Vui lòng chờ Admin duyệt.")
+                                .data(null)
+                                .build();
+                return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
 }

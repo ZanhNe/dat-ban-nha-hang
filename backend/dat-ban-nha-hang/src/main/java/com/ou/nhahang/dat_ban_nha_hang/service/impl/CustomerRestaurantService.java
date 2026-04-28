@@ -56,6 +56,15 @@ import com.ou.nhahang.dat_ban_nha_hang.repository.UserRepository;
 import com.ou.nhahang.dat_ban_nha_hang.repository.ReviewRepository;
 import com.ou.nhahang.dat_ban_nha_hang.service.ICustomerRestaurantService;
 import com.ou.nhahang.dat_ban_nha_hang.service.port.IGeolocationService;
+import com.ou.nhahang.dat_ban_nha_hang.service.port.IFileStorageService;
+import com.ou.nhahang.dat_ban_nha_hang.repository.CuisineRepository;
+import com.ou.nhahang.dat_ban_nha_hang.repository.LegalDocRepository;
+import com.ou.nhahang.dat_ban_nha_hang.entity.LegalDoc;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.RegisterRestaurantRequestDTO;
+import org.springframework.web.multipart.MultipartFile;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
+import org.locationtech.jts.geom.Coordinate;
 
 import lombok.RequiredArgsConstructor;
 
@@ -70,6 +79,9 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
         private final IGeolocationService geolocationService;
         private final ReviewRepository reviewRepository;
         private final ApplicationEventPublisher eventPublisher;
+        private final IFileStorageService fileStorageService;
+        private final CuisineRepository cuisineRepository;
+        private final LegalDocRepository legalDocRepository;
 
         private GetBookingHistoryResponseDTO mapToBookingHistoryDTO(Booking b) {
                 return GetBookingHistoryResponseDTO.builder()
@@ -592,5 +604,64 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
                                 review.getRating(),
                                 review.getComment(),
                                 review.getCreatedAt());
+        }
+
+        @Override
+        @Transactional
+        public void registerRestaurantExecute(Long userId, RegisterRestaurantRequestDTO requestDTO) {
+                User manager = userRepository.findById(userId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+
+                GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+                Point location = geometryFactory.createPoint(new Coordinate(requestDTO.getLongitude(), requestDTO.getLatitude()));
+
+                Set<Cuisine> cuisines = new HashSet<>();
+                if (requestDTO.getCuisineIds() != null && !requestDTO.getCuisineIds().isEmpty()) {
+                        for (Long cuisineId : requestDTO.getCuisineIds()) {
+                                Cuisine cuisine = cuisineRepository.findById(cuisineId)
+                                                .orElseThrow(() -> new BusinessException("Không tìm thấy danh mục ẩm thực ID: " + cuisineId));
+                                cuisines.add(cuisine);
+                        }
+                }
+
+                String logoUrl = null;
+                if (requestDTO.getLogo() != null && !requestDTO.getLogo().isEmpty()) {
+                        logoUrl = fileStorageService.storeFile(requestDTO.getLogo());
+                }
+
+                Restaurant restaurant = Restaurant.builder()
+                                .name(requestDTO.getName())
+                                .description(requestDTO.getDescription())
+                                .address(requestDTO.getAddress())
+                                .location(location)
+                                .baseDepositValue(requestDTO.getBaseDepositValue())
+                                .depositPolicy(requestDTO.getDepositPolicy())
+                                .manager(manager)
+                                .status(Restaurant.RestaurantStatus.PENDING)
+                                .logo(logoUrl != null ? logoUrl : "")
+                                .avgRating(0.0)
+                                .dayOfWeek(7) // default
+                                .commissionType(Restaurant.CommissionType.PERCENTAGE) // default
+                                .baseCommissionValue(10L) // default 10%
+                                .cuisines(cuisines)
+                                .build();
+
+                restaurant = restaurantRepository.save(restaurant);
+
+                if (requestDTO.getLegalDocs() != null && !requestDTO.getLegalDocs().isEmpty()) {
+                        for (MultipartFile file : requestDTO.getLegalDocs()) {
+                                if (!file.isEmpty()) {
+                                        String docUrl = fileStorageService.storeFile(file);
+                                        LegalDoc legalDoc = LegalDoc.builder()
+                                                        .file(docUrl)
+                                                        .name(file.getOriginalFilename())
+                                                        .type(LegalDoc.LegalDocType.OTHER)
+                                                        .status(LegalDoc.LegalStatus.VALID)
+                                                        .restaurant(restaurant)
+                                                        .build();
+                                        legalDocRepository.save(legalDoc);
+                                }
+                        }
+                }
         }
 }

@@ -37,10 +37,6 @@ public class RestaurantTable extends Base {
     @JoinColumn(name = "table_area_id", nullable = false)
     private TableArea tableArea;
 
-    @OneToMany(mappedBy = "table")
-    @Builder.Default
-    private List<RestaurantTableSession> sessions = new ArrayList<>();
-
     @ManyToMany(mappedBy = "tables")
     @Builder.Default
     private Set<Booking> bookings = new HashSet<>();

@@ -7,17 +7,50 @@ const USE_MOCK = true;
 
 function RegisterRestaurant() {
     const [form, setForm] = useState({
-        restaurantName: '',
-        address: '',
-        phone: '',
+        name: '',
         description: '',
-        cuisineType: '',
+        address: '',
+        baseDepositValue: 200000,
+        depositPolicy: 'FIXED',
+        cuisineIds: []
     });
+
+    const [logo, setLogo] = useState(null);
+    const [legalDocs, setLegalDocs] = useState([]);
+    
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
+    // Mock danh mục ẩm thực
+    const CUISINE_OPTIONS = [
+        { id: 1, name: "Lẩu" },
+        { id: 2, name: "Nướng BBQ" },
+        { id: 3, name: "Hải sản" },
+        { id: 4, name: "Món Á" },
+        { id: 5, name: "Món Âu" }
+    ];
+
     const handleChange = (e) => {
         setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const handleCuisineToggle = (id) => {
+        setForm(prev => {
+            const currentIds = prev.cuisineIds;
+            if (currentIds.includes(id)) {
+                return { ...prev, cuisineIds: currentIds.filter(cId => cId !== id) };
+            } else {
+                return { ...prev, cuisineIds: [...currentIds, id] };
+            }
+        });
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.name === 'logo') {
+            setLogo(e.target.files[0]);
+        } else if (e.target.name === 'legalDocs') {
+            setLegalDocs(Array.from(e.target.files));
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -27,11 +60,38 @@ function RegisterRestaurant() {
             if (USE_MOCK) {
                 await new Promise(r => setTimeout(r, 1000));
             } else {
-                await apiClient.post('/restaurants/register', form);
+                const formData = new FormData();
+                formData.append('name', form.name);
+                formData.append('description', form.description);
+                formData.append('address', form.address);
+                
+                // Giả lập tọa độ HCM
+                formData.append('latitude', 10.762622);
+                formData.append('longitude', 106.660172);
+                
+                formData.append('baseDepositValue', form.baseDepositValue);
+                formData.append('depositPolicy', form.depositPolicy);
+                
+                form.cuisineIds.forEach(id => {
+                    formData.append('cuisineIds', id);
+                });
+
+                if (logo) {
+                    formData.append('logo', logo);
+                }
+
+                if (legalDocs && legalDocs.length > 0) {
+                    legalDocs.forEach(doc => {
+                        formData.append('legalDocs', doc);
+                    });
+                }
+
+                await apiClient.post('/customer/restaurants/register', formData);
             }
             setSubmitted(true);
         } catch (err) {
             console.error('Lỗi đăng ký:', err);
+            alert("Có lỗi xảy ra khi đăng ký: " + (err.response?.data?.message || err.message));
         } finally {
             setSubmitting(false);
         }
@@ -57,15 +117,15 @@ function RegisterRestaurant() {
         <div className="register-restaurant-page">
             <Link to="/customer" className="btn-back-link" style={{ color: '#1565c0', textDecoration: 'none', fontWeight: 600 }}>← Quay lại</Link>
             <h2>Đăng ký mở nhà hàng</h2>
-            <p className="subtitle">Điền thông tin để gửi yêu cầu đăng ký nhà hàng trên hệ thống</p>
+            <p className="subtitle">Điền thông tin và đính kèm giấy tờ pháp lý để gửi yêu cầu đăng ký</p>
 
             <div className="register-card">
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Tên nhà hàng *</label>
                         <input
-                            name="restaurantName"
-                            value={form.restaurantName}
+                            name="name"
+                            value={form.name}
                             onChange={handleChange}
                             placeholder="VD: Haidilao - Chi nhánh Quận 1"
                             required
@@ -85,34 +145,73 @@ function RegisterRestaurant() {
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label>Số điện thoại *</label>
+                            <label>Mức cọc cơ bản (VNĐ) *</label>
                             <input
-                                name="phone"
-                                value={form.phone}
+                                type="number"
+                                name="baseDepositValue"
+                                value={form.baseDepositValue}
                                 onChange={handleChange}
-                                placeholder="0901234567"
                                 required
                             />
                         </div>
                         <div className="form-group">
-                            <label>Loại ẩm thực</label>
-                            <input
-                                name="cuisineType"
-                                value={form.cuisineType}
-                                onChange={handleChange}
-                                placeholder="VD: Lẩu, BBQ, Á, Âu..."
-                            />
+                            <label>Chính sách cọc *</label>
+                            <select name="depositPolicy" value={form.depositPolicy} onChange={handleChange} required>
+                                <option value="FIXED">Cố định (FIXED)</option>
+                                <option value="PER_GUEST">Theo người (PER_GUEST)</option>
+                                <option value="NONE">Không cọc (NONE)</option>
+                            </select>
                         </div>
                     </div>
 
                     <div className="form-group">
-                        <label>Mô tả nhà hàng</label>
+                        <label>Danh mục ẩm thực *</label>
+                        <div className="cuisine-checkboxes" style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                            {CUISINE_OPTIONS.map(c => (
+                                <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={form.cuisineIds.includes(c.id)}
+                                        onChange={() => handleCuisineToggle(c.id)}
+                                    />
+                                    {c.name}
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label>Mô tả nhà hàng *</label>
                         <textarea
                             name="description"
                             value={form.description}
                             onChange={handleChange}
                             placeholder="Giới thiệu ngắn về nhà hàng của bạn..."
+                            required
                         />
+                    </div>
+
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label>Logo nhà hàng (Ảnh) *</label>
+                            <input
+                                type="file"
+                                name="logo"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Giấy tờ pháp lý (Nhiều file) *</label>
+                            <input
+                                type="file"
+                                name="legalDocs"
+                                multiple
+                                onChange={handleFileChange}
+                                required
+                            />
+                        </div>
                     </div>
 
                     <button type="submit" className="btn-submit-register" disabled={submitting}>

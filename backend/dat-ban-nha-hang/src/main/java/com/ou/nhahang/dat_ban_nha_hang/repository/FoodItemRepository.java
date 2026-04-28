@@ -29,9 +29,8 @@ public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
             JOIN fi.foodDescription fd
             JOIN fi.foodOrder fo
             JOIN fo.tableSession ts
-            JOIN ts.table t
-            JOIN t.tableArea ta
-            WHERE ta.restaurant.id = :restaurantId
+            JOIN ts.booking b
+            WHERE b.restaurant.id = :restaurantId
               AND fi.status = com.ou.nhahang.dat_ban_nha_hang.entity.FoodItem$FoodItemStatus.SERVED
               AND (:from IS NULL OR fi.createdAt >= :from)
               AND (:to IS NULL OR fi.createdAt < :to)

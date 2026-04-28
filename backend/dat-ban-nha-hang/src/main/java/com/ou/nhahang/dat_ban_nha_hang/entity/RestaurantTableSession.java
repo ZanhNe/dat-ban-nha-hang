@@ -13,6 +13,8 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@DiscriminatorValue("TABLE_SESSION")
+@PrimaryKeyJoinColumn(name = "table_session_id")
 public class RestaurantTableSession extends PaymentSource {
 
     public enum TableSessionStatus {
@@ -35,10 +37,6 @@ public class RestaurantTableSession extends PaymentSource {
     @ManyToOne
     @JoinColumn(name = "waiter_id", nullable = false)
     private User waiter;
-
-    // @ManyToOne
-    // @JoinColumn(name = "table_id", nullable = false)
-    // private RestaurantTable table;
 
     @OneToOne(mappedBy = "tableSession")
     private Booking booking;

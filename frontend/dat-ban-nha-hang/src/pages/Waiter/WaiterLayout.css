@@ -8,7 +8,6 @@
 .waiter-sidebar {
     width: 260px;
     background: #d35400;
-    /* Màu cam đậm đặc trưng cho Phục vụ */
     color: white;
     display: flex;
     flex-direction: column;

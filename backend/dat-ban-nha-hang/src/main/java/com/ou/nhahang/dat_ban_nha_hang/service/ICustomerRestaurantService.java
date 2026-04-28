@@ -15,6 +15,7 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.request.GetBookingHistoryRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetRestaurantReviewResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.CursorPaginationResult;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.GetBookingHistoryResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.request.RegisterRestaurantRequestDTO;
 
 import org.springframework.data.domain.Page;
 
@@ -37,5 +38,7 @@ public interface ICustomerRestaurantService {
 
         Page<GetBookingHistoryResponseDTO> getBookingHistoryExecute(Long userId,
                         GetBookingHistoryRequestDTO requestDTO);
+
+        void registerRestaurantExecute(Long userId, RegisterRestaurantRequestDTO requestDTO);
 
 }
