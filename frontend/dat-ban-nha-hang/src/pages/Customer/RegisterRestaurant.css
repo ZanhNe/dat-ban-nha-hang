@@ -1,0 +1,93 @@
+/* src/pages/Customer/RegisterRestaurant.css */
+
+.register-restaurant-page {
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.register-restaurant-page h2 {
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.register-restaurant-page .subtitle {
+    color: #888;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+}
+
+.register-card {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #444;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #1565c0;
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.btn-submit-register {
+    background: #1565c0;
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.3s;
+    margin-top: 10px;
+}
+
+.btn-submit-register:hover { background: #0d47a1; }
+.btn-submit-register:disabled { background: #ccc; cursor: not-allowed; }
+
+.success-banner {
+    text-align: center;
+    padding: 40px;
+}
+
+.success-banner .icon { font-size: 3rem; margin-bottom: 15px; }
+.success-banner h3 { color: #2e7d32; margin-bottom: 10px; }
+.success-banner p { color: #666; }

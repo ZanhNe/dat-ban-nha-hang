@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import './AdminLayout.css';
 import { userAtom } from "../../store/authStore";
 import { useAtomValue, useSetAtom } from "jotai";
+import NotificationBell from "../../components/Notification/NotificationBell";
 function AdminLayout() {
     const navigate = useNavigate();
 
@@ -42,6 +43,9 @@ function AdminLayout() {
                     <NavLink to="/admin/user-management" className={({ isActive }) => isActive ? "active" : ""}>
                         Quản lý người dùng
                     </NavLink>
+                    <NavLink to="/admin/commission" className={({ isActive }) => isActive ? "active" : ""}>
+                        Hoa hồng
+                    </NavLink>
                 </nav>
                 <div className="sidebar-footer">
                     <button onClick={handleLogout} className="btn-logout-admin">Đăng xuất</button>
@@ -50,6 +54,9 @@ function AdminLayout() {
 
 
             <main className="admin-main-content">
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '15px 25px 0' }}>
+                    <NotificationBell />
+                </div>
                 <Outlet />
             </main>
         </div>

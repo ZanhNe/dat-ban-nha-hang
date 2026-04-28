@@ -1,0 +1,186 @@
+/* src/pages/Cashier/CashierPayment.css */
+
+.cashier-payment {
+    max-width: 800px;
+}
+
+.btn-back {
+    background: none;
+    border: none;
+    color: #1b5e20;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding: 0;
+}
+
+.btn-back:hover {
+    text-decoration: underline;
+}
+
+.payment-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.payment-header {
+    background: #1b5e20;
+    color: white;
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.payment-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.payment-header .status-badge {
+    padding: 5px 14px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.status-badge.served { background: #a5d6a7; color: #1b5e20; }
+.status-badge.paying { background: #ffe082; color: #e65100; }
+.status-badge.completed { background: #80cbc4; color: #004d40; }
+
+.payment-info {
+    padding: 20px 25px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.payment-info .info-item {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.payment-info .info-item strong {
+    color: #333;
+}
+
+.items-section {
+    padding: 20px 25px;
+}
+
+.items-section h3 {
+    margin: 0 0 15px;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.items-table th {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 2px solid #e0e0e0;
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.items-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.items-table .price-col {
+    text-align: right;
+}
+
+.payment-summary {
+    padding: 20px 25px;
+    background: #f9fbe7;
+    border-top: 2px solid #1b5e20;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    color: #555;
+}
+
+.summary-row.total {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1b5e20;
+    border-top: 1px solid #c5e1a5;
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.payment-actions {
+    padding: 20px 25px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.btn-initiate {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-initiate:hover { background: #f57c00; }
+.btn-initiate:disabled { background: #ccc; cursor: not-allowed; }
+
+.btn-complete {
+    background: #1b5e20;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-complete:hover { background: #2e7d32; }
+.btn-complete:disabled { background: #ccc; cursor: not-allowed; }
+
+.payment-method-select {
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    min-width: 160px;
+}
+
+.format-price {
+    font-family: 'Segoe UI', monospace;
+}
+
+.completed-banner {
+    text-align: center;
+    padding: 20px;
+    color: #2e7d32;
+    font-weight: 600;
+    font-size: 1.1rem;
+}

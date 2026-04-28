@@ -1,12 +1,8 @@
 // src/services/managerService.js
+import apiClient from './apiClient';
 
 const USE_MOCK = true;
-const BASE_URL = 'http://localhost:8080/api/v1/manager/restaurants';
-
-const getAuthHeaders = () => ({
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('token')}`
-});
+const PREFIX = '/manager';
 
 export const managerService = {
 
@@ -24,14 +20,11 @@ export const managerService = {
                 }
             };
         }
-        let url = `${BASE_URL}/${restaurantId}/reports/overview?`;
-        if (fromDate) url += `fromDate=${fromDate}&`;
-        if (toDate) url += `toDate=${toDate}`;
-
-        const response = await fetch(url, { headers: getAuthHeaders() });
-        return response.json();
+        const params = {};
+        if (fromDate) params.fromDate = fromDate;
+        if (toDate) params.toDate = toDate;
+        return apiClient.get(`${PREFIX}/restaurants/${restaurantId}/reports/overview`, { params });
     },
-
 
     getRevenueChart: async (restaurantId, fromDate, toDate, timeUnit = 'DAY') => {
         if (USE_MOCK) {
@@ -47,12 +40,10 @@ export const managerService = {
                 ]
             };
         }
-
-        const url = `${BASE_URL}/${restaurantId}/reports/revenue-chart?fromDate=${fromDate}&toDate=${toDate}&timeUnit=${timeUnit}`;
-        const response = await fetch(url, { headers: getAuthHeaders() });
-        return response.json();
+        return apiClient.get(`${PREFIX}/restaurants/${restaurantId}/reports/revenue-chart`, {
+            params: { fromDate, toDate, timeUnit }
+        });
     },
-
 
     getTopFoods: async (restaurantId, fromDate, toDate, limit = 5) => {
         if (USE_MOCK) {
@@ -68,16 +59,13 @@ export const managerService = {
                 ]
             };
         }
-        let url = `${BASE_URL}/${restaurantId}/reports/top-foods?limit=${limit}&`;
-        if (fromDate) url += `fromDate=${fromDate}&`;
-        if (toDate) url += `toDate=${toDate}`;
-
-        const response = await fetch(url, { headers: getAuthHeaders() });
-        return response.json();
+        const params = { limit };
+        if (fromDate) params.fromDate = fromDate;
+        if (toDate) params.toDate = toDate;
+        return apiClient.get(`${PREFIX}/restaurants/${restaurantId}/reports/top-foods`, { params });
     },
-    //  QUẢN LÝ THÔNG TIN NHÀ HÀNG
 
-    // Lấy thông tin nhà hàng
+    //  QUẢN LÝ THÔNG TIN NHÀ HÀNG
     getRestaurantInfo: async (restaurantId) => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -97,14 +85,9 @@ export const managerService = {
                 }
             };
         }
-        const response = await fetch(`${BASE_URL}/${restaurantId}`, {
-            method: 'GET',
-            headers: getAuthHeaders()
-        });
-        return response.json();
+        return apiClient.get(`${PREFIX}/restaurants/${restaurantId}`);
     },
 
-    // Cập nhật thông tin nhà hàng
     updateRestaurantInfo: async (restaurantId, payload) => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 600));
@@ -114,29 +97,18 @@ export const managerService = {
                 data: { restaurantId, ...payload, status: "OPENING" }
             };
         }
-        const response = await fetch(`${BASE_URL}/${restaurantId}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload)
-        });
-        return response.json();
+        return apiClient.put(`${PREFIX}/restaurants/${restaurantId}`, payload);
     },
 
-    // Xóa nhà hàng
     deleteRestaurant: async (restaurantId) => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 600));
             return { status: 200, message: "Xóa thành công (MOCK)", data: null };
         }
-        const response = await fetch(`${BASE_URL}/${restaurantId}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
-        });
-        return response.json();
+        return apiClient.delete(`${PREFIX}/restaurants/${restaurantId}`);
     },
 
     // 4.2. QUẢN LÝ NHÂN SỰ (STAFF)
-
     getStaffs: async (restaurantId, page = 0, size = 10) => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 400));
@@ -150,11 +122,7 @@ export const managerService = {
                 meta: { page, size, totalElements: 2, totalPages: 1 }
             };
         }
-        const response = await fetch(`${BASE_URL}/${restaurantId}/staffs?page=${page}&size=${size}`, {
-            method: 'GET',
-            headers: getAuthHeaders()
-        });
-        return response.json();
+        return apiClient.get(`${PREFIX}/restaurants/${restaurantId}/staffs`, { params: { page, size } });
     },
 
     createStaff: async (restaurantId, payload) => {
@@ -166,12 +134,7 @@ export const managerService = {
                 data: { userId: Math.floor(Math.random() * 1000), ...payload, roles: [{ id: payload.roleId, name: "ROLE_STAFF" }], status: "ACTIVE" }
             };
         }
-        const response = await fetch(`${BASE_URL}/${restaurantId}/staffs`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload)
-        });
-        return response.json();
+        return apiClient.post(`${PREFIX}/restaurants/${restaurantId}/staffs`, payload);
     },
 
     updateStaff: async (staffId, payload) => {
@@ -179,14 +142,7 @@ export const managerService = {
             await new Promise(resolve => setTimeout(resolve, 500));
             return { status: 200, message: "Cập nhật nhân viên thành công", data: { userId: staffId, ...payload } };
         }
-
-        const URL_STAFF = BASE_URL.replace('/restaurants', '');
-        const response = await fetch(`${URL_STAFF}/staffs/${staffId}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload)
-        });
-        return response.json();
+        return apiClient.put(`${PREFIX}/staffs/${staffId}`, payload);
     },
 
     deleteStaff: async (staffId) => {
@@ -194,12 +150,7 @@ export const managerService = {
             await new Promise(resolve => setTimeout(resolve, 500));
             return { status: 200, message: "Xóa nhân viên thành công", data: null };
         }
-        const URL_STAFF = BASE_URL.replace('/restaurants', '');
-        const response = await fetch(`${URL_STAFF}/staffs/${staffId}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
-        });
-        return response.json();
+        return apiClient.delete(`${PREFIX}/staffs/${staffId}`);
     },
 
     kickStaff: async (staffId) => {
@@ -207,12 +158,7 @@ export const managerService = {
             await new Promise(resolve => setTimeout(resolve, 500));
             return { status: 200, message: "Đã gỡ nhân viên khỏi nhà hàng thành công", data: null };
         }
-        const URL_STAFF = BASE_URL.replace('/restaurants', '');
-        const response = await fetch(`${URL_STAFF}/staffs/${staffId}/kick`, {
-            method: 'PATCH',
-            headers: getAuthHeaders()
-        });
-        return response.json();
+        return apiClient.patch(`${PREFIX}/staffs/${staffId}/kick`);
     },
 
     //  QUẢN LÝ THỰC ĐƠN (MENU, GROUPS, FOODS)
@@ -223,19 +169,20 @@ export const managerService = {
             await new Promise(resolve => setTimeout(resolve, 300));
             return { status: 200, data: [{ menuId: 1, name: "Thực đơn chính", description: "Dùng cho cả ngày" }, { menuId: 2, name: "Thực đơn sáng", description: "Từ 6h - 10h" }] };
         }
-        const res = await fetch(`${BASE_URL.replace('/restaurants', '')}/menus`, { headers: getAuthHeaders() });
-        return res.json();
+        return apiClient.get(`${PREFIX}/menus`);
     },
+
     saveMenu: async (payload, menuId = null) => {
         if (USE_MOCK) return { status: 200, message: "Lưu menu thành công", data: { menuId: menuId || Date.now(), ...payload } };
-        const url = menuId ? `${BASE_URL.replace('/restaurants', '')}/menus/${menuId}` : `${BASE_URL.replace('/restaurants', '')}/menus`;
-        const res = await fetch(url, { method: menuId ? 'PUT' : 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
-        return res.json();
+        if (menuId) {
+            return apiClient.put(`${PREFIX}/menus/${menuId}`, payload);
+        }
+        return apiClient.post(`${PREFIX}/menus`, payload);
     },
+
     deleteMenu: async (menuId) => {
         if (USE_MOCK) return { status: 200, message: "Xóa menu thành công", data: null };
-        const res = await fetch(`${BASE_URL.replace('/restaurants', '')}/menus/${menuId}`, { method: 'DELETE', headers: getAuthHeaders() });
-        return res.json();
+        return apiClient.delete(`${PREFIX}/menus/${menuId}`);
     },
 
     // --- FOOD GROUPS ---
@@ -244,19 +191,20 @@ export const managerService = {
             await new Promise(resolve => setTimeout(resolve, 300));
             return { status: 200, data: [{ groupId: 10, name: "Món Chính", description: "Các loại steak và salad" }, { groupId: 11, name: "Đồ Uống", description: "Nước ép, Sinh tố" }] };
         }
-        const res = await fetch(`${BASE_URL.replace('/restaurants', '')}/menus/${menuId}/food-groups`, { headers: getAuthHeaders() });
-        return res.json();
+        return apiClient.get(`${PREFIX}/menus/${menuId}/food-groups`);
     },
+
     saveFoodGroup: async (menuId, payload, groupId = null) => {
         if (USE_MOCK) return { status: 200, message: "Lưu nhóm món thành công", data: { groupId: groupId || Date.now(), ...payload } };
-        const url = groupId ? `${BASE_URL.replace('/restaurants', '')}/food-groups/${groupId}` : `${BASE_URL.replace('/restaurants', '')}/menus/${menuId}/food-groups`;
-        const res = await fetch(url, { method: groupId ? 'PUT' : 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
-        return res.json();
+        if (groupId) {
+            return apiClient.put(`${PREFIX}/food-groups/${groupId}`, payload);
+        }
+        return apiClient.post(`${PREFIX}/menus/${menuId}/food-groups`, payload);
     },
+
     deleteFoodGroup: async (groupId) => {
         if (USE_MOCK) return { status: 200, message: "Xóa nhóm món thành công", data: null };
-        const res = await fetch(`${BASE_URL.replace('/restaurants', '')}/food-groups/${groupId}`, { method: 'DELETE', headers: getAuthHeaders() });
-        return res.json();
+        return apiClient.delete(`${PREFIX}/food-groups/${groupId}`);
     },
 
     // --- FOODS (MÓN ĂN) ---
@@ -265,19 +213,20 @@ export const managerService = {
             await new Promise(resolve => setTimeout(resolve, 300));
             return { status: 200, data: [{ foodId: 50, name: "Bò lúc lắc", description: "Bò Mỹ sốt tiêu", price: 150000, status: "OPENING", image: "" }] };
         }
-        const res = await fetch(`${BASE_URL.replace('/restaurants', '')}/food-groups/${groupId}/foods`, { headers: getAuthHeaders() });
-        return res.json();
+        return apiClient.get(`${PREFIX}/food-groups/${groupId}/foods`);
     },
+
     saveFood: async (groupId, payload, foodId = null) => {
         if (USE_MOCK) return { status: 200, message: "Lưu món ăn thành công", data: { foodId: foodId || Date.now(), ...payload } };
-        const url = foodId ? `${BASE_URL.replace('/restaurants', '')}/foods/${foodId}` : `${BASE_URL.replace('/restaurants', '')}/food-groups/${groupId}/foods`;
-        const res = await fetch(url, { method: foodId ? 'PUT' : 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
-        return res.json();
+        if (foodId) {
+            return apiClient.put(`${PREFIX}/foods/${foodId}`, payload);
+        }
+        return apiClient.post(`${PREFIX}/food-groups/${groupId}/foods`, payload);
     },
+
     deleteFood: async (foodId) => {
         if (USE_MOCK) return { status: 200, message: "Xóa món ăn thành công", data: null };
-        const res = await fetch(`${BASE_URL.replace('/restaurants', '')}/foods/${foodId}`, { method: 'DELETE', headers: getAuthHeaders() });
-        return res.json();
+        return apiClient.delete(`${PREFIX}/foods/${foodId}`);
     },
 
     // 4.4. QUẢN LÝ SƠ ĐỒ BÀN (TABLE LAYOUT)
@@ -288,21 +237,20 @@ export const managerService = {
             await new Promise(resolve => setTimeout(resolve, 300));
             return { status: 200, data: [{ tableAreaId: 1, name: "Tầng 1", status: "ACTIVE" }, { tableAreaId: 2, name: "Sân thượng", status: "ACTIVE" }] };
         }
-        const res = await fetch(`${BASE_URL.replace('/restaurants', '')}/table-areas`, { headers: getAuthHeaders() });
-        return res.json();
+        return apiClient.get(`${PREFIX}/table-areas`);
     },
 
     saveTableArea: async (payload, areaId = null) => {
         if (USE_MOCK) return { status: 200, message: "Lưu khu vực thành công", data: { tableAreaId: areaId || Date.now(), ...payload } };
-        const url = areaId ? `${BASE_URL.replace('/restaurants', '')}/table-areas/${areaId}` : `${BASE_URL.replace('/restaurants', '')}/table-areas`;
-        const res = await fetch(url, { method: areaId ? 'PUT' : 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
-        return res.json();
+        if (areaId) {
+            return apiClient.put(`${PREFIX}/table-areas/${areaId}`, payload);
+        }
+        return apiClient.post(`${PREFIX}/table-areas`, payload);
     },
 
     deleteTableArea: async (areaId) => {
         if (USE_MOCK) return { status: 200, message: "Xóa khu vực thành công" };
-        const res = await fetch(`${BASE_URL.replace('/restaurants', '')}/table-areas/${areaId}`, { method: 'DELETE', headers: getAuthHeaders() });
-        return res.json();
+        return apiClient.delete(`${PREFIX}/table-areas/${areaId}`);
     },
 
     // --- BÀN ĂN (TABLES) ---
@@ -319,20 +267,19 @@ export const managerService = {
                 ]
             };
         }
-        const res = await fetch(`${BASE_URL.replace('/restaurants', '')}/table-areas/${areaId}/tables`, { headers: getAuthHeaders() });
-        return res.json();
+        return apiClient.get(`${PREFIX}/table-areas/${areaId}/tables`);
     },
 
     saveTable: async (areaId, payload, tableId = null) => {
         if (USE_MOCK) return { status: 200, message: "Lưu bàn thành công", data: { tableId: tableId || Date.now(), ...payload } };
-        const url = tableId ? `${BASE_URL.replace('/restaurants', '')}/tables/${tableId}` : `${BASE_URL.replace('/restaurants', '')}/table-areas/${areaId}/tables`;
-        const res = await fetch(url, { method: tableId ? 'PUT' : 'POST', headers: getAuthHeaders(), body: JSON.stringify(payload) });
-        return res.json();
+        if (tableId) {
+            return apiClient.put(`${PREFIX}/tables/${tableId}`, payload);
+        }
+        return apiClient.post(`${PREFIX}/table-areas/${areaId}/tables`, payload);
     },
 
     deleteTable: async (tableId) => {
         if (USE_MOCK) return { status: 200, message: "Xóa bàn thành công" };
-        const res = await fetch(`${BASE_URL.replace('/restaurants', '')}/tables/${tableId}`, { method: 'DELETE', headers: getAuthHeaders() });
-        return res.json();
+        return apiClient.delete(`${PREFIX}/tables/${tableId}`);
     }
 };

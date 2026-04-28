@@ -1,0 +1,127 @@
+/* src/pages/Receptionist/BookingDetail.css */
+
+.booking-detail {
+    max-width: 700px;
+}
+
+.booking-detail .btn-back {
+    background: none;
+    border: none;
+    color: #1a237e;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding: 0;
+}
+
+.booking-detail .btn-back:hover {
+    text-decoration: underline;
+}
+
+.detail-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.detail-header {
+    background: #1a237e;
+    color: white;
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.detail-header h2 { margin: 0; font-size: 1.3rem; }
+
+.detail-header .status-badge {
+    padding: 5px 14px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: rgba(255,255,255,0.2);
+}
+
+.detail-body {
+    padding: 25px;
+}
+
+.detail-body .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.info-grid .info-item {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.info-grid .info-item strong {
+    color: #333;
+    display: block;
+    margin-top: 2px;
+}
+
+.tables-info {
+    margin-bottom: 20px;
+}
+
+.tables-info .table-tag {
+    display: inline-block;
+    background: #e8eaf6;
+    color: #283593;
+    padding: 4px 12px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    margin-right: 6px;
+    font-weight: 500;
+}
+
+.cancel-section {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.cancel-section h3 {
+    color: #c62828;
+    margin: 0 0 12px;
+    font-size: 1rem;
+}
+
+.cancel-section textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+
+.cancel-section textarea:focus {
+    outline: none;
+    border-color: #c62828;
+}
+
+.btn-cancel-booking {
+    background: #c62828;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-cancel-booking:hover { background: #b71c1c; }
+.btn-cancel-booking:disabled { background: #ccc; cursor: not-allowed; }

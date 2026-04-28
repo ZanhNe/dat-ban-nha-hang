@@ -1,8 +1,9 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import './ManagerLayout.css';
-import { userAtom } from "../../store/authStore";
 import { useAtomValue, useSetAtom } from "jotai";
+import { userAtom } from "../../store/authStore";
+import NotificationBell from "../../components/Notification/NotificationBell";
+import './ManagerLayout.css';
 function ManagerLayout() {
     const navigate = useNavigate();
 
@@ -47,7 +48,7 @@ function ManagerLayout() {
                         <span>Khu vực Quản trị Nhà hàng</span>
                     </div>
                     <div className="header-right">
-                        <button className="btn-notification"> <span className="badge">3</span></button>
+                        <NotificationBell />
                         <div className="user-profile">
                             <span className="user-name">Xin chào, <strong>{user.fullName}</strong></span>
                             <button className="btn-logout" onClick={handleLogout}>Đăng xuất</button>

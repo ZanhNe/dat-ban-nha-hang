@@ -8,7 +8,9 @@ import PendingBookingsPage from './pages/PendingBookings/PendingBookingsPage'
 import ProtectedRoute from "./pages/RoutePage/ProtectedRoute"
 import PublicRoute from "./pages/RoutePage/PublicRoute"
 import HomeCustomer from "./pages/Customer/HomeCustomer"
-import { Navigate } from "react-router-dom"
+import BookingHistory from "./pages/Customer/BookingHistory"
+import ReviewForm from "./pages/Customer/ReviewForm"
+import RegisterRestaurant from "./pages/Customer/RegisterRestaurant"
 import AdminDashboard from "./pages/Admin/AdminDashboard"
 import AdminLayout from "./pages/Admin/AdminLayout"
 import RestaurantApprovals from "./pages/Admin/RestaurantApprovals"
@@ -16,6 +18,7 @@ import RestaurantManagement from "./pages/Admin/RestaurantManagement"
 import CuisineManagement from "./pages/Admin/CuisineManagement"
 import UserManagement from "./pages/Admin/UserManagement"
 import BroadcastCenter from "./pages/Admin/BroadcastCenter"
+import CommissionConfig from "./pages/Admin/CommissionConfig"
 import ManagerLayout from "./pages/Manager/ManagerLayout"
 import ManagerDashboard from "./pages/Manager/ManagerDashboard"
 import RestaurantInfo from "./pages/Manager/RestaurantInfo"
@@ -26,13 +29,17 @@ import TableManagement from "./pages/Manager/TableManagement"
 import BookingRequests from "./pages/Receptionist/BookingRequests"
 import ReceptionistLayout from "./pages/Receptionist/ReceptionistLayout"
 import CheckIn from "./pages/Receptionist/CheckIn"
+import BookingDetail from "./pages/Receptionist/BookingDetail"
 
 import WaiterLayout from "./pages/Waiter/WaiterLayout"
 import WaiterDashboard from "./pages/Waiter/WaiterDashboard"
 import PosScreen from "./pages/Waiter/PosScreen"
-
-
 import FoodStatusScreen from "./pages/Waiter/FoodStatusScreen"
+
+import CashierLayout from "./pages/Cashier/CashierLayout"
+import CashierDashboard from "./pages/Cashier/CashierDashboard"
+import CashierPayment from "./pages/Cashier/CashierPayment"
+
 function App() {
 
   return (
@@ -57,7 +64,11 @@ function App() {
           <Route path="map-search" element={<MapSearchPage />} />
           <Route path="restaurants/:id" element={<RestaurantDetailPage />} />
           <Route path="bookings/pending-payment" element={<PendingBookingsPage />} />
+          <Route path="bookings" element={<BookingHistory />} />
+          <Route path="review/:restaurantId" element={<ReviewForm />} />
+          <Route path="register-restaurant" element={<RegisterRestaurant />} />
         </Route>
+
         <Route path="/admin" element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
           <Route element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
@@ -66,15 +77,13 @@ function App() {
             <Route path="cuisines" element={<CuisineManagement />} />
             <Route path="broadcast" element={<BroadcastCenter />} />
             <Route path="user-management" element={<UserManagement />} />
+            <Route path="commission" element={<CommissionConfig />} />
           </Route>
         </Route>
 
         <Route path="/manager" element={<ProtectedRoute allowedRoles={["MANAGER"]} />}>
           <Route element={<ManagerLayout />}>
-
             <Route index element={<ManagerDashboard />} />
-
-
             <Route path="info" element={<RestaurantInfo />} />
             <Route path="staff" element={<StaffManagement />} />
             <Route path="menu" element={<MenuManagement />} />
@@ -86,6 +95,7 @@ function App() {
           <Route element={<ReceptionistLayout />}>
             <Route index element={<BookingRequests />} />
             <Route path="check-in" element={<CheckIn />} />
+            <Route path="bookings/:bookingId" element={<BookingDetail />} />
           </Route>
         </Route>
 
@@ -98,19 +108,15 @@ function App() {
         </Route>
 
         <Route path="/cashier" element={<ProtectedRoute allowedRoles={["CASHIER"]} />}>
-          <Route element={<ReceptionistLayout />}>
-            <Route index element={<BookingRequests />} />
-            <Route path="check-in" element={<CheckIn />} />
+          <Route element={<CashierLayout />}>
+            <Route index element={<CashierDashboard />} />
+            <Route path="paying" element={<CashierDashboard />} />
+            <Route path="payment/:sessionId" element={<CashierPayment />} />
           </Route>
         </Route>
 
-
-
-
-
-
       </Routes>
-    </BrowserRouter >
+    </BrowserRouter>
   )
 }
 

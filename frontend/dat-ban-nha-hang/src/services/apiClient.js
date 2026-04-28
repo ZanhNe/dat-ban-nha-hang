@@ -8,6 +8,18 @@ const apiClient = axios.create({
   timeout: 10000,
 });
 
+// Tự động gắn Authorization header cho mọi request
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 apiClient.interceptors.response.use(
   (response) => {
     return response.data;

@@ -1,0 +1,98 @@
+/* src/pages/Customer/ReviewForm.css */
+
+.review-form-page {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.review-form-page h2 {
+    color: #333;
+    margin-bottom: 25px;
+}
+
+.review-card {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.star-rating {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.star-rating .star {
+    font-size: 2rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.star-rating .star:hover {
+    transform: scale(1.2);
+}
+
+.star-rating .star.active {
+    filter: none;
+}
+
+.review-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+    margin-bottom: 20px;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.review-textarea:focus {
+    outline: none;
+    border-color: #ff9800;
+}
+
+.btn-submit-review {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    width: 100%;
+}
+
+.btn-submit-review:hover { background: #f57c00; }
+.btn-submit-review:disabled { background: #ccc; cursor: not-allowed; }
+
+.success-msg {
+    text-align: center;
+    color: #2e7d32;
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 30px;
+}
+
+.btn-back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #1565c0;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.btn-back-link:hover {
+    text-decoration: underline;
+}

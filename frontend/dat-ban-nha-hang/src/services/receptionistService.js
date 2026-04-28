@@ -1,11 +1,7 @@
 // src/services/receptionistService.js
-const USE_MOCK = true;
-const BASE_URL = 'http://localhost:8080/api/v1/receptionist';
+import apiClient from './apiClient';
 
-const getHeaders = () => ({
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-});
+const USE_MOCK = true;
 
 export const receptionistService = {
     // Lấy danh sách booking (PENDING để xác nhận, CONFIRMED để check-in)
@@ -19,31 +15,23 @@ export const receptionistService = {
                 ]
             };
         }
-        const res = await fetch(`${BASE_URL}/bookings?status=${status}`, { headers: getHeaders() });
-        return res.json();
+        return apiClient.get('/receptionist/bookings', { params: { status } });
     },
 
     // 6.1 Xác nhận
     confirmBooking: async (id) => {
         if (USE_MOCK) return { status: 200, message: "Xác nhận thành công", data: { bookingId: id, status: "CONFIRMED" } };
-        const res = await fetch(`${BASE_URL}/bookings/${id}/confirm`, { method: 'PATCH', headers: getHeaders() });
-        return res.json();
+        return apiClient.patch(`/receptionist/bookings/${id}/confirm`);
     },
 
     // 6.2 Từ chối
     rejectBooking: async (id, reason) => {
         if (USE_MOCK) return { status: 200, message: "Đã từ chối", data: { bookingId: id, status: "REJECTED" } };
-        const res = await fetch(`${BASE_URL}/bookings/${id}/reject`, {
-            method: 'PATCH',
-            headers: getHeaders(),
-            body: JSON.stringify({ reason })
-        });
-        return res.json();
+        return apiClient.patch(`/receptionist/bookings/${id}/reject`, { reason });
     },
-    // Thêm vào object receptionistService trong file đã có
 
     // Lấy danh sách khách sắp đến (Trạng thái CONFIRMED)
-    getConfirmedBookings: async (restaurantId) => {
+    getConfirmedBookings: async () => {
         if (USE_MOCK) {
             await new Promise(r => setTimeout(r, 500));
             return {
@@ -54,8 +42,7 @@ export const receptionistService = {
                 ]
             };
         }
-        const res = await fetch(`${BASE_URL}/bookings?status=CONFIRMED`, { headers: getHeaders() });
-        return res.json();
+        return apiClient.get('/receptionist/bookings', { params: { status: 'CONFIRMED' } });
     },
 
     // 6.3. Thực hiện Check-in
@@ -68,10 +55,6 @@ export const receptionistService = {
                 data: { sessionId: 1001, tableIds: [5], status: "ACTIVE" }
             };
         }
-        const res = await fetch(`${BASE_URL}/bookings/${bookingId}/check-in`, {
-            method: 'PATCH',
-            headers: getHeaders()
-        });
-        return res.json();
+        return apiClient.patch(`/receptionist/bookings/${bookingId}/check-in`);
     }
 };

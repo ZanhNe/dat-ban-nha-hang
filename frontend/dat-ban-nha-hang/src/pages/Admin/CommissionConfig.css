@@ -1,0 +1,89 @@
+/* src/pages/Admin/CommissionConfig.css */
+
+.commission-config h2 {
+    margin: 0 0 8px;
+    color: #1a237e;
+}
+
+.commission-config .subtitle {
+    color: #888;
+    margin-bottom: 25px;
+    font-size: 0.9rem;
+}
+
+.commission-card {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    max-width: 500px;
+}
+
+.current-rate {
+    background: #e8eaf6;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.current-rate .rate-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a237e;
+}
+
+.current-rate .rate-label {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.commission-form .form-group {
+    margin-bottom: 20px;
+}
+
+.commission-form .form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #444;
+    font-size: 0.9rem;
+}
+
+.commission-form .form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    box-sizing: border-box;
+}
+
+.commission-form .form-group input:focus {
+    outline: none;
+    border-color: #1a237e;
+}
+
+.btn-save-commission {
+    background: #1a237e;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    width: 100%;
+}
+
+.btn-save-commission:hover { background: #0d47a1; }
+.btn-save-commission:disabled { background: #ccc; cursor: not-allowed; }
+
+.save-success {
+    color: #2e7d32;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 15px;
+}

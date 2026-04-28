@@ -1,0 +1,134 @@
+/* src/pages/Cashier/CashierDashboard.css */
+
+.cashier-dashboard h2 {
+    margin: 0 0 20px;
+    color: #1b5e20;
+    font-size: 1.5rem;
+}
+
+.cashier-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.cashier-tabs .tab-btn {
+    padding: 10px 24px;
+    border: 2px solid #1b5e20;
+    background: white;
+    color: #1b5e20;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.cashier-tabs .tab-btn.active {
+    background: #1b5e20;
+    color: white;
+}
+
+.cashier-tabs .tab-btn:hover:not(.active) {
+    background: #e8f5e9;
+}
+
+.session-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.session-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border-left: 5px solid #43a047;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.session-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.session-card.paying {
+    border-left-color: #ff9800;
+}
+
+.session-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.session-card .card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.session-card .badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.badge.served {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.badge.paying {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.session-card .card-body p {
+    margin: 6px 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.session-card .card-body strong {
+    color: #333;
+}
+
+.session-card .tables-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.session-card .table-tag {
+    background: #f1f8e9;
+    color: #33691e;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.empty-state .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+    font-size: 1rem;
+}

@@ -1,20 +1,11 @@
+// src/services/adminService.js
+import apiClient from './apiClient';
 
 const USE_MOCK = true;
-const BASE_URL = 'http://localhost:8080/api/v1/admin';
-
-const getAuthHeaders = () => {
-    const token = localStorage.getItem('accessToken');
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-    };
-};
-
 
 const adminService = {
 
     // Lấy danh sách nhà hàng (chỉ lấy PENDING)
-
     getPendingRestaurants: async (page = 0, limit = 10, status = 'PENDING') => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -40,18 +31,10 @@ const adminService = {
                 meta: { page: page, limit: limit, totalItems: 2, totalPages: 1 }
             };
         }
-
-
-        const response = await fetch(`${BASE_URL}/restaurants?status=${status}&page=${page}&limit=${limit}`, {
-            method: 'GET',
-            headers: getAuthHeaders(),
-        });
-        return response.json();
+        return apiClient.get('/admin/restaurants', { params: { status, page, limit } });
     },
 
-
     // Xem chi tiết nhà hàng
-
     getRestaurantDetail: async (id) => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -76,18 +59,10 @@ const adminService = {
                 }
             };
         }
-
-
-        const response = await fetch(`${BASE_URL}/restaurants/${id}`, {
-            method: 'GET',
-            headers: getAuthHeaders(),
-        });
-        return response.json();
+        return apiClient.get(`/admin/restaurants/${id}`);
     },
 
-
     // Duyệt nhà hàng mới
-
     updateApprovalStatus: async (id, payload) => {
         // payload: { status: "APPROVED" | "REJECTED", rejectReason?: "..." }
         if (USE_MOCK) {
@@ -103,19 +78,10 @@ const adminService = {
                 }
             };
         }
-
-
-        const response = await fetch(`${BASE_URL}/restaurants/${id}/approval`, {
-            method: 'PATCH',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload)
-        });
-        return response.json();
+        return apiClient.patch(`/admin/restaurants/${id}/approval`, payload);
     },
 
-
     // Lấy TẤT CẢ danh sách nhà hàng (Quản lý chung)
-
     getAllRestaurants: async (page = 0, limit = 100, search = '') => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -129,17 +95,12 @@ const adminService = {
                 ]
             };
         }
-
-        let url = `${BASE_URL}/restaurants?page=${page}&limit=${limit}`;
-        if (search) url += `&search=${search}`;
-
-        const response = await fetch(url, { method: 'GET', headers: getAuthHeaders() });
-        return response.json();
+        const params = { page, limit };
+        if (search) params.search = search;
+        return apiClient.get('/admin/restaurants', { params });
     },
 
-
     // 7.4. Khóa / Mở khóa nhà hàng
-
     updateRestaurantStatus: async (id, status, reason = "") => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -149,20 +110,11 @@ const adminService = {
                 data: { restaurantId: id, status: status }
             };
         }
-
-        const response = await fetch(`${BASE_URL}/restaurants/${id}/status`, {
-            method: 'PATCH',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ status, reason })
-        });
-        return response.json();
+        return apiClient.patch(`/admin/restaurants/${id}/status`, { status, reason });
     },
 
-
     // 7.6. Cấu hình Commission (Hoa hồng)
-
     updateRestaurantCommission: async (id, payload) => {
-
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 500));
             return {
@@ -171,18 +123,10 @@ const adminService = {
                 data: { restaurantId: id, ...payload }
             };
         }
-
-        const response = await fetch(`${BASE_URL}/restaurants/${id}/commission`, {
-            method: 'PATCH',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload)
-        });
-        return response.json();
+        return apiClient.patch(`/admin/restaurants/${id}/commission`, payload);
     },
 
     // 7.7. QUẢN LÝ DANH MỤC ẨM THỰC (CUISINES)
-
-
     getAllCuisines: async () => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 300));
@@ -197,8 +141,7 @@ const adminService = {
                 ]
             };
         }
-        const response = await fetch(`${BASE_URL}/cuisines`, { method: 'GET', headers: getAuthHeaders() });
-        return response.json();
+        return apiClient.get('/admin/cuisines');
     },
 
     createCuisine: async (payload) => {
@@ -210,12 +153,7 @@ const adminService = {
                 data: { cuisineId: Math.floor(Math.random() * 1000), ...payload }
             };
         }
-        const response = await fetch(`${BASE_URL}/cuisines`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload)
-        });
-        return response.json();
+        return apiClient.post('/admin/cuisines', payload);
     },
 
     updateCuisine: async (id, payload) => {
@@ -227,12 +165,7 @@ const adminService = {
                 data: { cuisineId: id, ...payload }
             };
         }
-        const response = await fetch(`${BASE_URL}/cuisines/${id}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload)
-        });
-        return response.json();
+        return apiClient.put(`/admin/cuisines/${id}`, payload);
     },
 
     deleteCuisine: async (id) => {
@@ -240,19 +173,13 @@ const adminService = {
             await new Promise(resolve => setTimeout(resolve, 500));
             return { status: 200, message: "Xóa thành công (MOCK)", data: null };
         }
-        const response = await fetch(`${BASE_URL}/cuisines/${id}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
-        });
-        return response.json();
+        return apiClient.delete(`/admin/cuisines/${id}`);
     },
 
     // 7.8. BÁO CÁO TOÀN HỆ THỐNG (DASHBOARD)
-
     getDashboardMetrics: async (fromDate = null, toDate = null) => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 500));
-
             const isFiltered = fromDate || toDate;
             return {
                 status: 200,
@@ -260,30 +187,18 @@ const adminService = {
                 data: {
                     totalRevenue: isFiltered ? 5000000 : 15000000,
                     totalBookings: isFiltered ? 320 : 1250,
-                    totalRestaurants: 45, // Tổng nhà hàng thường cố định
+                    totalRestaurants: 45,
                     totalNewUsers: isFiltered ? 45 : 120
                 }
             };
         }
-
-
-        let url = `${BASE_URL}/reports/dashboard`;
-        const params = new URLSearchParams();
-        if (fromDate) params.append('fromDate', fromDate);
-        if (toDate) params.append('toDate', toDate);
-
-        const queryString = params.toString();
-        if (queryString) {
-            url += `?${queryString}`;
-        }
-
-        const response = await fetch(url, { method: 'GET', headers: getAuthHeaders() });
-        return response.json();
+        const params = {};
+        if (fromDate) params.fromDate = fromDate;
+        if (toDate) params.toDate = toDate;
+        return apiClient.get('/admin/reports/dashboard', { params });
     },
 
     // 7.10. QUẢN LÝ NGƯỜI DÙNG (USER MANAGEMENT)
-
-    //  Lấy danh sách người dùng
     getAllUsers: async (params = {}) => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 400));
@@ -297,21 +212,18 @@ const adminService = {
                 meta: { totalItems: 50, totalPages: 5, page: 0, limit: 10 }
             };
         }
-        const query = new URLSearchParams(params).toString();
-        const response = await fetch(`${BASE_URL}/users?${query}`, { method: 'GET', headers: getAuthHeaders() });
-        return response.json();
+        return apiClient.get('/admin/users', { params });
     },
 
-    //  Tạo / Cập nhật người dùng
     saveUser: async (payload, userId = null) => {
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 500));
             return { status: userId ? 200 : 201, message: "Thành công (MOCK)", data: { userId: userId || 999, ...payload } };
         }
-        const url = userId ? `${BASE_URL}/users/${userId}` : `${BASE_URL}/users`;
-        const method = userId ? 'PUT' : 'POST';
-        const response = await fetch(url, { method, headers: getAuthHeaders(), body: JSON.stringify(payload) });
-        return response.json();
+        if (userId) {
+            return apiClient.put(`/admin/users/${userId}`, payload);
+        }
+        return apiClient.post('/admin/users', payload);
     },
 
     // Điều chuyển nhân sự (Gán workplace)
@@ -320,15 +232,10 @@ const adminService = {
             await new Promise(resolve => setTimeout(resolve, 500));
             return { status: 200, message: "Điều chuyển nhân sự thành công (MOCK)" };
         }
-        const response = await fetch(`${BASE_URL}/users/${userId}/workplace`, {
-            method: 'PATCH',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ restaurantId, roleId })
-        });
-        return response.json();
+        return apiClient.patch(`/admin/users/${userId}/workplace`, { restaurantId, roleId });
     },
-    // TRUNG TÂM THÔNG BÁO
 
+    // TRUNG TÂM THÔNG BÁO
     // Gửi thông báo chung (Broadcast / Role)
     sendBroadcastNotification: async (payload) => {
         // payload: { title, content, type, targetRole? }
@@ -336,27 +243,17 @@ const adminService = {
             await new Promise(resolve => setTimeout(resolve, 600));
             return { status: 200, message: "Đã đưa vào hàng đợi gửi thông báo chung (MOCK)" };
         }
-        const response = await fetch(`${BASE_URL}/notifications/broadcast`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload)
-        });
-        return response.json();
+        return apiClient.post('/admin/notifications/broadcast', payload);
     },
 
-    //  Gửi thông báo cá nhân
+    // Gửi thông báo cá nhân
     sendPersonalNotification: async (payload) => {
         // payload: { userId, title, content, type }
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 600));
             return { status: 200, message: `Đã gửi thông báo cá nhân tới User ID ${payload.userId} thành công (MOCK)` };
         }
-        const response = await fetch(`${BASE_URL}/notifications/send`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload)
-        });
-        return response.json();
+        return apiClient.post('/admin/notifications/send', payload);
     }
 
 };

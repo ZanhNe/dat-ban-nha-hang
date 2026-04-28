@@ -1,0 +1,81 @@
+/* src/pages/Customer/BookingHistory.css */
+
+.booking-history {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+.booking-history h2 {
+    color: #333;
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.history-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: box-shadow 0.3s;
+}
+
+.history-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.history-info h3 {
+    margin: 0 0 6px;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.history-info p {
+    margin: 3px 0;
+    color: #777;
+    font-size: 0.9rem;
+}
+
+.history-status .status-badge {
+    padding: 6px 16px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-badge.confirmed { background: #e3f2fd; color: #1565c0; }
+.status-badge.completed { background: #e8f5e9; color: #2e7d32; }
+.status-badge.cancelled { background: #fbe9e7; color: #c62828; }
+.status-badge.serving { background: #fff3e0; color: #e65100; }
+.status-badge.pending { background: #f3e5f5; color: #6a1b9a; }
+.status-badge.rejected { background: #ffebee; color: #b71c1c; }
+
+.history-actions {
+    margin-top: 10px;
+}
+
+.btn-review {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+.btn-review:hover {
+    background: #f57c00;
+}

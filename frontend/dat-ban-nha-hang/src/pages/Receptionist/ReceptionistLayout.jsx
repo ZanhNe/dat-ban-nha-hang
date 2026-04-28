@@ -3,6 +3,7 @@ import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAtomValue, useSetAtom } from "jotai";
 import { userAtom } from "../../store/authStore";
+import NotificationBell from "../../components/Notification/NotificationBell";
 import './ReceptionistLayout.css';
 
 function ReceptionistLayout() {
@@ -42,6 +43,7 @@ function ReceptionistLayout() {
                         <h3>{user?.workplace?.name || "Nhà hàng hiện tại"}</h3>
                     </div>
                     <div className="header-user">
+                        <NotificationBell />
                         <span>Nhân viên: <strong>{user?.fullName}</strong></span>
                         <button onClick={handleLogout} className="btn-logout-minimal">Đăng xuất</button>
                     </div>
