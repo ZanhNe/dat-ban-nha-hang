@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { paymentService } from '../../services/paymentService';
-import { PaymentModal } from '../../components/PaymentModal/PaymentModal';
 import { Clock, Users, Calendar, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,7 +7,7 @@ const PendingBookingsPage = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [selectedBooking, setSelectedBooking] = useState(null);
+    const [isProcessing, setIsProcessing] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
 
@@ -32,10 +31,21 @@ const PendingBookingsPage = () => {
         fetchBookings();
     }, []);
 
-    const handlePaymentSuccess = () => {
-        setSuccessMessage('Đã khởi tạo giao dịch đặt cọc thành công, vui lòng chờ nhà hàng duyệt.');
-        setSelectedBooking(null);
-        fetchBookings();
+    const handlePaymentClick = async (booking) => {
+        try {
+            setIsProcessing(true);
+            const res = await paymentService.initiatePayment(booking.bookingId);
+            if (res.data && res.data.paymentUrl) {
+                // Redirect to VNPay
+                window.location.href = res.data.paymentUrl;
+            } else {
+                setError('Không lấy được URL thanh toán VNPay.');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Có lỗi xảy ra khi khởi tạo thanh toán VNPay.');
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     if (loading) {
@@ -112,11 +122,13 @@ const PendingBookingsPage = () => {
                                             </p>
                                         </div>
                                         <button
-                                            onClick={() => setSelectedBooking(booking)}
-                                            className="w-full sm:w-auto flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
+                                            onClick={() => handlePaymentClick(booking)}
+                                            disabled={isProcessing}
+                                            className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg font-medium transition-colors ${isProcessing ? 'bg-blue-400 text-white cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                }`}
                                         >
-                                            Thanh toán ngay
-                                            <ChevronRight className="w-4 h-4" />
+                                            {isProcessing ? 'Đang xử lý...' : 'Thanh toán VNPay ngay'}
+                                            {!isProcessing && <ChevronRight className="w-4 h-4" />}
                                         </button>
                                     </div>
                                 </div>
@@ -126,13 +138,6 @@ const PendingBookingsPage = () => {
                 </div>
             </div>
 
-            {selectedBooking && (
-                <PaymentModal
-                    booking={selectedBooking}
-                    onClose={() => setSelectedBooking(null)}
-                    onPaymentSuccess={handlePaymentSuccess}
-                />
-            )}
         </div>
     );
 };

@@ -7,6 +7,6 @@ export const paymentService = {
     },
 
     initiatePayment: async (bookingId) => {
-        return apiClient.post(`/bookings/${bookingId}/payments/initiate`);
+        return apiClient.post(`/bookings/${bookingId}/transactions/initiate-online`);
     }
 };

@@ -1,98 +1,98 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './HomeCustomer.css'; // File CSS tương ứng
+import './HomeCustomer.css';
 import Header from '../../components/Header/Header'
+import { paymentService } from '../../services/paymentService';
+
 function HomeCustomer() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useState({ keyword: '', cuisine: '' });
+    const [pendingCount, setPendingCount] = useState(0);
 
-    // Mock data: Thông báo chờ thanh toán (Tính năng 4)
-    const pendingPayments = 1;
-
-    // Mock data: Danh sách nhà hàng nổi bật (Tính năng 1, 2, 3)
-    const featuredRestaurants = [
-        { id: 1, name: "Haidilao Hotpot", cuisine: "Lẩu", location: "Quận 1, TP.HCM", rating: 4.8, image: "https://via.placeholder.com/300x200" },
-        { id: 2, name: "El Gaucho Steakhouse", cuisine: "Âu", location: "Quận 2, TP.HCM", rating: 4.9, image: "https://via.placeholder.com/300x200" },
-        { id: 3, name: "Sushi Hokkaido Sachi", cuisine: "Nhật Bản", location: "Quận 3, TP.HCM", rating: 4.7, image: "https://via.placeholder.com/300x200" },
-    ];
+    useEffect(() => {
+        const fetchPendingCount = async () => {
+            try {
+                const res = await paymentService.getPendingBookings();
+                if (res.data) {
+                    setPendingCount(res.data.length);
+                }
+            } catch (err) {
+                console.error("Không thể lấy danh sách chờ thanh toán", err);
+            }
+        };
+        fetchPendingCount();
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
-        // Xử lý chuyển hướng kèm query params, hoặc gọi API
-        console.log("Searching for:", searchParams);
-        // navigate(`/customer/search?keyword=${searchParams.keyword}&cuisine=${searchParams.cuisine}`);
+        navigate(`/customer/map-search?keyword=${searchParams.keyword}&cuisine=${searchParams.cuisine}`);
     };
 
     return (
         <>
             <Header />
             <div className="home-customer">
-                {/* Cảnh báo thanh toán cọc - Tính năng 4 */}
-                {pendingPayments > 0 && (
+                {/* Thông báo thanh toán cọc */}
+                {pendingCount > 0 && (
                     <div className="alert-banner">
-                        Bạn có {pendingPayments} đặt bàn đang chờ thanh toán cọc.
-                        <Link to="/customer/bookings/pending-payment"> Thanh toán ngay</Link>
+                        <strong>Chú ý:</strong> Bạn có {pendingCount} đơn đặt bàn đang chờ thanh toán cọc (VNPay).
+                        <Link to="/customer/bookings/pending-payment" className="alert-link">
+                            {' '}Thanh toán ngay để giữ chỗ
+                        </Link>
                     </div>
                 )}
 
-                {/* Hero Section & TÌm kiếm - Tính năng 1 */}
-                <section className="hero-section">
-                    <h1>Tìm kiếm hương vị yêu thích của bạn</h1>
-                    <form className="search-bar" onSubmit={handleSearch}>
-                        <input
-                            type="text"
-                            placeholder="Tên nhà hàng, vị trí..."
-                            value={searchParams.keyword}
-                            onChange={(e) => setSearchParams({ ...searchParams, keyword: e.target.value })}
-                        />
-                        <select
-                            value={searchParams.cuisine}
-                            onChange={(e) => setSearchParams({ ...searchParams, cuisine: e.target.value })}
-                        >
-                            <option value="">Tất cả ẩm thực</option>
-                            <option value="vietnamese">Việt Nam</option>
-                            <option value="japanese">Nhật Bản</option>
-                            <option value="western">Món Âu</option>
-                        </select>
-                        <button type="submit">Tìm kiếm</button>
-                        <Link to="/customer/map-search" className="btn-map-search">
-                            🗺️ Tìm trên bản đồ
-                        </Link>
+                {/* Phần Tìm Kiếm Đơn Giản */}
+                <section className="search-section shadow-sm border border-gray-200">
+                    <h1 className="text-xl font-bold mb-4">Tìm Nhà Hàng Nhanh</h1>
+                    <form className="search-form" onSubmit={handleSearch}>
+                        <div className="search-inputs">
+                            <input
+                                type="text"
+                                placeholder="Nhập tên nhà hàng hoặc địa chỉ..."
+                                value={searchParams.keyword}
+                                onChange={(e) => setSearchParams({ ...searchParams, keyword: e.target.value })}
+                                className="form-control"
+                            />
+                            <select
+                                value={searchParams.cuisine}
+                                onChange={(e) => setSearchParams({ ...searchParams, cuisine: e.target.value })}
+                                className="form-control"
+                            >
+                                <option value="">Tất cả loại hình</option>
+                                <option value="Lẩu">Lẩu</option>
+                                <option value="Món Trung">Món Trung</option>
+                                <option value="BBQ">BBQ</option>
+                            </select>
+                        </div>
+                        <div className="search-actions mt-4 flex gap-2">
+                            <button type="submit" className="btn-primary">Tìm Kiếm</button>
+                            <Link to="/customer/map-search" className="btn-secondary">
+                                Xem trên Bản đồ
+                            </Link>
+                        </div>
                     </form>
                 </section>
 
-                {/* Bảng điều khiển cá nhân (Lịch sử & Đánh giá) - Tính năng 5, 6 */}
-                <section className="dashboard-quick-links">
-                    <h2>Hoạt động của tôi</h2>
-                    <div className="action-cards">
-                        <Link to="/customer/history" className="action-card">
-                            🕒 Lịch sử đặt bàn
+                <section className="features-section mt-8">
+                    <h2 className="text-lg font-semibold mb-4 border-b pb-2">Bảng điều khiển cá nhân</h2>
+                    <div className="dashboard-grid">
+                        <Link to="/customer/bookings/pending-payment" className="dashboard-card">
+                            <div className="card-icon">💳</div>
+                            <div className="card-title">Chờ thanh toán</div>
+                            <div className="card-desc">Thanh toán cọc qua VNPay</div>
+                            {pendingCount > 0 && <span className="badge">{pendingCount}</span>}
                         </Link>
-                        <Link to="/customer/reviews" className="action-card">
-                            ⭐ Đánh giá nhà hàng
+                        <Link to="/customer/bookings" className="dashboard-card">
+                            <div className="card-icon">🕒</div>
+                            <div className="card-title">Lịch sử đặt bàn</div>
+                            <div className="card-desc">Xem lại các lần ăn uống</div>
                         </Link>
-                    </div>
-                </section>
-
-                {/* Danh sách nhà hàng nổi bật - Tính năng 2, 3 */}
-                <section className="featured-section">
-                    <h2>Nhà hàng nổi bật</h2>
-                    <div className="restaurant-grid">
-                        {featuredRestaurants.map((rest) => (
-                            <div key={rest.id} className="restaurant-card">
-                                <img src={rest.image} alt={rest.name} />
-                                <div className="card-info">
-                                    <h3>{rest.name}</h3>
-                                    <p>🍽️ {rest.cuisine} | 📍 {rest.location}</p>
-                                    <p>⭐ {rest.rating}/5.0</p>
-                                    <div className="card-actions">
-                                        <Link to={`/customer/restaurants/${rest.id}`} className="btn-details">
-                                            Xem Menu & Đặt bàn
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                        <Link to="/customer/map-search" className="dashboard-card">
+                            <div className="card-icon">📍</div>
+                            <div className="card-title">Tìm quanh đây</div>
+                            <div className="card-desc">Định vị và tìm nhà hàng</div>
+                        </Link>
                     </div>
                 </section>
             </div>
