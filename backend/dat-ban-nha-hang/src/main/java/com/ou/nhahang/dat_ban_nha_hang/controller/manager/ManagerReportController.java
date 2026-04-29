@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ou.nhahang.dat_ban_nha_hang.utils.RequestDateParsers;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,66 +25,66 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ManagerReportController {
 
-    private final IManagerReportService managerReportService;
+        private final IManagerReportService managerReportService;
 
-    @GetMapping("/overview")
-    public ResponseEntity<ApiResponse<ManagerReportOverviewResponseDTO>> getOverview(
-            @RequestParam(name = "fromDate", required = false) String fromDate,
-            @RequestParam(name = "toDate", required = false) String toDate,
-            Authentication authentication) {
-        Long managerId = (Long) authentication.getCredentials();
-        LocalDateTime from = (fromDate == null || fromDate.isBlank()) ? null : LocalDateTime.parse(fromDate);
-        LocalDateTime toExclusive = (toDate == null || toDate.isBlank()) ? null : LocalDateTime.parse(toDate);
+        @GetMapping("/overview")
+        public ResponseEntity<ApiResponse<ManagerReportOverviewResponseDTO>> getOverview(
+                        @RequestParam(name = "fromDate", required = false) String fromDate,
+                        @RequestParam(name = "toDate", required = false) String toDate,
+                        Authentication authentication) {
+                Long managerId = (Long) authentication.getCredentials();
+                LocalDateTime from = RequestDateParsers.parseFlexibleDateTime(fromDate, "fromDate", false);
+                LocalDateTime toExclusive = RequestDateParsers.parseFlexibleDateTime(toDate, "toDate", true);
 
-        ManagerReportOverviewResponseDTO data = managerReportService.getOverview(managerId, from, toExclusive);
-        ApiResponse<ManagerReportOverviewResponseDTO> response = ApiResponse.<ManagerReportOverviewResponseDTO>builder()
-                .status(200)
-                .message("Thành công")
-                .data(data)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+                ManagerReportOverviewResponseDTO data = managerReportService.getOverview(managerId, from, toExclusive);
+                ApiResponse<ManagerReportOverviewResponseDTO> response = ApiResponse
+                                .<ManagerReportOverviewResponseDTO>builder()
+                                .status(200)
+                                .message("Thành công")
+                                .data(data)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/revenue-chart")
-    public ResponseEntity<ApiResponse<List<ManagerRevenueChartPointResponseDTO>>> getRevenueChart(
-            @RequestParam(name = "fromDate") String fromDate,
-            @RequestParam(name = "toDate") String toDate,
-            @RequestParam(name = "timeUnit", defaultValue = "DAY") String timeUnit,
-            Authentication authentication) {
-        Long managerId = (Long) authentication.getCredentials();
-        LocalDateTime from = LocalDateTime.parse(fromDate);
-        LocalDateTime toExclusive = LocalDateTime.parse(toDate);
+        @GetMapping("/revenue-chart")
+        public ResponseEntity<ApiResponse<List<ManagerRevenueChartPointResponseDTO>>> getRevenueChart(
+                        @RequestParam(name = "fromDate") String fromDate,
+                        @RequestParam(name = "toDate") String toDate,
+                        @RequestParam(name = "timeUnit", defaultValue = "DAY") String timeUnit,
+                        Authentication authentication) {
+                Long managerId = (Long) authentication.getCredentials();
+                LocalDateTime from = RequestDateParsers.parseFlexibleDateTime(fromDate, "fromDate", false);
+                LocalDateTime toExclusive = RequestDateParsers.parseFlexibleDateTime(toDate, "toDate", true);
 
-        List<ManagerRevenueChartPointResponseDTO> data = managerReportService.getRevenueChart(
-                managerId, from, toExclusive, timeUnit);
-        ApiResponse<List<ManagerRevenueChartPointResponseDTO>> response = ApiResponse
-                .<List<ManagerRevenueChartPointResponseDTO>>builder()
-                .status(200)
-                .message("Thành công")
-                .data(data)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+                List<ManagerRevenueChartPointResponseDTO> data = managerReportService.getRevenueChart(
+                                managerId, from, toExclusive, timeUnit);
+                ApiResponse<List<ManagerRevenueChartPointResponseDTO>> response = ApiResponse
+                                .<List<ManagerRevenueChartPointResponseDTO>>builder()
+                                .status(200)
+                                .message("Thành công")
+                                .data(data)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 
-    @GetMapping("/top-foods")
-    public ResponseEntity<ApiResponse<List<ManagerTopFoodResponseDTO>>> getTopFoods(
-            @RequestParam(name = "fromDate", required = false) String fromDate,
-            @RequestParam(name = "toDate", required = false) String toDate,
-            @RequestParam(name = "limit", defaultValue = "5") Integer limit,
-            Authentication authentication) {
-        Long managerId = (Long) authentication.getCredentials();
-        LocalDateTime from = (fromDate == null || fromDate.isBlank()) ? null : LocalDateTime.parse(fromDate);
-        LocalDateTime toExclusive = (toDate == null || toDate.isBlank()) ? null : LocalDateTime.parse(toDate);
+        @GetMapping("/top-foods")
+        public ResponseEntity<ApiResponse<List<ManagerTopFoodResponseDTO>>> getTopFoods(
+                        @RequestParam(name = "fromDate", required = false) String fromDate,
+                        @RequestParam(name = "toDate", required = false) String toDate,
+                        @RequestParam(name = "limit", defaultValue = "5") Integer limit,
+                        Authentication authentication) {
+                Long managerId = (Long) authentication.getCredentials();
+                LocalDateTime from = RequestDateParsers.parseFlexibleDateTime(fromDate, "fromDate", false);
+                LocalDateTime toExclusive = RequestDateParsers.parseFlexibleDateTime(toDate, "toDate", true);
 
-        List<ManagerTopFoodResponseDTO> data = managerReportService.getTopFoods(
-                managerId, from, toExclusive, limit);
-        ApiResponse<List<ManagerTopFoodResponseDTO>> response = ApiResponse.<List<ManagerTopFoodResponseDTO>>builder()
-                .status(200)
-                .message("Thành công")
-                .data(data)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+                List<ManagerTopFoodResponseDTO> data = managerReportService.getTopFoods(
+                                managerId, from, toExclusive, limit);
+                ApiResponse<List<ManagerTopFoodResponseDTO>> response = ApiResponse
+                                .<List<ManagerTopFoodResponseDTO>>builder()
+                                .status(200)
+                                .message("Thành công")
+                                .data(data)
+                                .build();
+                return ResponseEntity.ok(response);
+        }
 }
-
-

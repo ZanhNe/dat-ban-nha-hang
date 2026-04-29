@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +35,32 @@ public class AdminRestaurantService implements IAdminRestaurantService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà hàng"));
     }
 
+    private Restaurant.RestaurantStatus parseRestaurantStatus(String rawStatus) {
+        try {
+            return Restaurant.RestaurantStatus.valueOf(rawStatus.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new BusinessException("Trạng thái nhà hàng không hợp lệ");
+        }
+    }
+
+    private void ensureValidCommission(AdminRestaurantRequestDTO.UpdateCommission request) {
+        if ("PERCENTAGE".equalsIgnoreCase(request.commissionType()) && request.baseCommissionValue() > 100) {
+            throw new BusinessException("Hoa hồng theo phần trăm phải nằm trong khoảng 0-100");
+        }
+    }
+
+    private void detachCurrentManagerIfNeeded(Restaurant restaurant, User newManager) {
+        User currentManager = restaurant.getManager();
+        if (currentManager == null || currentManager.getId().equals(newManager.getId())) {
+            return;
+        }
+
+        if (currentManager.getWorkplace() != null && currentManager.getWorkplace().getId().equals(restaurant.getId())) {
+            currentManager.setWorkplace(null);
+            userRepository.save(currentManager);
+        }
+    }
+
     private AdminRestaurantListItemResponseDTO mapToListItem(Restaurant r) {
         User manager = r.getManager();
         return AdminRestaurantListItemResponseDTO.builder()
@@ -43,6 +68,8 @@ public class AdminRestaurantService implements IAdminRestaurantService {
                 .restaurantName(r.getName())
                 .managerName(manager != null ? manager.getFullName() : null)
                 .status(r.getStatus() != null ? r.getStatus().name() : null)
+                .commissionType(r.getCommissionType() != null ? r.getCommissionType().name() : null)
+                .baseCommissionValue(r.getBaseCommissionValue())
                 .createdAt(r.getCreatedAt())
                 .build();
     }
@@ -51,20 +78,26 @@ public class AdminRestaurantService implements IAdminRestaurantService {
         User manager = r.getManager();
         AdminRestaurantDetailResponseDTO.ManagerDTO managerDTO = manager == null ? null
                 : AdminRestaurantDetailResponseDTO.ManagerDTO.builder()
-                .userId(manager.getId())
-                .fullName(manager.getFullName())
-                .phone(manager.getPhone())
-                .build();
+                        .userId(manager.getId())
+                        .fullName(manager.getFullName())
+                        .phone(manager.getPhone())
+                        .build();
 
         List<AdminRestaurantDetailResponseDTO.LegalDocDTO> legalDocs = r.getLegalDocs() == null ? List.of()
                 : r.getLegalDocs().stream()
-                .map(this::mapLegalDoc)
-                .toList();
+                        .map(this::mapLegalDoc)
+                        .toList();
 
         return AdminRestaurantDetailResponseDTO.builder()
                 .restaurantId(r.getId())
                 .restaurantName(r.getName())
                 .status(r.getStatus() != null ? r.getStatus().name() : null)
+                .logo(r.getLogo())
+                .description(r.getDescription())
+                .address(r.getAddress())
+                .commissionType(r.getCommissionType() != null ? r.getCommissionType().name() : null)
+                .baseCommissionValue(r.getBaseCommissionValue())
+                .createdAt(r.getCreatedAt())
                 .manager(managerDTO)
                 .legalDocs(legalDocs)
                 .build();
@@ -74,6 +107,10 @@ public class AdminRestaurantService implements IAdminRestaurantService {
         return AdminRestaurantDetailResponseDTO.LegalDocDTO.builder()
                 .docId(doc.getId())
                 .docUrl(doc.getFile())
+                .docName(doc.getName())
+                .docType(doc.getType() != null ? doc.getType().name() : null)
+                .docStatus(doc.getStatus() != null ? doc.getStatus().name() : null)
+                .expireDate(doc.getExpireDate())
                 .build();
     }
 
@@ -84,7 +121,7 @@ public class AdminRestaurantService implements IAdminRestaurantService {
 
         if ("APPROVED".equalsIgnoreCase(request.status())) {
             restaurant.setStatus(Restaurant.RestaurantStatus.OPENING);
-            
+
             // Nâng cấp khách hàng (manager) thành MANAGER ROLE
             User manager = restaurant.getManager();
             if (manager != null) {
@@ -95,15 +132,13 @@ public class AdminRestaurantService implements IAdminRestaurantService {
                 manager.setWorkplace(restaurant);
                 userRepository.save(manager);
             }
-            
+
             restaurantRepository.save(restaurant);
             return;
         }
 
         if ("REJECTED".equalsIgnoreCase(request.status())) {
-            if (request.rejectReason() == null || request.rejectReason().isBlank()) {
-                throw new BusinessException("rejectReason là bắt buộc khi từ chối");
-            }
+            restaurant.setManager(null);
             restaurant.setStatus(Restaurant.RestaurantStatus.REJECTED);
             restaurantRepository.save(restaurant);
             return;
@@ -121,7 +156,7 @@ public class AdminRestaurantService implements IAdminRestaurantService {
             if ("APPROVED".equalsIgnoreCase(request.status())) {
                 st = Restaurant.RestaurantStatus.OPENING;
             } else {
-                st = Restaurant.RestaurantStatus.valueOf(request.status().toUpperCase());
+                st = parseRestaurantStatus(request.status());
             }
         }
 
@@ -142,7 +177,7 @@ public class AdminRestaurantService implements IAdminRestaurantService {
     @Transactional
     public void updateRestaurantStatus(Long restaurantId, AdminRestaurantRequestDTO.UpdateStatus request) {
         Restaurant restaurant = getRestaurantOrThrow(restaurantId);
-        restaurant.setStatus(Restaurant.RestaurantStatus.valueOf(request.status()));
+        restaurant.setStatus(parseRestaurantStatus(request.status()));
         restaurantRepository.save(restaurant);
     }
 
@@ -150,6 +185,7 @@ public class AdminRestaurantService implements IAdminRestaurantService {
     @Transactional
     public void updateRestaurantCommission(Long restaurantId, AdminRestaurantRequestDTO.UpdateCommission request) {
         Restaurant restaurant = getRestaurantOrThrow(restaurantId);
+        ensureValidCommission(request);
         restaurant.setCommissionType(Restaurant.CommissionType.valueOf(request.commissionType()));
         restaurant.setBaseCommissionValue(request.baseCommissionValue());
         restaurantRepository.save(restaurant);
@@ -165,6 +201,7 @@ public class AdminRestaurantService implements IAdminRestaurantService {
         // Thăng cấp user -> MANAGER (set 1 role MANAGER)
         var managerRole = roleRepository.findByName("MANAGER")
                 .orElseThrow(() -> new BusinessException("Role MANAGER không tồn tại"));
+        detachCurrentManagerIfNeeded(restaurant, user);
         user.getRoles().clear();
         user.getRoles().add(managerRole);
         user.setWorkplace(restaurant);
@@ -175,4 +212,3 @@ public class AdminRestaurantService implements IAdminRestaurantService {
         restaurantRepository.save(restaurant);
     }
 }
-

@@ -77,7 +77,7 @@ public class PaymentService implements IPaymentService {
                                         .transactionId(tx.getId())
                                         .bookingId(bookingId)
                                         .amount(tx.getAmount())
-                                        .currency("vnd")
+                                        .currency("VND")
                                         .status(tx.getTransactionStatus().name())
                                         .build();
                 }
@@ -96,8 +96,10 @@ public class PaymentService implements IPaymentService {
 
                 tx = transactionRepository.saveAndFlush(tx);
 
-                String paymentUrl = vnpayGateway.createPaymentUrl(amount, tx.getId(), expireTime.minusMinutes(2),
-                                "vnd", ipAddr);
+                String vnpTxnRef = tx.getId() + "_" + System.currentTimeMillis();
+
+                String paymentUrl = vnpayGateway.createPaymentUrl(amount, vnpTxnRef, expireTime.minusMinutes(2),
+                                "VND", ipAddr);
 
                 tx.setPaymentUrl(paymentUrl);
                 transactionRepository.save(tx);
@@ -107,7 +109,7 @@ public class PaymentService implements IPaymentService {
                                 .transactionId(tx.getId())
                                 .bookingId(bookingId)
                                 .amount(amount)
-                                .currency("vnd")
+                                .currency("VND")
                                 .status(tx.getTransactionStatus().name())
                                 .build();
         }
@@ -124,15 +126,18 @@ public class PaymentService implements IPaymentService {
                                                                                  // chờ thanh toán
                 List<Booking> bookings = bookingRepository.findByBookingUser_IdAndStatus(userId,
                                 Booking.BookingStatus.PENDING_PAYMENT);
-                return bookings.stream().map(b -> BookingResponseDTO.builder()
-                                .bookingId(b.getId())
-                                .restaurantId(b.getRestaurant().getId())
-                                .restaurantName(b.getRestaurant().getName())
-                                .bookingTime(b.getBookingTime().getStartTime())
-                                .guestCount(b.getNumberOfPeople())
-                                .depositAmount(b.getDepositAmount())
-                                .status(b.getStatus().name())
-                                .note(b.getNote())
-                                .build()).collect(Collectors.toList());
+                return bookings.stream()
+                                .sorted((left, right) -> right.getCreatedAt().compareTo(left.getCreatedAt()))
+                                .map(b -> BookingResponseDTO.builder()
+                                                .bookingId(b.getId())
+                                                .restaurantId(b.getRestaurant().getId())
+                                                .restaurantName(b.getRestaurant().getName())
+                                                .bookingTime(b.getBookingTime().getStartTime())
+                                                .guestCount(b.getNumberOfPeople())
+                                                .depositAmount(b.getDepositAmount())
+                                                .status(b.getStatus().name())
+                                                .note(b.getNote())
+                                                .build())
+                                .collect(Collectors.toList());
         }
 }

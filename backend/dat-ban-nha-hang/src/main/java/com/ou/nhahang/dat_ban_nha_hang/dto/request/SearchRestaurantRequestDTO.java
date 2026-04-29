@@ -16,7 +16,7 @@ public record SearchRestaurantRequestDTO(
         String cuisine,
         @NotNull(message = "Bán kính tìm kiếm không được để trống") @Min(value = 1, message = "Bán kính tìm kiếm phải lớn hơn 0") Integer radius,
         @Min(value = 0, message = "Số trang phải lớn hơn hoặc bằng 0") Integer page,
-        @Min(value = 10, message = "Số lượng trên mỗi trang phải lớn hơn 0") @Max(value = 50, message = "Số lượng trên mỗi trang phải nhỏ hơn hoặc bằng 50") Integer limit) {
+        @Min(value = 1, message = "Số lượng trên mỗi trang phải lớn hơn 0") @Max(value = 50, message = "Số lượng trên mỗi trang phải nhỏ hơn hoặc bằng 50") Integer limit) {
 
     public SearchRestaurantRequestDTO {
         if (page == null || page < 0)

@@ -21,7 +21,11 @@ public class AdminNotificationService implements IAdminNotificationService {
     @Transactional
     public void broadcast(AdminNotificationRequestDTO.Broadcast request) {
         NotificationType type = NotificationType.valueOf(request.type());
-        if ("ALL".equalsIgnoreCase(request.targetRole())) {
+        String targetRole = (request.targetRole() == null || request.targetRole().isBlank())
+                ? "ALL"
+                : request.targetRole().toUpperCase();
+
+        if ("ALL".equals(targetRole)) {
             notificationService.sendBroadcastNotification(
                     request.title(),
                     request.content(),
@@ -32,7 +36,7 @@ public class AdminNotificationService implements IAdminNotificationService {
         }
 
         // Gửi theo Role: lấy danh sách user theo roleName (DB lưu name không có prefix "ROLE_")
-        String roleName = request.targetRole().toUpperCase();
+        String roleName = targetRole;
         for (User u : userRepository.findAllByRoleName(roleName)) {
             notificationService.sendNotificationToUser(
                     u.getId(),

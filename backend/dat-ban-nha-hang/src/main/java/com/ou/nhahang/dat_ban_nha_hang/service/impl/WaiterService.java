@@ -2,7 +2,6 @@ package com.ou.nhahang.dat_ban_nha_hang.service.impl;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterGetAvailableSessionsRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterGetMySessionsRequestDTO;
-import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterCancelOrderRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterConfirmOrderRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterUpdateFoodItemStatusRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.*;
@@ -51,12 +50,8 @@ public class WaiterService implements IWaiterService {
     @Override
     public Page<WaiterSessionListResponseDTO> getAvailableSessions(Long waiterId, WaiterGetAvailableSessionsRequestDTO request) {
         Restaurant workplace = getWorkplace(waiterId);
-        RestaurantTableSession.TableSessionStatus sessionStatus;
-        try {
-            sessionStatus = RestaurantTableSession.TableSessionStatus.valueOf(request.status().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            sessionStatus = RestaurantTableSession.TableSessionStatus.ACTIVE;
-        }
+        RestaurantTableSession.TableSessionStatus sessionStatus = RestaurantTableSession.TableSessionStatus
+                .valueOf(request.status().toUpperCase());
 
         Pageable pageable = PageRequest.of(request.page(), request.limit());
         Page<RestaurantTableSession> sessions = tableSessionRepository.findByRestaurantIdAndStatus(workplace.getId(),
@@ -93,7 +88,7 @@ public class WaiterService implements IWaiterService {
     @Transactional
     public WaiterAssignSessionResponseDTO assignSession(Long waiterId, Long sessionId) {
         Restaurant workplace = getWorkplace(waiterId);
-        RestaurantTableSession session = tableSessionRepository.findByIdAndRestaurantId(sessionId, workplace.getId())
+        RestaurantTableSession session = tableSessionRepository.findByIdAndRestaurantIdForUpdate(sessionId, workplace.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy phiên bàn hoặc phiên bàn không thuộc nhà hàng của bạn"));
 
@@ -137,6 +132,7 @@ public class WaiterService implements IWaiterService {
                 .numberOfPeople(session.getBooking().getNumberOfPeople().intValue())
                 .status(session.getStatus().name())
                 .foodOrders(session.getFoodOrders().stream()
+                        .sorted((left, right) -> right.getCreatedAt().compareTo(left.getCreatedAt()))
                         .map(order -> WaiterSessionDetailResponseDTO.FoodOrderSummaryDTO.builder()
                                 .orderId(order.getId())
                                 .status(order.getStatus().name())
@@ -213,6 +209,14 @@ public class WaiterService implements IWaiterService {
             throw new BusinessException("Chỉ có thể tạo order cho phiên bàn đang phục vụ (SERVING)");
         }
 
+        boolean hasActiveOrder = session.getFoodOrders() != null && session.getFoodOrders().stream()
+                .anyMatch(order -> order.getStatus() == FoodOrder.FoodOrderStatus.TAKING_ORDER
+                        || order.getStatus() == FoodOrder.FoodOrderStatus.CONFIRMED);
+        if (hasActiveOrder) {
+            throw new BusinessException(
+                    "Đã tồn tại order đang hoạt động cho phiên bàn này. Vui lòng hoàn tất hoặc hủy order hiện tại trước.");
+        }
+
         FoodOrder order = FoodOrder.builder()
                 .tableSession(session)
                 .totalPrice(0L)
@@ -272,14 +276,15 @@ public class WaiterService implements IWaiterService {
 
         int itemsCount = 0;
         for (WaiterConfirmOrderRequestDTO.FoodItemRequestDTO itemRequest : request.items()) {
-            FoodDescription desc = foodDescriptionRepository.findById(itemRequest.foodDescriptionId())
+            FoodDescription desc = foodDescriptionRepository
+                    .findByIdAndFoodGroupMenuRestaurantId(itemRequest.foodDescriptionId(), workplace.getId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Không tìm thấy món ăn ID " + itemRequest.foodDescriptionId()));
 
             List<FoodOption> options = new ArrayList<>();
             if (itemRequest.optionIds() != null) {
                 for (Long optionId : itemRequest.optionIds()) {
-                    FoodOption opt = foodOptionRepository.findById(optionId)
+                    FoodOption opt = foodOptionRepository.findByIdAndOptionGroupRestaurantId(optionId, workplace.getId())
                             .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tùy chọn ID " + optionId));
                     options.add(opt);
                 }
@@ -295,10 +300,14 @@ public class WaiterService implements IWaiterService {
                     .build();
 
             foodItemRepository.save(foodItem);
+            if (order.getFoodItems() != null) {
+                order.getFoodItems().add(foodItem);
+            }
             itemsCount++;
         }
 
         order.setStatus(FoodOrder.FoodOrderStatus.CONFIRMED);
+        order.calculatePrice();
         order = foodOrderRepository.save(order);
 
         return WaiterConfirmOrderResponseDTO.builder()
@@ -321,12 +330,7 @@ public class WaiterService implements IWaiterService {
             throw new BusinessException("Bạn không được phân công phục vụ món này");
         }
 
-        FoodItem.FoodItemStatus newStatus;
-        try {
-            newStatus = FoodItem.FoodItemStatus.valueOf(request.status().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new BusinessException("Trạng thái món ăn không hợp lệ");
-        }
+        FoodItem.FoodItemStatus newStatus = FoodItem.FoodItemStatus.valueOf(request.status().toUpperCase());
 
         if (newStatus != FoodItem.FoodItemStatus.SERVED && newStatus != FoodItem.FoodItemStatus.CANCELLED) {
             throw new BusinessException("Chỉ được cập nhật trạng thái SERVED hoặc CANCELLED");
@@ -378,8 +382,7 @@ public class WaiterService implements IWaiterService {
 
     @Override
     @Transactional
-    public WaiterCancelOrderResponseDTO cancelFoodOrder(Long waiterId, Long orderId,
-            WaiterCancelOrderRequestDTO request) {
+    public WaiterCancelOrderResponseDTO cancelFoodOrder(Long waiterId, Long orderId) {
         Restaurant workplace = getWorkplace(waiterId);
         FoodOrder order = foodOrderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy order"));
@@ -422,6 +425,14 @@ public class WaiterService implements IWaiterService {
 
         if (session.getStatus() != RestaurantTableSession.TableSessionStatus.SERVING) {
             throw new BusinessException("Chỉ có thể hoàn tất phiên bàn đang phục vụ");
+        }
+
+        boolean allOrdersFinished = session.getFoodOrders().stream()
+                .allMatch(order -> order.getStatus() == FoodOrder.FoodOrderStatus.COMPLETED
+                        || order.getStatus() == FoodOrder.FoodOrderStatus.CANCELLED
+                        || order.getStatus() == FoodOrder.FoodOrderStatus.CLOSED);
+        if (!allOrdersFinished) {
+            throw new BusinessException("Vẫn còn order chưa hoàn tất, chưa thể kết thúc phục vụ");
         }
 
         session.setStatus(RestaurantTableSession.TableSessionStatus.SERVED);

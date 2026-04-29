@@ -28,8 +28,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistCancelBookingRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistBookingListResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistBookingDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistCancelBookingResponseDTO;
@@ -50,6 +50,10 @@ import org.springframework.data.domain.Sort;
 @RequiredArgsConstructor
 @Slf4j
 public class ReceptionistBookingService implements IReceptionistBookingService {
+        private static final Set<Booking.BookingStatus> CANCELLABLE_STATUSES = Set.of(
+                        Booking.BookingStatus.AWAITING_CONFIRMATION,
+                        Booking.BookingStatus.PENDING_PAYMENT,
+                        Booking.BookingStatus.CONFIRMED);
 
         private final BookingRepository bookingRepository;
         private final TransactionRepository transactionRepository;
@@ -180,15 +184,21 @@ public class ReceptionistBookingService implements IReceptionistBookingService {
                 return user.getWorkplace();
         }
 
+        private ReceptionistBookingListResponseDTO mapBookingListItem(Booking booking) {
+                return ReceptionistBookingListResponseDTO.builder()
+                                .bookingId(booking.getId())
+                                .customerName(booking.getBookingUser().getFullName())
+                                .customerPhone(booking.getBookingUser().getPhone())
+                                .bookingTime(booking.getBookingTime().getStartTime())
+                                .numberOfPeople(booking.getNumberOfPeople().intValue())
+                                .status(booking.getStatus().name())
+                                .build();
+        }
+
         @Override
         public Page<ReceptionistBookingListResponseDTO> getBookings(Long userId, ReceptionistGetBookingsRequestDTO request) {
                 Restaurant workplace = getWorkplace(userId);
-                Booking.BookingStatus bookingStatus;
-                try {
-                        bookingStatus = Booking.BookingStatus.valueOf(request.status().toUpperCase());
-                } catch (IllegalArgumentException e) {
-                        bookingStatus = Booking.BookingStatus.CONFIRMED;
-                }
+                Booking.BookingStatus bookingStatus = Booking.BookingStatus.valueOf(request.status().toUpperCase());
 
                 String[] sortParams = request.sort().split(",");
                 String sortBy = sortParams[0];
@@ -200,14 +210,7 @@ public class ReceptionistBookingService implements IReceptionistBookingService {
                 Page<Booking> bookings = bookingRepository.findByRestaurant_IdAndStatus(workplace.getId(),
                                 bookingStatus, pageable);
 
-                return bookings.map(booking -> ReceptionistBookingListResponseDTO.builder()
-                                .bookingId(booking.getId())
-                                .customerName(booking.getBookingUser().getFullName())
-                                .customerPhone(booking.getBookingUser().getPhone())
-                                .bookingTime(booking.getBookingTime().getStartTime())
-                                .numberOfPeople(booking.getNumberOfPeople().intValue())
-                                .status(booking.getStatus().name())
-                                .build());
+                return bookings.map(this::mapBookingListItem);
         }
 
         @Override
@@ -218,14 +221,7 @@ public class ReceptionistBookingService implements IReceptionistBookingService {
                 Page<Booking> bookings = bookingRepository.findByRestaurant_IdAndStatus(workplace.getId(),
                                 Booking.BookingStatus.AWAITING_CONFIRMATION, pageable);
 
-                return bookings.map(booking -> ReceptionistBookingListResponseDTO.builder()
-                                .bookingId(booking.getId())
-                                .customerName(booking.getBookingUser().getFullName())
-                                .customerPhone(booking.getBookingUser().getPhone())
-                                .bookingTime(booking.getBookingTime().getStartTime())
-                                .numberOfPeople(booking.getNumberOfPeople().intValue())
-                                .status(booking.getStatus().name())
-                                .build());
+                return bookings.map(this::mapBookingListItem);
         }
 
         @Override
@@ -275,17 +271,21 @@ public class ReceptionistBookingService implements IReceptionistBookingService {
                         throw new BusinessException("Yêu cầu đặt bàn không ở trạng thái xác nhận");
                 }
 
-                // Cập nhật trạng thái đơn đặt bàn thành khách đã đến
-                booking.setStatus(Booking.BookingStatus.CUSTOMER_ARRIVED);
-
-                // Tạo phiên làm việc (waiter_id ban đầu để trống là chưa có phục vụ đảm nhận)
-                RestaurantTableSession session = RestaurantTableSession.builder()
-                                .booking(booking)
-                                .build();
-
                 if (booking.getTables().isEmpty()) {
                         throw new BusinessException("Yêu cầu đặt bàn này chưa được xếp bàn, không thể check-in");
                 }
+
+                boolean hasUnavailableTable = booking.getTables().stream()
+                                .anyMatch(table -> table.getStatus() != RestaurantTable.TableStatus.AVAILABLE);
+                if (hasUnavailableTable) {
+                        throw new BusinessException("Có bàn đã được sử dụng hoặc không sẵn sàng, không thể check-in");
+                }
+
+                booking.setStatus(Booking.BookingStatus.CUSTOMER_ARRIVED);
+
+                RestaurantTableSession session = RestaurantTableSession.builder()
+                                .booking(booking)
+                                .build();
 
                 session = tableSessionRepository.save(session);
 
@@ -302,14 +302,13 @@ public class ReceptionistBookingService implements IReceptionistBookingService {
                 return ReceptionistCheckInResponseDTO.builder()
                                 .sessionId(session.getId())
                                 .tableIds(tableIds)
-                                .status(session.getStatus().name())
+                                .status(booking.getStatus().name())
                                 .build();
         }
 
         @Override
         @Transactional
-        public ReceptionistCancelBookingResponseDTO cancelBooking(Long userId, Long bookingId,
-                        ReceptionistCancelBookingRequestDTO request) {
+        public ReceptionistCancelBookingResponseDTO cancelBooking(Long userId, Long bookingId) {
                 Restaurant workplace = getWorkplace(userId);
                 Booking booking = bookingRepository.findById(bookingId)
                                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy yêu cầu đặt bàn"));
@@ -318,13 +317,25 @@ public class ReceptionistBookingService implements IReceptionistBookingService {
                         throw new BusinessException("Không có quyền truy cập yêu cầu đặt bàn của nhà hàng khác");
                 }
 
-                if (booking.getStatus() == Booking.BookingStatus.COMPLETED
-                                || booking.getStatus() == Booking.BookingStatus.CANCELLED) {
-                        throw new BusinessException("Yêu cầu đặt bàn đã hoàn tất hoặc đã hủy");
+                if (!CANCELLABLE_STATUSES.contains(booking.getStatus())) {
+                        throw new BusinessException("Chỉ có thể hủy booking đang chờ xác nhận, chờ thanh toán hoặc đã xác nhận");
                 }
+
+                List<Transaction> depositTransactions = transactionRepository
+                                .findByPaymentSourceIdAndTransactionTypeAndStatusesForUpdate(
+                                                booking.getId(),
+                                                Transaction.TransactionType.DEPOSIT,
+                                                List.of(
+                                                                Transaction.TransactionStatus.PENDING,
+                                                                Transaction.TransactionStatus.AUTHORIZED));
 
                 booking.setStatus(Booking.BookingStatus.CANCELLED);
                 booking.getBookingTime().setStatus(Time.TimeStatus.CLOSED);
+
+                depositTransactions.forEach(transaction -> transaction.setTransactionStatus(Transaction.TransactionStatus.CANCELLED));
+                if (!depositTransactions.isEmpty()) {
+                        transactionRepository.saveAll(depositTransactions);
+                }
 
                 bookingRepository.save(booking);
 

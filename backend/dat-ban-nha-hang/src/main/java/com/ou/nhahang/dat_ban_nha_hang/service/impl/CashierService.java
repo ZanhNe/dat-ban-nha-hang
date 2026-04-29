@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -42,12 +44,8 @@ public class CashierService implements ICashierService {
     @Override
     public Page<CashierSessionListResponseDTO> getServedSessions(Long cashierId, CashierGetServedSessionsRequestDTO request) {
         Restaurant workplace = getWorkplace(cashierId);
-        RestaurantTableSession.TableSessionStatus sessionStatus;
-        try {
-            sessionStatus = RestaurantTableSession.TableSessionStatus.valueOf(request.status().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            sessionStatus = RestaurantTableSession.TableSessionStatus.SERVED;
-        }
+        RestaurantTableSession.TableSessionStatus sessionStatus = RestaurantTableSession.TableSessionStatus
+                .valueOf(request.status().toUpperCase());
 
         Pageable pageable = PageRequest.of(request.page(), request.limit());
         Page<RestaurantTableSession> sessions = tableSessionRepository.findByRestaurantIdAndStatus(workplace.getId(),
@@ -85,26 +83,43 @@ public class CashierService implements ICashierService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy phiên bàn hoặc phiên bàn không thuộc nhà hàng của bạn"));
 
-        List<CashierSessionDetailResponseDTO.CashierFoodItemSummaryDTO> items = new ArrayList<>();
+        List<CashierSessionDetailResponseDTO.CashierOrderSummaryDTO> orders = new ArrayList<>();
         long totalFoodAmount = 0L;
 
         if (session.getFoodOrders() != null) {
-            for (FoodOrder order : session.getFoodOrders()) {
+            List<FoodOrder> sortedOrders = session.getFoodOrders().stream()
+                    .sorted(Comparator.comparing(FoodOrder::getCreatedAt))
+                    .toList();
+            for (FoodOrder order : sortedOrders) {
+                List<CashierSessionDetailResponseDTO.CashierFoodItemSummaryDTO> orderItems = new ArrayList<>();
                 if (order.getStatus() == FoodOrder.FoodOrderStatus.COMPLETED && order.getFoodItems() != null) {
                     for (FoodItem item : order.getFoodItems()) {
                         if (item.getStatus() == FoodItem.FoodItemStatus.SERVED) {
                             long itemPrice = item.calculatePrice();
                             totalFoodAmount += itemPrice;
-                            items.add(CashierSessionDetailResponseDTO.CashierFoodItemSummaryDTO.builder()
+                            orderItems.add(CashierSessionDetailResponseDTO.CashierFoodItemSummaryDTO.builder()
                                     .foodName(item.getFoodDescription().getName())
                                     .quantity(item.getQuantity())
                                     .price(itemPrice / item.getQuantity())
-                                            .totalItemPrice(itemPrice)
+                                    .totalItemPrice(itemPrice)
                                     .build());
                         }
                     }
                 }
+                if (!orderItems.isEmpty()) {
+                    orders.add(CashierSessionDetailResponseDTO.CashierOrderSummaryDTO.builder()
+                            .orderId(order.getId())
+                            .status(order.getStatus().name())
+                            .createdAt(order.getCreatedAt())
+                            .items(orderItems)
+                            .build());
+                }
             }
+        }
+
+        long amountToPay = totalFoodAmount - session.getBooking().getDepositAmount();
+        if (amountToPay < 0) {
+            amountToPay = 0;
         }
 
         return CashierSessionDetailResponseDTO.builder()
@@ -114,8 +129,9 @@ public class CashierService implements ICashierService {
                 .numberOfPeople(session.getBooking().getNumberOfPeople().intValue())
                 .depositAmount(session.getBooking().getDepositAmount())
                 .totalAmount(totalFoodAmount)
+                .amountToPay(amountToPay)
                 .status(session.getStatus().name())
-                .items(items)
+                .orders(orders)
                 .build();
     }
 
@@ -123,12 +139,25 @@ public class CashierService implements ICashierService {
     @Transactional
     public CashierInitiatePaymentResponseDTO initiatePayment(Long cashierId, Long sessionId) {
         Restaurant workplace = getWorkplace(cashierId);
-        RestaurantTableSession session = tableSessionRepository.findByIdAndRestaurantId(sessionId, workplace.getId())
+        User cashier = userRepository.findById(cashierId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên"));
+        RestaurantTableSession session = tableSessionRepository.findByIdAndRestaurantIdForUpdate(sessionId, workplace.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy phiên bàn hoặc phiên bàn không thuộc nhà hàng của bạn"));
 
         if (session.getStatus() != RestaurantTableSession.TableSessionStatus.SERVED) {
             throw new BusinessException("Chỉ có thể tạo thanh toán cho phiên bàn đã phục vụ xong (SERVED)");
+        }
+
+        List<FoodOrder> foodOrders = session.getFoodOrders() != null ? session.getFoodOrders() : List.of();
+        boolean hasPendingFoodOrder = foodOrders.stream()
+                .anyMatch(order -> order.getStatus() == FoodOrder.FoodOrderStatus.TAKING_ORDER
+                        || order.getStatus() == FoodOrder.FoodOrderStatus.CONFIRMED);
+        boolean hasPendingFoodItem = foodOrders.stream()
+                .flatMap(order -> order.getFoodItems() != null ? order.getFoodItems().stream() : Stream.empty())
+                .anyMatch(item -> item.getStatus() == FoodItem.FoodItemStatus.PENDING);
+        if (hasPendingFoodOrder || hasPendingFoodItem) {
+            throw new BusinessException("Vẫn còn món hoặc order chưa hoàn tất, chưa thể khởi tạo thanh toán");
         }
 
         long totalFoodAmount = 0L;
@@ -144,26 +173,37 @@ public class CashierService implements ICashierService {
             }
         }
 
-        session.setTotal(totalFoodAmount);
-        session.setStatus(RestaurantTableSession.TableSessionStatus.PAYING);
-        tableSessionRepository.save(session);
-
         long amountToPay = totalFoodAmount - session.getBooking().getDepositAmount();
         if (amountToPay < 0) {
             amountToPay = 0;
         }
 
+        var existedPending = transactionRepository.findByPaymentSourceIdAndTransactionTypeAndTransactionStatusForUpdate(
+                session.getBooking().getId(),
+                Transaction.TransactionType.FINAL_PAYMENT,
+                Transaction.TransactionStatus.PENDING);
+        if (existedPending.isPresent()) {
+            throw new BusinessException("Phiên bàn đã có giao dịch thanh toán đang chờ xử lý");
+        }
+
+        session.setTotal(totalFoodAmount);
+        session.setStatus(RestaurantTableSession.TableSessionStatus.PAYING);
+        tableSessionRepository.save(session);
+
         Transaction transaction = Transaction.builder()
                 .amount(amountToPay)
                 .transactionType(Transaction.TransactionType.FINAL_PAYMENT)
                 .transactionStatus(Transaction.TransactionStatus.PENDING)
+                .cashier(cashier)
                 .paymentSource(session.getBooking())
                 .build();
-        transactionRepository.save(transaction);
+        transaction = transactionRepository.save(transaction);
 
         return CashierInitiatePaymentResponseDTO.builder()
                 .sessionId(session.getId())
                 .status(session.getStatus().name())
+                .transactionId(transaction.getId())
+                .amountToPay(amountToPay)
                 .build();
     }
 
@@ -172,7 +212,9 @@ public class CashierService implements ICashierService {
     public CashierCompletePaymentResponseDTO completePayment(Long cashierId, Long sessionId,
             CashierCompletePaymentRequestDTO request) {
         Restaurant workplace = getWorkplace(cashierId);
-        RestaurantTableSession session = tableSessionRepository.findByIdAndRestaurantId(sessionId, workplace.getId())
+        User cashier = userRepository.findById(cashierId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên"));
+        RestaurantTableSession session = tableSessionRepository.findByIdAndRestaurantIdForUpdate(sessionId, workplace.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy phiên bàn hoặc phiên bàn không thuộc nhà hàng của bạn"));
 
@@ -180,37 +222,24 @@ public class CashierService implements ICashierService {
             throw new BusinessException("Phiên bàn chưa khởi tạo thanh toán (PAYING)");
         }
 
-        // Tìm giao dịch chờ thanh toán
-        Transaction pendingTransaction = null;
-        if (session.getBooking().getTransactions() != null) {
-            for (Transaction tx : session.getBooking().getTransactions()) {
-                if (tx.getTransactionType() == Transaction.TransactionType.FINAL_PAYMENT
-                        && tx.getTransactionStatus() == Transaction.TransactionStatus.PENDING) {
-                    pendingTransaction = tx;
-                    break;
-                }
-            }
-        }
-
-        if (pendingTransaction == null) {
-            throw new BusinessException("Không tìm thấy giao dịch chờ thanh toán cho phiên bàn này");
-        }
+        Transaction pendingTransaction = transactionRepository
+                .findByPaymentSourceIdAndTransactionTypeAndTransactionStatusForUpdate(
+                        session.getBooking().getId(),
+                        Transaction.TransactionType.FINAL_PAYMENT,
+                        Transaction.TransactionStatus.PENDING)
+                .orElseThrow(() -> new BusinessException("Không tìm thấy giao dịch chờ thanh toán cho phiên bàn này"));
 
         if (pendingTransaction.getAmount() > 0 && !request.totalAmount().equals(pendingTransaction.getAmount())) {
             throw new BusinessException("Số tiền thanh toán không khớp với số tiền cần thanh toán ("
                     + pendingTransaction.getAmount() + ")");
         }
 
-        pendingTransaction.setTransactionStatus(Transaction.TransactionStatus.AUTHORIZED);
+        pendingTransaction.setTransactionStatus(Transaction.TransactionStatus.CAPTURED);
+        pendingTransaction.setCashier(cashier);
         transactionRepository.save(pendingTransaction);
 
         if (pendingTransaction.getAmount() > 0) {
-            Payment.PaymentMethod method;
-            try {
-                method = Payment.PaymentMethod.valueOf(request.paymentMethod().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                method = Payment.PaymentMethod.CASH;
-            }
+            Payment.PaymentMethod method = Payment.PaymentMethod.valueOf(request.paymentMethod().toUpperCase());
 
             Payment payment = Payment.builder()
                     .price(pendingTransaction.getAmount())
@@ -239,6 +268,7 @@ public class CashierService implements ICashierService {
         return CashierCompletePaymentResponseDTO.builder()
                 .sessionId(session.getId())
                 .status(session.getStatus().name())
+                .transactionId(pendingTransaction.getId())
                 .build();
     }
 }

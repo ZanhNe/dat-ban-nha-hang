@@ -34,6 +34,59 @@ public class AdminUserService implements IAdminUserService {
     private final RestaurantRepository restaurantRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private User.UserStatus parseUserStatus(String rawStatus) {
+        try {
+            return User.UserStatus.valueOf(rawStatus.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new BusinessException("status không hợp lệ");
+        }
+    }
+
+    private boolean isWorkplaceScopedRole(String roleName) {
+        return "MANAGER".equals(roleName)
+                || "RECEPTIONIST".equals(roleName)
+                || "WAITER".equals(roleName)
+                || "CASHIER".equals(roleName);
+    }
+
+    private List<Restaurant> getManagedRestaurants(Long userId) {
+        return restaurantRepository.findAllByManagerId(userId);
+    }
+
+    private void ensureRoleChangeDoesNotBreakManagerInvariant(User user, Role newRole) {
+        List<Restaurant> managedRestaurants = getManagedRestaurants(user.getId());
+        if (!managedRestaurants.isEmpty() && !"MANAGER".equals(newRole.getName())) {
+            throw new BusinessException(
+                    "Người dùng đang là manager của nhà hàng. Hãy bổ nhiệm manager khác trước khi đổi role.");
+        }
+    }
+
+    private void ensureWorkplaceRoleConsistency(User user, Role role, Long restaurantId) {
+        List<Restaurant> managedRestaurants = getManagedRestaurants(user.getId());
+        if (!managedRestaurants.isEmpty() && !"MANAGER".equals(role.getName())) {
+            throw new BusinessException(
+                    "Người dùng đang là manager của nhà hàng. Hãy bổ nhiệm manager khác trước khi đổi role hoặc workplace.");
+        }
+
+        if (restaurantId != null && !isWorkplaceScopedRole(role.getName())) {
+            throw new BusinessException("Chỉ các role MANAGER, RECEPTIONIST, WAITER, CASHIER mới được gán workplace.");
+        }
+
+        if ("MANAGER".equals(role.getName())) {
+            if (restaurantId == null) {
+                throw new BusinessException("Role MANAGER bắt buộc phải gắn với nhà hàng làm việc.");
+            }
+
+            if (managedRestaurants.stream().anyMatch(restaurant -> !restaurant.getId().equals(restaurantId))) {
+                throw new BusinessException(
+                        "Người dùng đang quản lý nhà hàng khác. Hãy dùng API bổ nhiệm manager để chuyển đổi đúng nghiệp vụ.");
+            }
+
+            throw new BusinessException(
+                    "Không dùng API điều chuyển workplace để bổ nhiệm manager. Hãy dùng API bổ nhiệm manager của nhà hàng.");
+        }
+    }
+
     private AdminUserResponseDTO mapToDTO(User user) {
         List<AdminUserResponseDTO.RoleResponse> roles = user.getRoles().stream()
                 .map(r -> new AdminUserResponseDTO.RoleResponse(r.getId(), "ROLE_" + r.getName()))
@@ -61,6 +114,7 @@ public class AdminUserService implements IAdminUserService {
             workplace = AdminUserDetailResponseDTO.WorkplaceDTO.builder()
                     .restaurantId(r.getId())
                     .name(r.getName())
+                    .restaurantName(r.getName())
                     .status(r.getStatus() != null ? r.getStatus().name() : null)
                     .avatar(r.getLogo())
                     .build();
@@ -84,8 +138,10 @@ public class AdminUserService implements IAdminUserService {
     @Transactional(readOnly = true)
     public Page<AdminUserResponseDTO> getUsers(AdminUserSearchRequestDTO request) {
         Pageable pageable = PageRequest.of(request.page(), request.limit());
-        String roleName = (request.role() == null || request.role().isBlank()) ? null : request.role().replace("ROLE_", "").toUpperCase();
-        User.UserStatus st = (request.status() == null || request.status().isBlank()) ? null : User.UserStatus.valueOf(request.status().toUpperCase());
+        String roleName = (request.role() == null || request.role().isBlank()) ? null
+                : request.role().replace("ROLE_", "").toUpperCase();
+        User.UserStatus st = (request.status() == null || request.status().isBlank()) ? null
+                : parseUserStatus(request.status());
         String q = (request.search() == null || request.search().isBlank()) ? null : request.search();
 
         return userRepository.adminSearchUsers(roleName, request.restaurantId(), st, q, pageable).map(this::mapToDTO);
@@ -153,11 +209,12 @@ public class AdminUserService implements IAdminUserService {
 
         Role role = roleRepository.findById(request.roleId())
                 .orElseThrow(() -> new BusinessException("Role không tồn tại"));
+        ensureRoleChangeDoesNotBreakManagerInvariant(user, role);
 
         user.setFullName(request.fullName());
         user.setEmail(request.email());
         user.setPhone(request.phone());
-        user.setStatus(User.UserStatus.valueOf(request.status().toUpperCase()));
+        user.setStatus(parseUserStatus(request.status()));
 
         user.getRoles().clear();
         user.getRoles().add(role);
@@ -174,6 +231,7 @@ public class AdminUserService implements IAdminUserService {
 
         Role role = roleRepository.findById(request.roleId())
                 .orElseThrow(() -> new BusinessException("Role không tồn tại"));
+        ensureWorkplaceRoleConsistency(user, role, request.restaurantId());
 
         user.getRoles().clear();
         user.getRoles().add(role);
@@ -190,4 +248,3 @@ public class AdminUserService implements IAdminUserService {
         userRepository.save(user);
     }
 }
-

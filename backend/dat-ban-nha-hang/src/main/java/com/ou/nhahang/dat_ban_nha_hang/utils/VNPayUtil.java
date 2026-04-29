@@ -3,6 +3,7 @@ package com.ou.nhahang.dat_ban_nha_hang.utils;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -29,38 +30,44 @@ public class VNPayUtil {
     }
 
     public static String hashAllFields(String secretKey, Map<String, String> fields) {
-        Map<String, String> sortedFields = new TreeMap<>(fields);
-
-        StringBuilder hashData = new StringBuilder();
-
-        for (Map.Entry<String, String> entry : sortedFields.entrySet()) {
+        // 1. Dùng TreeMap để tự động sắp xếp key theo bảng chữ cái (Alpha-bet)
+        Map<String, String> sortedFields = new TreeMap<>();
+        for (Map.Entry<String, String> entry : fields.entrySet()) {
             String fieldName = entry.getKey();
             String fieldValue = entry.getValue();
 
-            // Chỉ lấy các trường có giá trị và không phải là trường SecureHash
-            if ((fieldValue != null) && (fieldValue.length() > 0)
+            // Tuyệt đối không đưa vnp_SecureHash và vnp_SecureHashType vào chuỗi băm
+            if (fieldValue != null && fieldValue.length() > 0
                     && !fieldName.equals("vnp_SecureHash")
                     && !fieldName.equals("vnp_SecureHashType")) {
-
-                try {
-                    hashData.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()));
-                    hashData.append('=');
-                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));
-                    hashData.append('&');
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException("Lỗi băm mã VNPay", e);
-                }
+                sortedFields.put(fieldName, fieldValue);
             }
         }
 
-        // 3. Cắt bỏ dấu & cuối cùng
-        String result = hashData.toString();
-        if (result.endsWith("&")) {
-            result = result.substring(0, result.length() - 1);
-        }
+        // 2. Nối chuỗi dữ liệu
+        StringBuilder hashData = new StringBuilder();
+        Iterator<Map.Entry<String, String>> itr = sortedFields.entrySet().iterator();
 
-        // 4. Thực hiện băm HMAC-SHA512 với Secret Key
-        return hmacSHA512(secretKey, result);
+        while (itr.hasNext()) {
+            Map.Entry<String, String> entry = itr.next();
+            try {
+                // Encode value theo chuẩn US_ASCII của VNPay
+                String encodedValue = URLEncoder.encode(entry.getValue(), StandardCharsets.US_ASCII.toString());
+
+                hashData.append(entry.getKey());
+                hashData.append('=');
+                hashData.append(encodedValue);
+
+                if (itr.hasNext()) {
+                    hashData.append('&');
+                }
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException("Lỗi mã hóa dữ liệu VNPay", e);
+            }
+        }
+        System.out.println("2. MY HASH DATA: " + hashData.toString());
+        // 3. Băm HMAC-SHA512
+        return hmacSHA512(secretKey, hashData.toString());
     }
 
     public static String getIpAddress(HttpServletRequest request) {

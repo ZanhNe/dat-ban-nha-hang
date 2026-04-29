@@ -83,14 +83,15 @@ public class AdminUserController {
     }
 
     @PatchMapping("/{userId}/workplace")
-    public ResponseEntity<ApiResponse<Void>> updateWorkplace(
+    public ResponseEntity<ApiResponse<AdminUserDetailResponseDTO>> updateWorkplace(
             @PathVariable Long userId,
             @Valid @RequestBody AdminUserRequestDTO.UpdateWorkplace request) {
         adminUserService.updateUserWorkplace(userId, request);
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
+        AdminUserDetailResponseDTO data = adminUserService.getUserDetail(userId);
+        ApiResponse<AdminUserDetailResponseDTO> response = ApiResponse.<AdminUserDetailResponseDTO>builder()
                 .status(200)
                 .message("Đã điều chuyển nhân sự thành công.")
-                .data(null)
+                .data(data)
                 .build();
         return ResponseEntity.ok(response);
     }

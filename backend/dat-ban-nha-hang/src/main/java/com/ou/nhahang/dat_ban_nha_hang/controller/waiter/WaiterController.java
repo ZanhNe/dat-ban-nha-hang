@@ -2,7 +2,6 @@ package com.ou.nhahang.dat_ban_nha_hang.controller.waiter;
 
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterGetAvailableSessionsRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterGetMySessionsRequestDTO;
-import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterCancelOrderRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterConfirmOrderRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterUpdateFoodItemStatusRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.*;
@@ -183,9 +182,9 @@ public class WaiterController {
         @PreAuthorize("hasAuthority('ROLE_WAITER')")
         public ResponseEntity<ApiResponse<WaiterCancelOrderResponseDTO>> cancelFoodOrder(
                         @PathVariable("orderId") Long orderId,
-                        @RequestBody @Valid WaiterCancelOrderRequestDTO request, Authentication authentication) {
+                        Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
-                WaiterCancelOrderResponseDTO data = waiterService.cancelFoodOrder(userId, orderId, request);
+                WaiterCancelOrderResponseDTO data = waiterService.cancelFoodOrder(userId, orderId);
                 return ResponseEntity.ok(ApiResponse.<WaiterCancelOrderResponseDTO>builder()
                                 .status(200)
                                 .message("Đã hủy order thành công")

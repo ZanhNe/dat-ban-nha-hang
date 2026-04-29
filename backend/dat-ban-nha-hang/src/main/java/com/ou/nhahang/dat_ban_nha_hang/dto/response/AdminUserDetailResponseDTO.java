@@ -21,6 +21,7 @@ public record AdminUserDetailResponseDTO(
     public record WorkplaceDTO(
             Long restaurantId,
             String name,
+            String restaurantName,
             String status,
             String avatar
     ) {

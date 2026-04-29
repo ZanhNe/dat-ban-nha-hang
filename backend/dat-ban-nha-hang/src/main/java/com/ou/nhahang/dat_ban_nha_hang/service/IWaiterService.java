@@ -1,6 +1,5 @@
 package com.ou.nhahang.dat_ban_nha_hang.service;
 
-import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterCancelOrderRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterConfirmOrderRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.WaiterUpdateFoodItemStatusRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.*;
@@ -32,7 +31,7 @@ public interface IWaiterService {
 
         WaiterFoodOrderDetailResponseDTO completeFoodOrder(Long waiterId, Long orderId);
 
-        WaiterCancelOrderResponseDTO cancelFoodOrder(Long waiterId, Long orderId, WaiterCancelOrderRequestDTO request);
+        WaiterCancelOrderResponseDTO cancelFoodOrder(Long waiterId, Long orderId);
 
         WaiterServeCompleteResponseDTO completeServiceSession(Long waiterId, Long sessionId);
 }

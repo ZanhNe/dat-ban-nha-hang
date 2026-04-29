@@ -1,18 +1,15 @@
 package com.ou.nhahang.dat_ban_nha_hang.dto.response;
 
-import java.time.LocalDateTime;
-
 import lombok.Builder;
 
 @Builder
-public record AdminRestaurantListItemResponseDTO(
+public record AdminRestaurantMutationResponseDTO(
         Long restaurantId,
-        String restaurantName,
-        String managerName,
         String status,
+        String approvalStatus,
+        String restaurantStatus,
         String commissionType,
         Long baseCommissionValue,
-        LocalDateTime createdAt
+        Long managerUserId
 ) {
 }
-

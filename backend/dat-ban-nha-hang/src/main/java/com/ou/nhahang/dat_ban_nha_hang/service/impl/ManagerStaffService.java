@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ManagerStaffService implements IManagerStaffService {
+    private static final Set<String> ALLOWED_STAFF_ROLES = Set.of("RECEPTIONIST", "WAITER", "CASHIER");
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -51,6 +53,15 @@ public class ManagerStaffService implements IManagerStaffService {
         String normalized = roleName.toUpperCase();
         return roleRepository.findByName(normalized)
                 .orElseThrow(() -> new ResourceNotFoundException("Role không tồn tại"));
+    }
+
+    private Role getAssignableStaffRoleOrThrow(Long roleId) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new BusinessException("Role không tồn tại"));
+        if (!ALLOWED_STAFF_ROLES.contains(role.getName())) {
+            throw new BusinessException("Manager chỉ được gán role RECEPTIONIST, WAITER hoặc CASHIER");
+        }
+        return role;
     }
 
     private ManagerStaffResponseDTO mapToDTO(User user) {
@@ -89,8 +100,7 @@ public class ManagerStaffService implements IManagerStaffService {
             throw new BusinessException("Số điện thoại đã được sử dụng cho tài khoản khác");
         }
 
-        Role role = roleRepository.findById(requestDTO.roleId())
-                .orElseThrow(() -> new BusinessException("Role không tồn tại"));
+        Role role = getAssignableStaffRoleOrThrow(requestDTO.roleId());
 
         staff.setFullName(requestDTO.fullName());
         staff.setEmail(requestDTO.email());
@@ -146,8 +156,7 @@ public class ManagerStaffService implements IManagerStaffService {
             throw new BusinessException("Số điện thoại đã được sử dụng");
         }
 
-        Role role = roleRepository.findById(requestDTO.roleId())
-                .orElseThrow(() -> new BusinessException("Role không tồn tại"));
+        Role role = getAssignableStaffRoleOrThrow(requestDTO.roleId());
         HashSet<Role> roles = new HashSet<>();
         roles.add(role);
 

@@ -24,7 +24,7 @@ public record ManagerStaffRequestDTO() {
 
         public record GetStaffs(
                         @Min(value = 0, message = "Số trang phải lớn hơn hoặc bằng 0") Integer page,
-                        @Min(value = 10, message = "Số lượng trên mỗi trang phải lớn hơn 0") @Max(value = 50, message = "Số lượng trên mỗi trang phải nhỏ hơn hoặc bằng 50") Integer limit) {
+                        @Min(value = 1, message = "Số lượng trên mỗi trang phải lớn hơn 0") @Max(value = 50, message = "Số lượng trên mỗi trang phải nhỏ hơn hoặc bằng 50") Integer limit) {
 
                 public GetStaffs {
                         if (page == null || page < 0)

@@ -63,7 +63,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
 
         // Cho phép các Method HTTP (Phải có OPTIONS)
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
         // Cho phép Frontend gửi lên những Header
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
@@ -82,8 +82,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll() // Này cho phép đăng nhập, đăng ký
-                        .requestMatchers(HttpMethod.POST, "/api/v1/restaurants/*/reviews").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/restaurants/*/bookings").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/customer/restaurants/*/reviews").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/customer/restaurants/*/bookings").authenticated()
                         .anyRequest().permitAll())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())

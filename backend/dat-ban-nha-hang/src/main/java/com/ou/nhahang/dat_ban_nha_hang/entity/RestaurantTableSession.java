@@ -35,7 +35,7 @@ public class RestaurantTableSession extends PaymentSource {
     private TableSessionStatus status = TableSessionStatus.ACTIVE;
 
     @ManyToOne
-    @JoinColumn(name = "waiter_id", nullable = false)
+    @JoinColumn(name = "waiter_id", nullable = true)
     private User waiter;
 
     @OneToOne(mappedBy = "tableSession")

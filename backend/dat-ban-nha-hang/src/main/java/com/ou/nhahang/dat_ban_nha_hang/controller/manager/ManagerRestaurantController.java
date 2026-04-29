@@ -52,18 +52,4 @@ public class ManagerRestaurantController {
                 return ResponseEntity.ok(response);
         }
 
-        @DeleteMapping
-        public ResponseEntity<ApiResponse<Void>> deleteRestaurant(
-                        Authentication authentication) {
-
-                Long managerId = (Long) authentication.getCredentials();
-                managerRestaurantService.deleteRestaurant(managerId);
-
-                ApiResponse<Void> response = ApiResponse.<Void>builder()
-                                .status(200)
-                                .message("Xóa thành công")
-                                .data(null)
-                                .build();
-                return ResponseEntity.ok(response);
-        }
 }

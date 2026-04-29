@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 public interface IVNPayGateway {
-    String createPaymentUrl(Long amount, Long transactionId, LocalDateTime expireTime, String currency,
+    String createPaymentUrl(Long amount, String vnpTxnRef, LocalDateTime expireTime, String currency,
             String ipAddress);
 
     Map<String, String> handleWebhook(Map<String, String> params);

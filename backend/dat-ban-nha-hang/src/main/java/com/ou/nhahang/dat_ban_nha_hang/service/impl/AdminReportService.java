@@ -28,12 +28,17 @@ public class AdminReportService implements IAdminReportService {
         long totalBookings = bookingRepository.countCreatedInRange(from, toExclusive);
         long totalRestaurants = restaurantRepository.countCreatedInRange(from, toExclusive);
         long totalNewUsers = userRepository.countCreatedInRange(from, toExclusive);
+        long totalNewCustomers = userRepository.countCreatedByRoleInRange("CUSTOMER", from, toExclusive);
 
         return AdminDashboardReportResponseDTO.builder()
                 .totalRevenue(totalRevenue)
                 .totalBookings(totalBookings)
                 .totalRestaurants(totalRestaurants)
                 .totalNewUsers(totalNewUsers)
+                .totalNewCustomers(totalNewCustomers)
+                .fromDate(from)
+                .toDate(toExclusive)
+                .generatedAt(LocalDateTime.now())
                 .build();
     }
 }

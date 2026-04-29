@@ -5,6 +5,7 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminRestaurantSearchRequestD
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.AdminUserRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminRestaurantDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminRestaurantListItemResponseDTO;
+import com.ou.nhahang.dat_ban_nha_hang.dto.response.AdminRestaurantMutationResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ApiResponse;
 import com.ou.nhahang.dat_ban_nha_hang.service.IAdminRestaurantService;
 import jakarta.validation.Valid;
@@ -27,7 +28,7 @@ public class AdminRestaurantController {
     private final IAdminRestaurantService adminRestaurantService;
 
     @PatchMapping("/{id}/approval")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> approveRestaurant(
+    public ResponseEntity<ApiResponse<AdminRestaurantMutationResponseDTO>> approveRestaurant(
             @PathVariable("id") Long restaurantId,
             @Valid @RequestBody AdminRestaurantRequestDTO.Approval request) {
 
@@ -37,13 +38,17 @@ public class AdminRestaurantController {
         String message = "APPROVED".equalsIgnoreCase(request.status())
                 ? "Đã phê duyệt nhà hàng thành công."
                 : "Đã từ chối nhà hàng.";
+        String restaurantStatus = "APPROVED".equalsIgnoreCase(request.status()) ? "OPENING" : "REJECTED";
 
-        ApiResponse<Map<String, Object>> response = ApiResponse.<Map<String, Object>>builder()
+        ApiResponse<AdminRestaurantMutationResponseDTO> response = ApiResponse.<AdminRestaurantMutationResponseDTO>builder()
                 .status(200)
                 .message(message)
-                .data(Map.of(
-                        "restaurantId", restaurantId,
-                        "status", responseStatus))
+                .data(AdminRestaurantMutationResponseDTO.builder()
+                        .restaurantId(restaurantId)
+                        .status(responseStatus)
+                        .approvalStatus(responseStatus)
+                        .restaurantStatus(restaurantStatus)
+                        .build())
                 .build();
         return ResponseEntity.ok(response);
     }
@@ -85,49 +90,55 @@ public class AdminRestaurantController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> updateRestaurantStatus(
+    public ResponseEntity<ApiResponse<AdminRestaurantMutationResponseDTO>> updateRestaurantStatus(
             @PathVariable("id") Long restaurantId,
             @Valid @RequestBody AdminRestaurantRequestDTO.UpdateStatus request) {
 
         adminRestaurantService.updateRestaurantStatus(restaurantId, request);
 
-        ApiResponse<Map<String, Object>> response = ApiResponse.<Map<String, Object>>builder()
+        ApiResponse<AdminRestaurantMutationResponseDTO> response = ApiResponse.<AdminRestaurantMutationResponseDTO>builder()
                 .status(200)
                 .message("Cập nhật trạng thái thành công")
-                .data(Map.of(
-                        "restaurantId", restaurantId,
-                        "status", request.status()))
+                .data(AdminRestaurantMutationResponseDTO.builder()
+                        .restaurantId(restaurantId)
+                        .status(request.status())
+                        .restaurantStatus(request.status())
+                        .build())
                 .build();
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}/commission")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> updateRestaurantCommission(
+    public ResponseEntity<ApiResponse<AdminRestaurantMutationResponseDTO>> updateRestaurantCommission(
             @PathVariable("id") Long restaurantId,
             @Valid @RequestBody AdminRestaurantRequestDTO.UpdateCommission request) {
 
         adminRestaurantService.updateRestaurantCommission(restaurantId, request);
 
-        ApiResponse<Map<String, Object>> response = ApiResponse.<Map<String, Object>>builder()
+        ApiResponse<AdminRestaurantMutationResponseDTO> response = ApiResponse.<AdminRestaurantMutationResponseDTO>builder()
                 .status(200)
                 .message("Cấu hình hoa hồng thành công")
-                .data(Map.of(
-                        "restaurantId", restaurantId,
-                        "commissionType", request.commissionType(),
-                        "baseCommissionValue", request.baseCommissionValue()))
+                .data(AdminRestaurantMutationResponseDTO.builder()
+                        .restaurantId(restaurantId)
+                        .commissionType(request.commissionType())
+                        .baseCommissionValue(request.baseCommissionValue())
+                        .build())
                 .build();
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{restaurantId}/manager")
-    public ResponseEntity<ApiResponse<Void>> assignManager(
+    public ResponseEntity<ApiResponse<AdminRestaurantMutationResponseDTO>> assignManager(
             @PathVariable Long restaurantId,
             @Valid @RequestBody AdminUserRequestDTO.AssignManager request) {
         adminRestaurantService.assignManager(restaurantId, request.userId());
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
+        ApiResponse<AdminRestaurantMutationResponseDTO> response = ApiResponse.<AdminRestaurantMutationResponseDTO>builder()
                 .status(200)
                 .message("Đã bổ nhiệm Manager cho nhà hàng thành công.")
-                .data(null)
+                .data(AdminRestaurantMutationResponseDTO.builder()
+                        .restaurantId(restaurantId)
+                        .managerUserId(request.userId())
+                        .build())
                 .build();
         return ResponseEntity.ok(response);
     }

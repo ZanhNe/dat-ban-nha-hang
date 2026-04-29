@@ -5,5 +5,7 @@ import lombok.Builder;
 @Builder
 public record CashierInitiatePaymentResponseDTO(
         Long sessionId,
-        String status
+        String status,
+        Long transactionId,
+        Long amountToPay
 ) {}

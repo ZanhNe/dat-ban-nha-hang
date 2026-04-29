@@ -27,6 +27,18 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("paymentSourceId") Long paymentSourceId, @Param("type") Transaction.TransactionType type,
             @Param("status") Transaction.TransactionStatus status);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT t FROM Transaction t
+            WHERE t.paymentSource.id = :paymentSourceId
+              AND t.transactionType = :type
+              AND t.transactionStatus IN :statuses
+            """)
+    List<Transaction> findByPaymentSourceIdAndTransactionTypeAndStatusesForUpdate(
+            @Param("paymentSourceId") Long paymentSourceId,
+            @Param("type") Transaction.TransactionType type,
+            @Param("statuses") List<Transaction.TransactionStatus> statuses);
+
     /**
      * Doanh thu hoa hồng hệ thống (ước tính): chỉ tính trên các giao dịch CAPTURED.
      * - PERCENTAGE: amount * baseCommissionValue / 100
