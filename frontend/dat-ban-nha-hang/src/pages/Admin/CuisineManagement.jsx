@@ -14,17 +14,19 @@ function CuisineManagement() {
         deleteCuisine
     } = useCuisineManagement();
 
+    console.log(cuisines)
+
     const [searchTerm, setSearchTerm] = useState("");
 
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCuisine, setEditingCuisine] = useState(null);
-    const [formData, setFormData] = useState({ name: "", description: "", isActive: true });
+    const [formData, setFormData] = useState({ name: "" });
 
 
     const handleAddNew = () => {
         setEditingCuisine(null);
-        setFormData({ name: "", description: "", isActive: true });
+        setFormData({ name: "" });
         setIsModalOpen(true);
     };
 
@@ -32,8 +34,6 @@ function CuisineManagement() {
         setEditingCuisine(cuisine);
         setFormData({
             name: cuisine.name,
-            description: cuisine.description || "",
-            isActive: cuisine.isActive
         });
         setIsModalOpen(true);
     };
@@ -44,7 +44,6 @@ function CuisineManagement() {
 
         let success = false;
         if (editingCuisine) {
-
             success = await updateCuisine(editingCuisine.cuisineId, formData);
         } else {
 
@@ -89,22 +88,14 @@ function CuisineManagement() {
                         <tr>
                             <th width="10%">ID</th>
                             <th width="25%">Tên danh mục</th>
-                            <th width="35%">Mô tả</th>
-                            <th width="15%">Trạng thái</th>
                             <th width="15%">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         {filteredCuisines.map((cuisine) => (
-                            <tr key={cuisine.cuisineId} className={!cuisine.isActive ? "row-disabled" : ""}>
+                            <tr key={cuisine.cuisineId} >
                                 <td><strong>{cuisine.cuisineId}</strong></td>
                                 <td>{cuisine.name}</td>
-                                <td><span className="text-truncate">{cuisine.description}</span></td>
-                                <td>
-                                    <span className={`badge ${cuisine.isActive ? 'active' : 'suspended'}`}>
-                                        {cuisine.isActive ? "Hiển thị" : "Đã ẩn"}
-                                    </span>
-                                </td>
                                 <td>
                                     <div className="action-group">
                                         <button className="btn-edit" onClick={() => handleEdit(cuisine)} disabled={isActionLoading}> Sửa </button>
@@ -133,34 +124,15 @@ function CuisineManagement() {
                                     type="text"
                                     placeholder="Ví dụ: Đồ Nướng..."
                                     value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    onChange={(e) => setFormData({ name: e.target.value })}
                                     required
                                     disabled={isActionLoading}
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label>Mô tả ngắn</label>
-                                <textarea
-                                    placeholder="Mô tả các món ăn thuộc danh mục này..."
-                                    rows="3"
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    disabled={isActionLoading}
-                                />
-                            </div>
 
-                            <div className="form-group checkbox-group">
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.isActive}
-                                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                                        disabled={isActionLoading}
-                                    />
-                                    Hiển thị danh mục này cho Khách hàng
-                                </label>
-                            </div>
+
+
 
                             <div className="modal-actions">
                                 <button type="submit" className="btn-save" disabled={isActionLoading}>

@@ -5,7 +5,7 @@ import './TableManagement.css';
 function TableManagement() {
     const {
         areas, activeAreaId, setActiveAreaId, tables,
-        isLoading, isActionLoading, onSaveArea, onDeleteArea, onSaveTable, onDeleteTable
+        isLoading, isActionLoading, error, onSaveArea, onDeleteArea, onSaveTable, onDeleteTable
     } = useTableManagement();
 
     const [modal, setModal] = useState({ isOpen: false, type: '', data: null });
@@ -13,7 +13,7 @@ function TableManagement() {
 
     const openModal = (type, data = null) => {
         setModal({ isOpen: true, type, data });
-        setFormData(data || (type === 'AREA' ? { name: '', description: '', status: 'ACTIVE' } : { name: '', capacity: 4, status: 'AVAILABLE' }));
+        setFormData(data || (type === 'AREA' ? { name: '', status: 'ACTIVE' } : { name: '', capacity: 4, status: 'AVAILABLE' }));
     };
 
     const handleSubmit = async (e) => {
@@ -41,6 +41,7 @@ function TableManagement() {
                     <button className="btn-primary" onClick={() => openModal('TABLE')} disabled={!activeAreaId}>+ Thêm Bàn</button>
                 </div>
             </header>
+            {error && <p className="status-error">{error}</p>}
 
             {/* TAB KHU VỰC */}
             <div className="area-tabs">
@@ -96,8 +97,7 @@ function TableManagement() {
                                         <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                                             <option value="AVAILABLE">Sẵn sàng (Available)</option>
                                             <option value="OCCUPIED">Có khách (Occupied)</option>
-                                            <option value="RESERVED">Đã đặt (Reserved)</option>
-                                            <option value="CLEANING">Đang dọn (Cleaning)</option>
+                                            <option value="MAINTENANCE">Bảo trì (Maintenance)</option>
                                         </select>
                                     </div>
                                 </>
@@ -106,7 +106,9 @@ function TableManagement() {
                                     <label>Trạng thái khu vực</label>
                                     <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                                         <option value="ACTIVE">Hoạt động</option>
-                                        <option value="INACTIVE">Tạm đóng</option>
+                                        <option value="CLOSED">Tạm đóng</option>
+                                        <option value="MAINTENANCE">Bảo trì</option>
+                                        <option value="PRIVATE_EVENT">Sự kiện riêng</option>
                                     </select>
                                 </div>
                             )}

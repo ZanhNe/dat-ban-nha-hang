@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useStaffManagement } from '../../hooks/manager/useStaffManagement';
+import PaginationBar from '../../components/ui/PaginationBar';
 import './StaffManagement.css';
 
 function StaffManagement() {
     const {
-        staffs, isLoading, isActionLoading,
-        handleCreate, handleUpdate, handleDelete, handleKick
+        staffs, isLoading, isActionLoading, error,
+        handleCreate, handleUpdate, handleDelete, handleKick,
+        page, setPage, meta
     } = useStaffManagement();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -13,6 +15,11 @@ function StaffManagement() {
     const [formData, setFormData] = useState({
         username: '', password: '', fullName: '', email: '', phone: '', roleId: 2, status: 'ACTIVE'
     });
+    const roleOptions = [
+        { id: 4, label: 'RECEPTIONIST' },
+        { id: 5, label: 'WAITER' },
+        { id: 6, label: 'CASHIER' }
+    ];
 
     const openModal = (staff = null) => {
         if (staff) {
@@ -33,14 +40,11 @@ function StaffManagement() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Đảm bảo roleId là số
         const payload = { ...formData, roleId: Number(formData.roleId) };
         let success = false;
 
         if (editingStaff) {
-            // PUT yêu cầu không gửi username/password
-            const { username, password, ...updatePayload } = payload;
+            const { username: _username, password: _password, ...updatePayload } = payload;
             success = await handleUpdate(editingStaff.userId, updatePayload);
         } else {
             success = await handleCreate(payload);
@@ -60,6 +64,7 @@ function StaffManagement() {
                     + Thêm nhân viên
                 </button>
             </header>
+            {error && <p className="status-error">{error}</p>}
 
             {isLoading ? (
                 <div className="loading-state">Đang tải danh sách nhân viên...</div>
@@ -92,7 +97,7 @@ function StaffManagement() {
                                         <span className="role-tag">{staff.roles[0]?.name.replace('ROLE_', '')}</span>
                                     </td>
                                     <td>
-                                        <span className={`badge ${staff.status.toLowerCase()}`}>{staff.status}</span>
+                                        <span className={`status-badge ${staff.status.toLowerCase()}`}>{staff.status === 'ACTIVE' ? 'Hoạt động' : 'Tạm dừng'}</span>
                                     </td>
                                     <td>
                                         <div className="action-group">
@@ -108,6 +113,15 @@ function StaffManagement() {
                             )}
                         </tbody>
                     </table>
+                    {meta && (
+                        <PaginationBar
+                            page={page}
+                            totalPages={meta.totalPages}
+                            totalItems={meta.totalItems}
+                            onPageChange={setPage}
+                            disabled={isLoading || isActionLoading}
+                        />
+                    )}
                 </div>
             )}
 
@@ -149,10 +163,10 @@ function StaffManagement() {
                             <div className="form-grid-2">
                                 <div className="form-group">
                                     <label>Vị trí (Quyền) <span className="req">*</span></label>
-                                    <select value={formData.roleId} onChange={e => setFormData({ ...formData, roleId: e.target.value })} disabled={isActionLoading}>
-                                        <option value="2">Phục vụ (WAITER)</option>
-                                        <option value="4">Thu ngân (CASHIER)</option>
-                                        <option value="5">Lễ tân (RECEPTIONIST)</option>
+                                    <select value={formData.roleId} onChange={(e) => setFormData({ ...formData, roleId: Number(e.target.value) })} disabled={isActionLoading}>
+                                        {roleOptions.map((role) => (
+                                            <option key={role.id} value={role.id}>{role.label}</option>
+                                        ))}
                                     </select>
                                 </div>
 

@@ -1,30 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../services/apiClient';
+import adminService from '../../services/adminService';
+import { formatApiError } from '../../services/apiShape';
 import './CommissionConfig.css';
 
-const USE_MOCK = true;
-
 function CommissionConfig() {
+    const [restaurants, setRestaurants] = useState([]);
+    const [selectedRestaurantId, setSelectedRestaurantId] = useState('');
     const [currentRate, setCurrentRate] = useState(null);
     const [newRate, setNewRate] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchRate = async () => {
             try {
-                if (USE_MOCK) {
-                    await new Promise(r => setTimeout(r, 400));
-                    setCurrentRate(10);
-                    setNewRate('10');
-                } else {
-                    const result = await apiClient.get('/admin/commission');
-                    setCurrentRate(result.data?.rate || 0);
-                    setNewRate(String(result.data?.rate || 0));
+                const result = await adminService.getAllRestaurants(0, 50);
+                const list = result.data || [];
+                setRestaurants(list);
+                if (list.length > 0) {
+                    const first = list[0];
+                    setSelectedRestaurantId(String(first.restaurantId));
+                    setCurrentRate(first.baseCommissionValue || 0);
+                    setNewRate(String(first.baseCommissionValue || 0));
                 }
             } catch (err) {
                 console.error('Lỗi tải cấu hình:', err);
+                setError(formatApiError(err, 'Không thể tải cấu hình hoa hồng.').displayMessage);
             } finally {
                 setLoading(false);
             }
@@ -34,21 +37,28 @@ function CommissionConfig() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const rate = parseFloat(newRate);
+        if (!selectedRestaurantId) return;
+        const rate = Math.round(Number(newRate));
         if (isNaN(rate) || rate < 0 || rate > 100) return alert('Tỷ lệ phải từ 0 đến 100');
         setSaving(true);
+        setError('');
         setShowSuccess(false);
         try {
-            if (USE_MOCK) {
-                await new Promise(r => setTimeout(r, 600));
-            } else {
-                await apiClient.put('/admin/commission', { rate });
-            }
+            await adminService.updateRestaurantCommission(selectedRestaurantId, {
+                commissionType: 'PERCENTAGE',
+                baseCommissionValue: rate
+            });
+            setRestaurants((prev) => prev.map((restaurant) => (
+                String(restaurant.restaurantId) === String(selectedRestaurantId)
+                    ? { ...restaurant, commissionType: 'PERCENTAGE', baseCommissionValue: rate }
+                    : restaurant
+            )));
             setCurrentRate(rate);
             setShowSuccess(true);
             setTimeout(() => setShowSuccess(false), 3000);
         } catch (err) {
             console.error('Lỗi cập nhật:', err);
+            setError(formatApiError(err, 'Không thể cập nhật cấu hình hoa hồng.').displayMessage);
         } finally {
             setSaving(false);
         }
@@ -60,6 +70,7 @@ function CommissionConfig() {
         <div className="commission-config">
             <h2>Cấu hình hoa hồng</h2>
             <p className="subtitle">Thiết lập tỷ lệ hoa hồng hệ thống thu từ mỗi giao dịch</p>
+            {error && <div className="save-success" style={{ background: '#fdecea', color: '#c0392b' }}>{error}</div>}
 
             <div className="commission-card">
                 <div className="current-rate">
@@ -69,10 +80,30 @@ function CommissionConfig() {
 
                 <form className="commission-form" onSubmit={handleSubmit}>
                     <div className="form-group">
+                        <label>Nhà hàng</label>
+                        <select
+                            value={selectedRestaurantId}
+                            onChange={(e) => {
+                                const id = e.target.value;
+                                setSelectedRestaurantId(id);
+                                const selected = restaurants.find((r) => String(r.restaurantId) === id);
+                                const val = selected?.baseCommissionValue ?? 0;
+                                setCurrentRate(val);
+                                setNewRate(String(val));
+                            }}
+                        >
+                            {restaurants.map((rest) => (
+                                <option key={rest.restaurantId} value={rest.restaurantId}>
+                                    {rest.restaurantName}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
                         <label>Tỷ lệ mới (%)</label>
                         <input
                             type="number"
-                            step="0.1"
+                            step="1"
                             min="0"
                             max="100"
                             value={newRate}

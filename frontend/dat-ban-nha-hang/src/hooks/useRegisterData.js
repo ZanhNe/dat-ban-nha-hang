@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSetAtom } from "jotai";
 import { setAuthAtom } from "../store/authStore";
 import { authService } from "../services/authService";
+import { formatApiError, normalizeApiError } from "../services/apiShape";
 
 const useRegisterData = () => {
     const navigate = useNavigate();
@@ -44,11 +45,11 @@ const useRegisterData = () => {
             navigate('/');
 
         } catch (err) {
-            const errData = err.response?.data;
+            const errData = normalizeApiError(err);
             if (errData?.errors) {
                 setFieldErrors(errData.errors);
             } else {
-                setError(errData?.message || 'Đăng ký thất bại, vui lòng thử lại!');
+                setError(formatApiError(err, 'Đăng ký thất bại, vui lòng thử lại!').displayMessage);
             }
         } finally {
             setIsLoading(false);

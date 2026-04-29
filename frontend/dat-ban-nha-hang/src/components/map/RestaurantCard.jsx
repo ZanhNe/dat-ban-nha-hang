@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAtom, useSetAtom } from 'jotai';
+import { useSetAtom } from 'jotai';
 import { Star, MapPin, Clock } from 'lucide-react';
 import { selectedRestaurantAtom, focusModeAtom } from '../../store/mapStore';
 
@@ -39,7 +39,9 @@ export default function RestaurantCard({ restaurant }) {
           <div className="flex items-center justify-between mt-2 text-sm text-gray-500">
             <span className="flex items-center">
               <MapPin className="w-4 h-4 mr-1" />
-              {restaurant.restaurantDistance ? `${restaurant.restaurantDistance.toFixed(1)} km` : "N/A"}
+              {typeof restaurant.restaurantDistance === 'number'
+                ? `${(restaurant.restaurantDistance / 1000).toFixed(1)} km`
+                : "N/A"}
             </span>
             <span className={`flex items-center font-medium ${restaurant.restaurantIsOpen ? 'text-green-600' : 'text-red-500'}`}>
               <Clock className="w-4 h-4 mr-1" />

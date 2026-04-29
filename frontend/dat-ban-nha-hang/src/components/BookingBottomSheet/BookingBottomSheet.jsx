@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Minus, Plus, Calendar, Clock, Users, CheckCircle2, Loader2 } from 'lucide-react';
 import { restaurantService } from '../../services/restaurantService';
+import { useNavigate } from 'react-router-dom';
+import { formatApiError, unwrapData } from '../../services/apiShape';
 
 const BookingBottomSheet = ({ isOpen, onClose, restaurant }) => {
+    const navigate = useNavigate();
     const [step, setStep] = useState(1);
 
 
@@ -38,7 +41,10 @@ const BookingBottomSheet = ({ isOpen, onClose, restaurant }) => {
 
     const times = useMemo(() => {
         if (!restaurant?.restaurantOperationTimes?.length) return [];
-        const opTime = restaurant.restaurantOperationTimes[0];
+        const selectedDay = dates.find((date) => date.id === selectedDate)?.dateObj?.getDay();
+        const normalizedDay = selectedDay === 0 ? 'SUNDAY' : ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][selectedDay - 1];
+        const opTime = restaurant?.restaurantOperationTimes?.find((item) => item.day === normalizedDay)
+            || restaurant?.restaurantOperationTimes?.[0];
 
         const openStr = opTime.open || '09:00';
         const closeStr = opTime.close || '22:00';
@@ -71,37 +77,74 @@ const BookingBottomSheet = ({ isOpen, onClose, restaurant }) => {
             }
         }
         return result;
-    }, [selectedDate, restaurant]);
+    }, [dates, selectedDate, restaurant]);
 
     // Tự động chọn khung giờ đầu tiên nếu thời gian cũ không hợp lệ ở ngày mới
     useEffect(() => {
         if (times.length > 0 && !times.includes(selectedTime)) {
             setSelectedTime(times[0]);
         }
-    }, [times, selectedDate]);
+    }, [times, selectedDate, selectedTime]);
 
     // State Step 2 (Gọi API lấy bàn)
     const [isLoadingTables, setIsLoadingTables] = useState(false);
+    const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
     const [areasData, setAreasData] = useState([]);
     const [selectedArea, setSelectedArea] = useState('');
-    const [selectedTable, setSelectedTable] = useState(null);
+    const [selectedTables, setSelectedTables] = useState([]);
+    const [error, setError] = useState('');
 
     // Xử lý nạp danh sách bàn từ Server khi chuyển sang Step 2
     const fetchTables = async () => {
         setIsLoadingTables(true);
+        setError('');
         try {
-            const data = await restaurantService.getAvailableTables(restaurant.restaurantId, selectedDate, selectedTime, guests);
+            const response = await restaurantService.getAvailableTables(restaurant.restaurantId, selectedDate, selectedTime, guests);
+            const data = unwrapData(response)?.areas || [];
             setAreasData(data);
+            setSelectedTables([]);
             if (data.length > 0) {
                 setSelectedArea(data[0].areaName);
             }
         } catch (error) {
-            console.error("Lỗi lấy danh sách bàn: ", error);
+            setError(formatApiError(error, 'Không thể lấy danh sách bàn trống.').displayMessage);
         } finally {
             setIsLoadingTables(false);
             setStep(2); // Qua bước 2
         }
     };
+
+    const submitBooking = async () => {
+        if (selectedTables.length === 0) return;
+        setIsSubmittingBooking(true);
+        setError('');
+        try {
+            const bookingTime = `${selectedDate}T${selectedTime}:00`;
+            const response = await restaurantService.createBooking(restaurant.restaurantId, {
+                bookingTime,
+                quantity: guests,
+                tableIds: selectedTables,
+            });
+            const booking = unwrapData(response);
+            onClose();
+            if (booking?.status === 'PENDING_PAYMENT') {
+                navigate('/customer/bookings/pending-payment');
+            } else {
+                navigate('/customer/bookings');
+            }
+        } catch (error) {
+            setError(formatApiError(error, 'Không thể tạo booking.').displayMessage);
+        } finally {
+            setIsSubmittingBooking(false);
+        }
+    };
+
+    const selectedCapacity = useMemo(() => {
+        return areasData
+            .flatMap((area) => area.tables || [])
+            .filter((table) => selectedTables.includes(table.tableId))
+            .reduce((sum, table) => sum + (table.capacity || 0), 0);
+    }, [areasData, selectedTables]);
 
     if (!isOpen) return null;
     const currentArea = areasData.find(a => a.areaName === selectedArea);
@@ -123,6 +166,11 @@ const BookingBottomSheet = ({ isOpen, onClose, restaurant }) => {
 
                 {/* Content Area */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                    {error && (
+                        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                            {error}
+                        </div>
+                    )}
 
                     {step === 1 && (
                         <div className="space-y-6">
@@ -136,7 +184,7 @@ const BookingBottomSheet = ({ isOpen, onClose, restaurant }) => {
                                         <button
                                             key={date.id}
                                             onClick={() => setSelectedDate(date.id)}
-                                            className={`flex-shrink-0 px-5 py-3 rounded-2xl border-2 transition-all font-medium ${selectedDate === date.id ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-gray-100 text-gray-500 hover:border-orange-200'}`}
+                                            className={`shrink-0 px-5 py-3 rounded-2xl border-2 transition-all font-medium ${selectedDate === date.id ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-gray-100 text-gray-500 hover:border-orange-200'}`}
                                         >
                                             {date.label}
                                         </button>
@@ -196,7 +244,7 @@ const BookingBottomSheet = ({ isOpen, onClose, restaurant }) => {
                             <div className="bg-orange-50 p-4 rounded-2xl flex justify-between items-center border border-orange-100">
                                 <div>
                                     <p className="text-sm text-orange-600 font-medium">{dates.find(d => d.id === selectedDate)?.label} • {selectedTime}</p>
-                                    <p className="text-xs text-orange-500 mt-1">{guests} người</p>
+                                    <p className="text-xs text-orange-500 mt-1">{guests} người • Đã chọn {selectedTables.length} bàn • Sức chứa {selectedCapacity}</p>
                                 </div>
                                 <button onClick={() => setStep(1)} className="text-sm px-3 py-1 bg-white rounded-lg border border-orange-200 text-orange-600 font-bold shadow-sm">
                                     Sửa
@@ -227,14 +275,18 @@ const BookingBottomSheet = ({ isOpen, onClose, restaurant }) => {
                                             <button
                                                 key={table.tableId}
                                                 disabled={!table.isAvailable}
-                                                onClick={() => setSelectedTable(table.tableId)}
+                                                onClick={() => {
+                                                    setSelectedTables((prev) => prev.includes(table.tableId)
+                                                        ? prev.filter((id) => id !== table.tableId)
+                                                        : [...prev, table.tableId]);
+                                                }}
                                                 className={`
                                                     relative p-4 rounded-2xl border-2 text-left transition-all overflow-hidden
                                                     ${!table.isAvailable ? 'bg-gray-50 border-gray-100 cursor-not-allowed opacity-70' :
-                                                        selectedTable === table.tableId ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300 bg-white'}
+                                                        selectedTables.includes(table.tableId) ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300 bg-white'}
                                                 `}
                                             >
-                                                {selectedTable === table.tableId && (
+                                                {selectedTables.includes(table.tableId) && (
                                                     <div className="absolute top-3 right-3 text-green-500">
                                                         <CheckCircle2 size={20} fill="currentColor" className="text-white" />
                                                     </div>
@@ -271,11 +323,14 @@ const BookingBottomSheet = ({ isOpen, onClose, restaurant }) => {
                         </button>
                     ) : (
                         <button
-                            disabled={!selectedTable}
+                            disabled={selectedTables.length === 0 || selectedCapacity < guests || isSubmittingBooking}
+                            onClick={submitBooking}
                             className={`w-full py-4 rounded-2xl font-bold text-lg transition-colors shadow-lg 
-                                ${selectedTable ? 'bg-green-500 text-white hover:bg-green-600 shadow-green-500/30' : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'}`}
+                                ${(selectedTables.length > 0 && selectedCapacity >= guests && !isSubmittingBooking) ? 'bg-green-500 text-white hover:bg-green-600 shadow-green-500/30' : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'}`}
                         >
-                            Xác nhận & Cọc ({(restaurant?.restaurantBaseDeposit || 0).toLocaleString()}đ)
+                            {isSubmittingBooking
+                                ? 'Đang tạo booking...'
+                                : `Xác nhận & Cọc (${(restaurant?.restaurantBaseDeposit || 0).toLocaleString()}đ)`}
                         </button>
                     )}
                 </div>

@@ -4,6 +4,7 @@ import { ArrowLeft, Navigation, Info, Star, Clock, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { selectedRestaurantAtom, focusModeAtom, originAtom, restaurantDetailAtom } from '../../store/mapStore';
 import { mapService } from '../../services/mapService';
+import { formatApiError, unwrapData } from '../../services/apiShape';
 
 export default function RestaurantDetailPanel() {
   const navigate = useNavigate();
@@ -12,24 +13,26 @@ export default function RestaurantDetailPanel() {
   const origin = useAtomValue(originAtom);
   const [detail, setDetail] = useAtom(restaurantDetailAtom);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (selectedRest && origin) {
       const fetchDetail = async () => {
         setLoading(true);
+        setError('');
         try {
           const originStr = `${origin.latitude},${origin.longitude}`;
           const res = await mapService.getRestaurantDetail(selectedRest.restaurantId, originStr);
-          setDetail(res.data || res); // Kiểm tra chính xác api format data trả về
+          setDetail(unwrapData(res) || res);
         } catch (error) {
-          console.error("Lỗi lấy chi tiết:", error);
+          setError(formatApiError(error, 'Không thể tải chi tiết nhà hàng hoặc dữ liệu chỉ đường.').displayMessage);
         } finally {
           setLoading(false);
         }
       };
       fetchDetail();
     }
-  }, [selectedRest, origin]);
+  }, [selectedRest, origin, setDetail]);
 
   if (!selectedRest) return null;
 
@@ -60,7 +63,7 @@ export default function RestaurantDetailPanel() {
 
       <div className="overflow-y-auto flex-1 p-4 pb-20">
         <img 
-          src={currentDisplay.restaurantImage || currentDisplay.restaurantLogo || "https://placehold.co/400x200?text=No+Image"} 
+          src={currentDisplay.restaurantLogo || "https://placehold.co/400x200?text=No+Image"} 
           alt={currentDisplay.restaurantName}
           className="w-full h-48 object-cover rounded-xl shadow-sm mb-4"
         />
@@ -74,13 +77,20 @@ export default function RestaurantDetailPanel() {
           </span>
           <span className="flex items-center">
             <MapPin className="w-4 h-4 mr-1" />
-            {currentDisplay.restaurantDistance?.toFixed(1) || (detail && "Chi tiết")} km
+            {typeof currentDisplay.restaurantDistance === 'number'
+              ? `${(currentDisplay.restaurantDistance / 1000).toFixed(1)} km`
+              : 'Chi tiết'}
           </span>
         </div>
 
         <p className="text-sm text-gray-700 mb-6 leading-relaxed">
           {detail?.restaurantDescription || "Đang tải mô tả..."}
         </p>
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            {error}
+          </div>
+        )}
 
         {/* Buttons Action */}
         <div className="flex flex-col gap-3">
@@ -93,7 +103,7 @@ export default function RestaurantDetailPanel() {
           </button>
           
           <button 
-            onClick={() => navigate(`/restaurants/${currentDisplay.restaurantId}`)}
+            onClick={() => navigate(`/customer/restaurants/${currentDisplay.restaurantId}`)}
             className="w-full bg-gray-100 text-gray-800 font-semibold py-3 px-4 rounded-lg flex items-center justify-center hover:bg-gray-200 transition"
           >
             <Info className="w-5 h-5 mr-2" />

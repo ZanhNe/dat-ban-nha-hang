@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Info, Menu as MenuIcon, MessageSquare, Loader2 } from 'lucide-react';
 import { useAtomValue } from 'jotai';
@@ -21,7 +21,7 @@ const RestaurantDetailPage = () => {
     const [isBookingSheetOpen, setIsBookingSheetOpen] = useState(false);
 
     // Sử dụng Custom Hook để dọn dẹp logic fetching
-    const { restaurant, menus, reviews, isLoading } = useRestaurantData(id, activeTab);
+    const { restaurant, menus, reviews, isLoading, error } = useRestaurantData(id, activeTab);
 
     if (isLoading) {
         return (
@@ -59,9 +59,14 @@ const RestaurantDetailPage = () => {
 
             {/* Content Area */}
             <div className="p-4 max-w-2xl mx-auto space-y-6 mt-4">
+                {error && (
+                    <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                        {error}
+                    </div>
+                )}
                 {activeTab === 'overview' && <DetailOverview restaurant={restaurant} />}
                 {activeTab === 'menu' && <DetailMenu menus={menus} />}
-                {activeTab === 'reviews' && <DetailReviews reviews={reviews} user={user} />}
+                {activeTab === 'reviews' && <DetailReviews reviews={reviews} user={user} restaurant={restaurant} />}
             </div>
 
             {/* Bottom Floating CTA */}

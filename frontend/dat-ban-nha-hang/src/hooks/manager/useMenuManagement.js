@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { managerService } from '../../services/managerService';
+import { formatApiError } from '../../services/apiShape';
 
 export const useMenuManagement = () => {
     const [menus, setMenus] = useState([]);
@@ -10,15 +11,22 @@ export const useMenuManagement = () => {
 
     const [isLoading, setIsLoading] = useState(false);
     const [isActionLoading, setIsActionLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const fetchMenus = useCallback(async () => {
         setIsLoading(true);
-        const res = await managerService.getMenus();
-        if (res.status === 200) {
-            setMenus(res.data);
-            if (res.data.length > 0 && !activeMenuId) setActiveMenuId(res.data[0].menuId);
+        setError('');
+        try {
+            const res = await managerService.getMenus();
+            if (res.status === 200) {
+                setMenus(res.data);
+                if (res.data.length > 0 && !activeMenuId) setActiveMenuId(res.data[0].menuId);
+            }
+        } catch (error) {
+            setError(formatApiError(error, 'Không thể tải danh sách menu.').displayMessage);
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     }, [activeMenuId]);
 
     useEffect(() => { fetchMenus(); }, [fetchMenus]);
@@ -26,21 +34,32 @@ export const useMenuManagement = () => {
     useEffect(() => {
         const fetchGroups = async () => {
             if (!activeMenuId) return;
-            const res = await managerService.getFoodGroups(activeMenuId);
-            if (res.status === 200) setFoodGroups(res.data);
+            setError('');
+            try {
+                const res = await managerService.getFoodGroups(activeMenuId);
+                if (res.status === 200) setFoodGroups(res.data);
+            } catch (error) {
+                setError(formatApiError(error, 'Không thể tải nhóm món ăn.').displayMessage);
+            }
         };
         fetchGroups();
     }, [activeMenuId]);
 
     const fetchFoodsForGroup = async (groupId) => {
-        const res = await managerService.getFoods(groupId);
-        if (res.status === 200) {
-            setFoodsByGroup(prev => ({ ...prev, [groupId]: res.data }));
+        setError('');
+        try {
+            const res = await managerService.getFoods(groupId);
+            if (res.status === 200) {
+                setFoodsByGroup(prev => ({ ...prev, [groupId]: res.data }));
+            }
+        } catch (error) {
+            setError(formatApiError(error, 'Không thể tải danh sách món ăn.').displayMessage);
         }
     };
 
     const handleSave = async (type, payload, id = null, parentId = null) => {
         setIsActionLoading(true);
+        setError('');
         let res;
         try {
             if (type === 'MENU') res = await managerService.saveMenu(payload, id);
@@ -48,7 +67,6 @@ export const useMenuManagement = () => {
             if (type === 'FOOD') res = await managerService.saveFood(parentId, payload, id);
 
             if (res.status === 200 || res.status === 201) {
-                alert(" " + res.message);
                 if (type === 'MENU') fetchMenus();
                 if (type === 'GROUP') {
                     const groupRes = await managerService.getFoodGroups(activeMenuId);
@@ -57,8 +75,8 @@ export const useMenuManagement = () => {
                 if (type === 'FOOD') fetchFoodsForGroup(parentId);
                 return true;
             }
-        } catch (e) {
-            alert(" Có lỗi xảy ra!");
+        } catch (err) {
+            setError(formatApiError(err, 'Không thể lưu dữ liệu menu.').displayMessage);
         } finally {
             setIsActionLoading(false);
         }
@@ -68,23 +86,29 @@ export const useMenuManagement = () => {
     const handleDelete = async (type, id, parentId = null) => {
         if (!window.confirm("Bạn có chắc chắn muốn xóa mục này?")) return;
         setIsActionLoading(true);
-        let res;
-        if (type === 'MENU') res = await managerService.deleteMenu(id);
-        if (type === 'GROUP') res = await managerService.deleteFoodGroup(id);
-        if (type === 'FOOD') res = await managerService.deleteFood(id);
+        setError('');
+        try {
+            let res;
+            if (type === 'MENU') res = await managerService.deleteMenu(id);
+            if (type === 'GROUP') res = await managerService.deleteFoodGroup(id);
+            if (type === 'FOOD') res = await managerService.deleteFood(id);
 
-        setIsActionLoading(false);
-        if (res?.status === 200) {
-            if (type === 'MENU') { setActiveMenuId(null); fetchMenus(); }
-            if (type === 'GROUP') { setFoodGroups(prev => prev.filter(g => g.groupId !== id)); }
-            if (type === 'FOOD') { fetchFoodsForGroup(parentId); }
+            if (res?.status === 200) {
+                if (type === 'MENU') { setActiveMenuId(null); fetchMenus(); }
+                if (type === 'GROUP') { setFoodGroups(prev => prev.filter(g => g.groupId !== id)); }
+                if (type === 'FOOD') { fetchFoodsForGroup(parentId); }
+            }
+        } catch (error) {
+            setError(formatApiError(error, 'Không thể xóa dữ liệu menu.').displayMessage);
+        } finally {
+            setIsActionLoading(false);
         }
     };
 
     return {
         menus, activeMenuId, setActiveMenuId,
         foodGroups, foodsByGroup, fetchFoodsForGroup,
-        isLoading, isActionLoading,
+        isLoading, isActionLoading, error,
         handleSave, handleDelete
     };
 };

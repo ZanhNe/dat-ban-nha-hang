@@ -1,7 +1,17 @@
 
 import React, { useState } from 'react';
 import { useRestaurantManagement } from '../../hooks/admin/useRestaurantManagement';
+import PaginationBar from '../../components/ui/PaginationBar';
 import './RestaurantManagement.css';
+
+const statusLabelMap = {
+    OPENING: "Đang hoạt động",
+    ACTIVE: "Đang hoạt động",
+    PENDING: "Chờ duyệt",
+    SUSPENDED: "Tạm khóa",
+    REJECTED: "Từ chối",
+    CLOSED: "Đóng cửa"
+};
 
 function RestaurantManagement() {
 
@@ -9,8 +19,12 @@ function RestaurantManagement() {
         restaurants,
         isLoading,
         isActionLoading,
+        error,
         toggleStatus,
-        updateCommission
+        updateCommission,
+        page,
+        setPage,
+        meta
     } = useRestaurantManagement();
 
     const [searchTerm, setSearchTerm] = useState("");
@@ -22,8 +36,8 @@ function RestaurantManagement() {
 
     // Lọc tìm kiếm
     const filteredRestaurants = restaurants.filter(rest =>
-        rest.restaurantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        rest.restaurantId.toString().includes(searchTerm)
+        String(rest.restaurantName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(rest.restaurantId || "").includes(searchTerm)
     );
 
     // Mở Modal
@@ -31,17 +45,16 @@ function RestaurantManagement() {
         setEditingRest(restaurant);
         setCommissionForm({
             commissionType: restaurant.commissionType || "PERCENTAGE",
-            baseCommissionValue: restaurant.baseCommissionValue || 0
+            baseCommissionValue: Number(restaurant.baseCommissionValue ?? 0)
         });
         setCommissionModalOpen(true);
     };
 
-    // Lưu Modal
     const handleSaveCommission = async (e) => {
         e.preventDefault();
         const success = await updateCommission(editingRest.restaurantId, commissionForm);
         if (success) {
-            setCommissionModalOpen(false); // Đóng modal nếu gọi API thành công
+            setCommissionModalOpen(false);
         }
     };
 
@@ -63,6 +76,7 @@ function RestaurantManagement() {
                     />
                 </div>
             </header>
+            {error && <p className="status-error">{error}</p>}
 
             <div className="table-responsive">
                 <table className="admin-table">
@@ -83,33 +97,38 @@ function RestaurantManagement() {
                                 <td><strong>{rest.restaurantName}</strong></td>
                                 <td>{rest.managerName}</td>
                                 <td>
-                                    <span className={`badge ${rest.status.toLowerCase()}`}>
-                                        {rest.status === "ACTIVE" ? "Đang hoạt động" : "Bị khóa"}
+                                    <span className={`status-badge ${String(rest.status || "pending").toLowerCase()}`}>
+                                        {statusLabelMap[rest.status] || rest.status}
                                     </span>
                                 </td>
                                 <td>
-                                    <div className="commission-display">
-                                        {rest.commissionType === "PERCENTAGE"
-                                            ? `${rest.baseCommissionValue}% / đơn`
-                                            : `${rest.baseCommissionValue.toLocaleString('vi-VN')} ₫ / đơn`
-                                        }
-                                        <button
-                                            className="btn-icon"
-                                            onClick={() => openCommissionModal(rest)}
-                                            disabled={isActionLoading}
-                                        >
-                                            Sửa
-                                        </button>
-                                    </div>
+                                    {rest.status === "PENDING" || rest.status === "REJECTED" || rest.status === "CLOSED" ? "---" : (
+                                        <div className="commission-display">
+                                            {rest.commissionType === "PERCENTAGE"
+                                                ? `${Number(rest.baseCommissionValue ?? 0)}% / đơn`
+                                                : `${Number(rest.baseCommissionValue ?? 0).toLocaleString('vi-VN')} ₫ / đơn`
+                                            }
+                                            <button
+                                                className="btn-icon"
+                                                onClick={() => openCommissionModal(rest)}
+                                                disabled={isActionLoading}
+                                            >
+                                                Sửa
+                                            </button>
+                                        </div>
+                                    )}
                                 </td>
                                 <td>
-                                    <button
-                                        className={`btn-toggle ${rest.status === "ACTIVE" ? "suspend" : "activate"}`}
-                                        onClick={() => toggleStatus(rest.restaurantId, rest.status)}
-                                        disabled={isActionLoading}
-                                    >
-                                        {rest.status === "ACTIVE" ? " Khóa" : " Mở khóa"}
-                                    </button>
+                                    {rest.status !== "PENDING" && rest.status !== "REJECTED" && rest.status !== "CLOSED" ? (
+
+                                        <button
+                                            className={`btn-toggle ${rest.status === "OPENING" || rest.status === "ACTIVE" ? "suspend" : "activate"}`}
+                                            onClick={() => toggleStatus(rest.restaurantId, rest.status)}
+                                            disabled={isActionLoading}
+                                        >
+                                            {rest.status === "OPENING" || rest.status === "ACTIVE" ? " Khóa" : " Mở khóa"}
+                                        </button>
+                                    ) : null}
                                 </td>
                             </tr>
                         ))}
@@ -118,6 +137,15 @@ function RestaurantManagement() {
                         )}
                     </tbody>
                 </table>
+                {meta && (
+                    <PaginationBar
+                        page={page}
+                        totalPages={meta.totalPages}
+                        totalItems={meta.totalItems}
+                        onPageChange={setPage}
+                        disabled={isLoading || isActionLoading}
+                    />
+                )}
             </div>
 
             {/* Modal Cấu hình Hoa hồng */}

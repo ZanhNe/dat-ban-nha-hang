@@ -7,8 +7,9 @@ function FoodStatusScreen() {
     const { sessionId } = useParams();
     const navigate = useNavigate();
     const {
-        orderData, isLoading, isActionLoading,
-        handleUpdateItem, handleCompleteOrder
+        orderData, sessionData, isLoading, isActionLoading,
+        error,
+        handleUpdateItem, handleCompleteOrder, handleCompleteSession
     } = useFoodStatus(sessionId);
 
     if (isLoading) return <div className="waiter-loading">Đang tải danh sách món...</div>;
@@ -40,6 +41,11 @@ function FoodStatusScreen() {
                     Mã Order: #{orderData.orderId}
                 </span>
             </header>
+            {error && (
+                <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                    {error}
+                </div>
+            )}
 
             <div className="status-content">
                 {/* NHÓM 1: CẦN THAO TÁC (PENDING) */}
@@ -52,7 +58,9 @@ function FoodStatusScreen() {
                                     <span className="qty">{item.quantity}x</span>
                                     <div>
                                         <h4 className="food-name">{item.foodName}</h4>
-                                        {item.options && <span className="food-options">{item.options}</span>}
+                                        {item.selectedOptions?.length > 0 && (
+                                            <span className="food-options">{item.selectedOptions.join(', ')}</span>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="task-actions">
@@ -87,7 +95,9 @@ function FoodStatusScreen() {
                                     <span className="qty">{item.quantity}x</span>
                                     <div>
                                         <h4 className="food-name">{item.foodName}</h4>
-                                        {item.options && <span className="food-options">{item.options}</span>}
+                                        {item.selectedOptions?.length > 0 && (
+                                            <span className="food-options">{item.selectedOptions.join(', ')}</span>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="task-status-badge">
@@ -107,6 +117,14 @@ function FoodStatusScreen() {
                     disabled={isActionLoading || pendingItems.length > 0}
                 >
                     {pendingItems.length > 0 ? `CÒN ${pendingItems.length} MÓN CHƯA LÊN` : "⭐ CHỐT ORDER (HOÀN TẤT)"}
+                </button>
+                <button
+                    className="btn-complete-order"
+                    style={{ marginLeft: 12 }}
+                    onClick={handleCompleteSession}
+                    disabled={isActionLoading || orderData.status !== 'COMPLETED' || sessionData?.status !== 'SERVING'}
+                >
+                    ✅ HOÀN TẤT PHIÊN PHỤC VỤ
                 </button>
             </div>
         </div>

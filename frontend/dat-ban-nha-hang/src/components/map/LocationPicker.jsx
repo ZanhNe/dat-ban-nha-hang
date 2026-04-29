@@ -3,6 +3,7 @@ import { useSetAtom } from 'jotai';
 import { MapPin, Navigation } from 'lucide-react';
 import { originAtom, addressAtom, loadingAtom } from '../../store/mapStore';
 import { mapService } from '../../services/mapService';
+import { unwrapData } from '../../services/apiShape';
 
 export default function LocationPicker() {
   const setOrigin = useSetAtom(originAtom);
@@ -16,9 +17,10 @@ export default function LocationPicker() {
 
     try {
       setLoading(true);
-      const data = await mapService.getCoordinates(inputValue);
-      if (data?.data?.geometry?.location) {
-        const { latitude, longitude } = data.data.geometry.location;
+      const res = await mapService.getCoordinates(inputValue);
+      const loc = unwrapData(res);
+      if (loc?.latitude != null && loc?.longitude != null) {
+        const { latitude, longitude } = loc;
         setOrigin({ latitude, longitude });
         setAddress(inputValue);
       } else {

@@ -16,6 +16,24 @@ import {
 import { decodePolyline } from '../../utils/polyline';
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER;
+const FALLBACK_MAP_STYLE = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '&copy; OpenStreetMap contributors'
+    }
+  },
+  layers: [
+    {
+      id: 'osm',
+      type: 'raster',
+      source: 'osm'
+    }
+  ]
+};
 
 export default function MapCanvas() {
   const mapRef = useRef();
@@ -85,24 +103,24 @@ export default function MapCanvas() {
     }
   }, [origin, focusMode, selectedRest, routeGeoJSON, radius]);
 
-  const mapStyleUrl = `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`;
+  const mapStyleUrl = typeof MAPTILER_KEY === 'string' && MAPTILER_KEY
+    ? `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`
+    : null;
 
-  // Custom fallback style if using goong
-  let goongMapStyle = typeof MAPTILER_KEY === 'string' && MAPTILER_KEY.startsWith('http')
-    ? MAPTILER_KEY
-    : mapStyleUrl;
-
-  // Nếu người dùng cung cấp link nguồn Tile (ví dụ URL có chứa sources/goong.json),
-  // Cần đổi thành Style JSON URL để Maplibre có layer render.
-  if (goongMapStyle.includes('sources/goong.json')) {
-    goongMapStyle = goongMapStyle.replace('sources/goong.json', 'assets/goong_map_web.json');
+  let resolvedMapStyle = FALLBACK_MAP_STYLE;
+  if (typeof MAPTILER_KEY === 'string' && MAPTILER_KEY.startsWith('http')) {
+    resolvedMapStyle = MAPTILER_KEY.includes('sources/goong.json')
+      ? MAPTILER_KEY.replace('sources/goong.json', 'assets/goong_map_web.json')
+      : MAPTILER_KEY;
+  } else if (mapStyleUrl) {
+    resolvedMapStyle = mapStyleUrl;
   }
 
   return (
     <Map
       ref={mapRef}
       initialViewState={initialViewState}
-      mapStyle={goongMapStyle}
+      mapStyle={resolvedMapStyle}
       style={{ width: '100%', height: '100%' }}
     >
       {/* Vòng tròn bán kính */}

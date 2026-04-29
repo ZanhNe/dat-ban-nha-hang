@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { notificationService } from '../../services/notificationService';
 import './NotificationBell.css';
 
@@ -7,22 +7,32 @@ function NotificationBell() {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const [countRes, listRes] = await Promise.all([
                 notificationService.getUnreadCount(),
                 notificationService.getNotifications()
             ]);
             setUnreadCount(countRes.data?.unreadCount || 0);
-            setNotifications(listRes.data || []);
+            const list = Array.isArray(listRes.data) ? listRes.data : [];
+            setNotifications(list.map((n) => ({
+                notificationId: n.id ?? n.notificationId,
+                title: n.title,
+                message: n.content ?? n.message,
+                isRead: n.read ?? n.isRead ?? false,
+                createdAt: n.createdAt
+            })));
         } catch (err) {
             console.error('Lỗi tải thông báo:', err);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        const t = setTimeout(() => {
+            fetchData();
+        }, 0);
+        return () => clearTimeout(t);
+    }, [fetchData]);
 
     const handleToggle = () => {
         setOpen(prev => !prev);
