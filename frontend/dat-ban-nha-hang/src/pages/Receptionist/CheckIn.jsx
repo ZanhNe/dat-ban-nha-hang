@@ -1,69 +1,108 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCheckIn } from '../../hooks/receptionist/useCheckIn';
-import './CheckIn.css';
+import PageHeader from '../../components/ui/PageHeader';
+import LoadingState from '../../components/ui/LoadingState';
+import EmptyState from '../../components/ui/EmptyState';
+import SectionCard from '../../components/ui/SectionCard';
+import { formatDateTime } from '../../utils/dateTime';
+import PaginationBar from '../../components/ui/PaginationBar';
+
+const statusLabelMap = {
+    CONFIRMED: 'Đã xác nhận',
+    CUSTOMER_ARRIVED: 'Khách đã đến',
+    SERVING: 'Đang phục vụ',
+    SERVED: 'Đã phục vụ',
+    COMPLETED: 'Hoàn tất',
+    CANCELLED: 'Đã hủy',
+    REJECTED: 'Đã từ chối',
+    EXPIRED: 'Hết hạn',
+    FAILED: 'Thất bại',
+    PENDING_PAYMENT: 'Chờ thanh toán',
+    AWAITING_CONFIRMATION: 'Chờ xác nhận'
+};
 
 function CheckIn() {
-    const { bookings, isLoading, isActionLoading, handleCheckIn, fetchConfirmed } = useCheckIn();
+    const { bookings, isLoading, isActionLoading, error, page, meta, handleCheckIn, fetchConfirmed } = useCheckIn();
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
 
     // Lọc danh sách theo tên hoặc SĐT khách
     const filteredBookings = bookings.filter(b =>
-        b.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        b.phone.includes(searchTerm)
+        b.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.customerPhone?.includes(searchTerm)
     );
 
     return (
-        <div className="reception-page checkin-page">
-            <header className="page-header flex-between">
-                <div>
-                    <h2>Danh sách đón khách hôm nay</h2>
-                    <p>Chỉ hiển thị những lịch đặt đã được xác nhận (Confirmed)</p>
-                </div>
-                <button className="btn-refresh" onClick={fetchConfirmed} disabled={isLoading}>
-                    Làm mới
-                </button>
-            </header>
+        <div>
+            <PageHeader
+                title="Danh sách đón khách"
+                subtitle="Các lịch đặt đã xác nhận để check-in."
+                rightSlot={
+                    <button className="ui-btn" onClick={() => fetchConfirmed(page)} disabled={isLoading}>
+                        Làm mới
+                    </button>
+                }
+            />
+            {error ? <p className="status-error mb-4">{error}</p> : null}
 
-            <div className="search-container">
+            <div className="mb-4">
                 <input
                     type="text"
                     placeholder="🔍 Tìm theo tên khách hoặc số điện thoại..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    className="ui-input max-w-md"
                 />
             </div>
 
-            {isLoading ? <div className="loading">Đang tải lịch đặt...</div> : (
-                <div className="checkin-list">
+            {isLoading ? <LoadingState message="Đang tải lịch đặt..." /> : (
+                <div className="space-y-3">
                     {filteredBookings.map(b => (
-                        <div key={b.bookingId} className="checkin-card">
-                            <div className="checkin-info">
-                                <div className="time-badge">{b.bookingTime}</div>
-                                <div className="customer-detail">
-                                    <h4>{b.fullName}</h4>
-                                    <span>📞 {b.phone}</span>
-                                </div>
-                                <div className="booking-detail">
-                                    <span>👥 {b.guestCount} khách</span>
-                                    <span>📍 {b.tableInfo || "Chưa gán bàn"}</span>
+                        <SectionCard key={b.bookingId} className="p-4 flex justify-between items-center gap-3">
+                            <div>
+                                {(() => {
+                                    const { date, time } = formatDateTime(b.bookingTime);
+                                    return <div className="text-sm text-gray-500 mb-1">{time} • {date}</div>;
+                                })()}
+                                <div className="font-semibold">{b.customerName}</div>
+                                <div className="text-sm text-gray-600">SĐT: {b.customerPhone}</div>
+                                <div className="text-sm text-gray-600">
+                                    {b.numberOfPeople} khách • {statusLabelMap[b.status] || b.status}
                                 </div>
                             </div>
-                            <button
-                                className="btn-checkin-action"
-                                onClick={() => handleCheckIn(b.bookingId)}
-                                disabled={isActionLoading}
-                            >
-                                {isActionLoading ? "..." : "DẪN KHÁCH VÀO BÀN"}
-                            </button>
-                        </div>
+                            <div className="flex gap-2">
+                                <button
+                                    className="ui-btn"
+                                    onClick={() => navigate(`/receptionist/bookings/${b.bookingId}`)}
+                                >
+                                    Xem chi tiết
+                                </button>
+                                <button
+                                    className="ui-btn ui-btn-primary"
+                                    onClick={() => handleCheckIn(b.bookingId)}
+                                    disabled={isActionLoading}
+                                >
+                                    {isActionLoading ? "..." : "DẪN KHÁCH VÀO BÀN"}
+                                </button>
+                            </div>
+                        </SectionCard>
                     ))}
 
                     {filteredBookings.length === 0 && (
-                        <div className="empty-state">
-                            <p>Không tìm thấy lịch đặt nào khớp với tìm kiếm.</p>
-                        </div>
+                        <EmptyState message="Không tìm thấy lịch đặt nào khớp với tìm kiếm." />
                     )}
                 </div>
+            )}
+
+            {meta && (
+                <PaginationBar
+                    page={page}
+                    totalPages={meta.totalPages}
+                    totalItems={meta.totalItems}
+                    onPageChange={fetchConfirmed}
+                    disabled={isLoading}
+                />
             )}
         </div>
     );

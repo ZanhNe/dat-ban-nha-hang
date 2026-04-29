@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import adminService from '../../services/adminService';
+import { formatApiError } from '../../services/apiShape';
 
 const useBroadcastCenter = () => {
     const [isSending, setIsSending] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSendNotification = async (formData) => {
         setIsSending(true);
+        setError('');
         try {
             let res;
 
@@ -36,16 +39,15 @@ const useBroadcastCenter = () => {
             }
 
             if (res.status === 200) {
-                alert(" " + res.message);
-                return true;
+                return { success: true, message: res.message };
             } else {
-                alert(" Lỗi: " + (res.message || "Gửi thất bại"));
-                return false;
+                return { success: false, message: res.message || "Gửi thất bại" };
             }
         } catch (error) {
             console.error("Lỗi khi gửi thông báo:", error);
-            alert(" Lỗi kết nối máy chủ!");
-            return false;
+            const apiError = formatApiError(error, 'Không thể gửi thông báo.');
+            setError(apiError.displayMessage);
+            return { success: false, message: apiError.displayMessage };
         } finally {
             setIsSending(false);
         }
@@ -53,6 +55,7 @@ const useBroadcastCenter = () => {
 
     return {
         isSending,
+        error,
         handleSendNotification
     };
 };

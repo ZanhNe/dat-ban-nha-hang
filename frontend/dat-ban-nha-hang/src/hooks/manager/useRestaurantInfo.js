@@ -2,79 +2,53 @@ import { useState, useEffect, useCallback } from 'react';
 import { managerService } from '../../services/managerService';
 import { useAtomValue } from "jotai";
 import { userAtom } from "../../store/authStore";
-import { useNavigate } from 'react-router-dom';
+import { formatApiError } from '../../services/apiShape';
 
 export const useRestaurantInfo = () => {
     const user = useAtomValue(userAtom);
-    const restaurantId = user?.workplace?.restaurantId || 101; // Fallback an toàn
-    const navigate = useNavigate();
 
     const [info, setInfo] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [error, setError] = useState('');
 
     // GET: Fetch thông tin
     const fetchInfo = useCallback(async () => {
         setIsLoading(true);
+        setError('');
         try {
-            const res = await managerService.getRestaurantInfo(restaurantId);
+            const res = await managerService.getRestaurantInfo();
             if (res.status === 200) {
                 setInfo(res.data);
             }
         } catch (error) {
-            console.error("Lỗi khi lấy thông tin nhà hàng:", error);
+            setError(formatApiError(error, 'Không thể tải thông tin nhà hàng.').displayMessage);
         } finally {
             setIsLoading(false);
         }
-    }, [restaurantId]);
+    }, []);
 
     useEffect(() => {
-        if (restaurantId) fetchInfo();
-    }, [fetchInfo, restaurantId]);
+        if (user) fetchInfo();
+    }, [fetchInfo, user]);
 
     // PUT: Cập nhật
     const updateInfo = async (formData) => {
         setIsSaving(true);
+        setError('');
         try {
-            const res = await managerService.updateRestaurantInfo(restaurantId, formData);
+            const res = await managerService.updateRestaurantInfo(formData);
             if (res.status === 200) {
-                alert(" " + res.message);
                 setInfo(res.data);
                 return true;
-            } else {
-                alert("❌ Lỗi: " + res.message);
             }
         } catch (error) {
-            console.error("Lỗi cập nhật:", error);
-            alert("Lỗi hệ thống khi cập nhật!");
+            setError(formatApiError(error, 'Không thể cập nhật thông tin nhà hàng.').displayMessage);
         } finally {
             setIsSaving(false);
         }
         return false;
     };
 
-    // DELETE: Xóa
-    const deleteRestaurant = async () => {
-        if (!window.confirm(" CẢNH BÁO NGUY HIỂM: Bạn có chắc chắn muốn XÓA VĨNH VIỄN nhà hàng này? Hành động này không thể hoàn tác!")) {
-            return;
-        }
-
-        setIsSaving(true);
-        try {
-            const res = await managerService.deleteRestaurant(restaurantId);
-            if (res.status === 200) {
-                alert(" Đã xóa nhà hàng thành công.");
-                navigate('/');
-            } else {
-                alert(" Lỗi: " + res.message);
-            }
-        } catch (error) {
-            console.error("Lỗi xóa:", error);
-            alert("Lỗi hệ thống khi xóa!");
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    return { info, isLoading, isSaving, updateInfo, deleteRestaurant };
+    return { info, isLoading, isSaving, error, updateInfo };
 };

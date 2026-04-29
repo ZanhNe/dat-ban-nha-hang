@@ -3,12 +3,11 @@ import useBroadcastCenter from '../../hooks/admin/useBroadcastCenter';
 import './BroadcastCenter.css';
 
 function BroadcastCenter() {
-    const { isSending, handleSendNotification } = useBroadcastCenter();
+    const { isSending, error, handleSendNotification } = useBroadcastCenter();
 
     // State quản lý form
     const [formData, setFormData] = useState({
         targetType: 'ALL', // ALL, ROLE, INDIVIDUAL
-        targetRole: 'CUSTOMER',
         targetUserId: '',
         title: '',
         content: '',
@@ -21,7 +20,7 @@ function BroadcastCenter() {
         const success = await handleSendNotification(formData);
 
         // Nếu gửi thành công thì reset form (giữ lại targetType)
-        if (success) {
+        if (success.success) {
             setFormData({
                 ...formData,
                 title: '',
@@ -37,6 +36,7 @@ function BroadcastCenter() {
                 <h1>Trung tâm thông báo</h1>
                 <p>Gửi thông báo hệ thống, cảnh báo hoặc khuyến mãi đến người dùng.</p>
             </header>
+            {error && <div className="empty-state">{error}</div>}
 
             <div className="compose-container">
                 <form className="compose-form" onSubmit={onSubmit}>
@@ -57,15 +57,6 @@ function BroadcastCenter() {
                                 <input
                                     type="radio"
                                     name="targetType"
-                                    value="ROLE"
-                                    checked={formData.targetType === 'ROLE'}
-                                    onChange={(e) => setFormData({ ...formData, targetType: e.target.value })}
-                                /> Theo nhóm quyền (Role)
-                            </label>
-                            <label className="radio-label">
-                                <input
-                                    type="radio"
-                                    name="targetType"
                                     value="INDIVIDUAL"
                                     checked={formData.targetType === 'INDIVIDUAL'}
                                     onChange={(e) => setFormData({ ...formData, targetType: e.target.value })}
@@ -74,18 +65,7 @@ function BroadcastCenter() {
                         </div>
 
 
-                        {formData.targetType === 'ROLE' && (
-                            <div className="dynamic-input fade-in">
-                                <label>Chọn nhóm quyền:</label>
-                                <select
-                                    value={formData.targetRole}
-                                    onChange={(e) => setFormData({ ...formData, targetRole: e.target.value })}
-                                >
-                                    <option value="CUSTOMER">Khách hàng (Customer)</option>
-                                    <option value="MANAGER">Chủ nhà hàng (Manager)</option>
-                                </select>
-                            </div>
-                        )}
+
 
                         {formData.targetType === 'INDIVIDUAL' && (
                             <div className="dynamic-input fade-in">

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { useRestaurantApprovals } from '../../hooks/admin/useRestaurantApprovals';
+import PaginationBar from '../../components/ui/PaginationBar';
 import './RestaurantApprovals.css';
 
 function RestaurantApprovals() {
@@ -10,12 +11,15 @@ function RestaurantApprovals() {
         viewingDetail,
         isLoading,
         isActionLoading,
+        error,
         fetchDetail,
         closeDetail,
-        handleApprovalAction
+        handleApprovalAction,
+        page,
+        setPage,
+        meta
     } = useRestaurantApprovals();
 
-    const [rejectReason, setRejectReason] = useState("");
     const [showRejectForm, setShowRejectForm] = useState(false);
 
     // Bấm nút Duyệt
@@ -28,12 +32,7 @@ function RestaurantApprovals() {
     // Submit form Từ chối
     const onRejectSubmit = (e, id) => {
         e.preventDefault();
-        if (!rejectReason.trim()) {
-            alert("Vui lòng nhập lý do từ chối!");
-            return;
-        }
-        handleApprovalAction(id, "REJECTED", rejectReason);
-        setRejectReason("");
+        handleApprovalAction(id, "REJECTED");
         setShowRejectForm(false);
     };
 
@@ -53,11 +52,14 @@ function RestaurantApprovals() {
                 <div className="detail-container">
                     <div className="detail-info">
                         <h2>Chi tiết đăng ký: {viewingDetail.restaurantName}</h2>
+                        {error && <div className="empty-state">{error}</div>}
                         <ul className="info-list">
                             <li><strong>Mã nhà hàng:</strong> {viewingDetail.restaurantId}</li>
-                            <li><strong>Quản lý:</strong> {viewingDetail.manager.fullName}</li>
-                            <li><strong>Số điện thoại:</strong> {viewingDetail.manager.phone}</li>
-                            <li><strong>Trạng thái:</strong> <span className="badge pending">{viewingDetail.status}</span></li>
+                            <li><strong>Quản lý:</strong> {viewingDetail.manager?.fullName || 'Chưa có quản lý'}</li>
+                            <li><strong>Số điện thoại:</strong> {viewingDetail.manager?.phone || 'Chưa cập nhật'}</li>
+                            <li><strong>Trạng thái:</strong> <span className="status-badge">{viewingDetail.status}</span></li>
+                            <li><strong>Địa chỉ:</strong> {viewingDetail.address || 'Chưa cập nhật'}</li>
+                            <li><strong>Mô tả:</strong> {viewingDetail.description || 'Chưa có mô tả'}</li>
                         </ul>
 
                         {!showRejectForm ? (
@@ -71,14 +73,7 @@ function RestaurantApprovals() {
                             </div>
                         ) : (
                             <form className="reject-form" onSubmit={(e) => onRejectSubmit(e, viewingDetail.restaurantId)}>
-                                <h3>Lý do từ chối</h3>
-                                <textarea
-                                    placeholder="Nhập lý do chi tiết để thông báo cho đối tác..."
-                                    value={rejectReason}
-                                    onChange={(e) => setRejectReason(e.target.value)}
-                                    rows="4"
-                                    disabled={isActionLoading}
-                                />
+
                                 <div className="reject-actions">
                                     <button type="submit" className="btn-confirm-reject" disabled={isActionLoading}>
                                         {isActionLoading ? "Đang xử lý..." : "Xác nhận Từ chối"}
@@ -94,8 +89,19 @@ function RestaurantApprovals() {
                     <div className="detail-docs">
                         <h3>Giấy phép kinh doanh / Tài liệu pháp lý</h3>
                         <div className="doc-preview">
+                            {viewingDetail.legalDocs.length === 0 && <p>Chưa có tài liệu pháp lý.</p>}
                             {viewingDetail.legalDocs.map((doc) => (
-                                <img key={doc.docId} src={doc.docUrl} alt="Giấy phép kinh doanh" style={{ marginBottom: '10px' }} />
+                                <div key={doc.docId} className="mb-4 rounded-lg border p-3">
+                                    <p><strong>{doc.docName || `Tài liệu #${doc.docId}`}</strong></p>
+                                    <p>Loại: {doc.docType || 'Không xác định'}</p>
+                                    <p>Trạng thái: {doc.docStatus || 'Không xác định'}</p>
+                                    <p>Hết hạn: {doc.expireDate ? new Date(doc.expireDate).toLocaleString('vi-VN') : 'Không có'}</p>
+                                    {doc.docUrl && (
+                                        <a href={doc.docUrl} target="_blank" rel="noreferrer" className="btn-view">
+                                            Mở tài liệu
+                                        </a>
+                                    )}
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -110,6 +116,7 @@ function RestaurantApprovals() {
                 <h1>Duyệt Yêu Cầu Mở Nhà Hàng</h1>
                 <p>Có {pendingRestaurants.length} yêu cầu đang chờ xử lý</p>
             </header>
+            {error && <div className="empty-state">{error}</div>}
 
             {pendingRestaurants.length === 0 ? (
                 <div className="empty-state">Không có yêu cầu nào đang chờ duyệt lúc này.</div>
@@ -134,7 +141,7 @@ function RestaurantApprovals() {
                                     <td>{rest.managerName}</td>
 
                                     <td>{new Date(rest.createdAt).toLocaleString('vi-VN')}</td>
-                                    <td><span className="badge pending">{rest.status}</span></td>
+                                    <td><span className="status-badge pending">{rest.status}</span></td>
                                     <td>
                                         <button className="btn-view" onClick={() => fetchDetail(rest.restaurantId)}>
                                             Xem & Duyệt
@@ -144,6 +151,15 @@ function RestaurantApprovals() {
                             ))}
                         </tbody>
                     </table>
+                    {meta && (
+                        <PaginationBar
+                            page={page}
+                            totalPages={meta.totalPages}
+                            totalItems={meta.totalItems}
+                            onPageChange={setPage}
+                            disabled={isLoading || isActionLoading}
+                        />
+                    )}
                 </div>
             )}
         </div>

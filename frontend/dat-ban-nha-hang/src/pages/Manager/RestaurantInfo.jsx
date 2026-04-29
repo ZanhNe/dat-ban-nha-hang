@@ -3,22 +3,26 @@ import { useRestaurantInfo } from '../../hooks/manager/useRestaurantInfo';
 import './RestaurantInfo.css';
 
 function RestaurantInfo() {
-    const { info, isLoading, isSaving, updateInfo, deleteRestaurant } = useRestaurantInfo();
+    const { info, isLoading, isSaving, error, updateInfo } = useRestaurantInfo();
     const [formData, setFormData] = useState({});
 
     // Cập nhật formData khi API fetch xong dữ liệu
     useEffect(() => {
         if (info) {
-            setFormData({
-                name: info.name || '',
-                logo: info.logo || '',
-                description: info.description || '',
-                address: info.address || '',
-                baseDepositValue: info.baseDepositValue || 0,
-                depositPolicy: info.depositPolicy || 'NONE',
-                dayOfWeek: info.dayOfWeek || 7
-            });
+            const t = setTimeout(() => {
+                setFormData({
+                    name: info.name || '',
+                    logo: info.logo || '',
+                    description: info.description || '',
+                    address: info.address || '',
+                    baseDepositValue: info.baseDepositValue || 0,
+                    depositPolicy: info.depositPolicy || 'NONE',
+                    dayOfWeek: info.dayOfWeek || 7
+                });
+            }, 0);
+            return () => clearTimeout(t);
         }
+        return undefined;
     }, [info]);
 
     const handleChange = (e) => {
@@ -52,6 +56,7 @@ function RestaurantInfo() {
                     </span>
                 )}
             </header>
+            {error && <p className="status-error">{error}</p>}
 
             <form className="info-form-container" onSubmit={handleSubmit}>
                 <div className="form-grid">
@@ -137,10 +142,6 @@ function RestaurantInfo() {
                 <div className="form-actions-bar">
                     <button type="submit" className="btn-save-info" disabled={isSaving}>
                         {isSaving ? "Đang lưu..." : " Lưu thay đổi"}
-                    </button>
-
-                    <button type="button" className="btn-delete-danger" onClick={deleteRestaurant} disabled={isSaving}>
-                        Xóa nhà hàng
                     </button>
                 </div>
             </form>

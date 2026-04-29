@@ -1,3 +1,11 @@
+.error-message {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #fdecea;
+    color: #c0392b;
+    font-weight: 600;
+}
 /* src/pages/Customer/ReviewForm.css */
 
 .review-form-page {

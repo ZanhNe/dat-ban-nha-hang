@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
 import { useUserManagement } from '../../hooks/admin/useUserManagement';
+import PaginationBar from '../../components/ui/PaginationBar';
 import './UserManagement.css';
 
 function UserManagement() {
-    const { users, isLoading, isActionLoading, filters, setFilters, handleSaveUser } = useUserManagement();
+    const { users, isLoading, isActionLoading, filters, setFilters, error, meta, handleSaveUser } = useUserManagement();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
-    const [formData, setFormData] = useState({ username: '', fullName: '', email: '', phone: '', roleId: 3, status: 'ACTIVE' });
+    const [formData, setFormData] = useState({ username: '', password: '', fullName: '', email: '', phone: '', roleId: 3, status: 'ACTIVE' });
+    const roleOptions = [
+        { id: 2, label: 'MANAGER' },
+        { id: 3, label: 'CUSTOMER' },
+        { id: 4, label: 'RECEPTIONIST' },
+        { id: 5, label: 'WAITER' },
+        { id: 6, label: 'CASHIER' }
+    ];
 
     const openModal = (user = null) => {
         if (user) {
@@ -17,31 +25,40 @@ function UserManagement() {
                 email: user.email,
                 phone: user.phone,
                 status: user.status,
-                roleId: user.roles[0].id,
+                roleId: Number(user.primaryRoleId ?? 3),
                 username: user.username // Username thường không cho sửa nhưng gửi đi để nhất quán
             });
         } else {
             setEditingUser(null);
-            setFormData({ username: '', fullName: '', email: '', phone: '', roleId: 3, status: 'ACTIVE' });
+            setFormData({ username: '', password: '', fullName: '', email: '', phone: '', roleId: 3, status: 'ACTIVE' });
         }
         setIsModalOpen(true);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = await handleSaveUser(formData, editingUser?.userId);
-        if (success) setIsModalOpen(false);
+        const payload = {
+            ...formData,
+            roleId: Number(formData.roleId)
+        };
+        const result = await handleSaveUser(payload, editingUser?.userId);
+        if (result.success) setIsModalOpen(false);
     };
+
+    if (isLoading && users.length === 0) {
+        return <div className="admin-page"><p>Đang tải danh sách người dùng...</p></div>;
+    }
 
     return (
         <div className="admin-page">
             <header className="page-header flex-between">
                 <div>
                     <h1>Quản lý Người dùng</h1>
-                    <p>Quản trị tài khoản và điều phối nhân sự toàn hệ thống</p>
+                    <p>Quản trị tài khoản và điều phối nhân sự toàn hệ thống{meta?.totalItems ? ` (${meta.totalItems} tài khoản)` : ''}</p>
                 </div>
                 <button className="btn-add-new" onClick={() => openModal()}>+ Tạo tài khoản</button>
             </header>
+            {error && <p className="status-error">{error}</p>}
 
             <div className="filter-bar">
                 <input
@@ -54,7 +71,9 @@ function UserManagement() {
                     <option value="">Tất cả Role</option>
                     <option value="ROLE_ADMIN">Admin</option>
                     <option value="ROLE_MANAGER">Manager</option>
+                    <option value="ROLE_RECEPTIONIST">Receptionist</option>
                     <option value="ROLE_WAITER">Waiter</option>
+                    <option value="ROLE_CASHIER">Cashier</option>
                     <option value="ROLE_CUSTOMER">Customer</option>
                 </select>
             </div>
@@ -78,7 +97,7 @@ function UserManagement() {
                                 <td><strong>{user.fullName}</strong><br /><small>{user.email}</small></td>
                                 <td>{user.username}</td>
                                 <td>{user.roles.map(r => <span key={r.id} className="role-tag">{r.name}</span>)}</td>
-                                <td><span className={`badge ${user.status.toLowerCase()}`}>{user.status}</span></td>
+                                <td><span className={`status-badge ${user.status.toLowerCase()}`}>{user.status}</span></td>
                                 <td>
                                     <button className="btn-edit" onClick={() => openModal(user)}>Sửa</button>
                                 </td>
@@ -86,6 +105,15 @@ function UserManagement() {
                         ))}
                     </tbody>
                 </table>
+                {meta && (
+                    <PaginationBar
+                        page={filters.page}
+                        totalPages={meta.totalPages}
+                        totalItems={meta.totalItems}
+                        onPageChange={(newPage) => setFilters({ ...filters, page: newPage })}
+                        disabled={isLoading || isActionLoading}
+                    />
+                )}
             </div>
 
             {isModalOpen && (
@@ -96,13 +124,13 @@ function UserManagement() {
                             {!editingUser && (
                                 <div className="form-group">
                                     <label>Username</label>
-                                    <input type="text" required onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
+                                    <input type="text" required value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
                                 </div>
                             )}
                             {!editingUser && (
                                 <div className="form-group">
                                     <label>Mật khẩu</label>
-                                    <input type="password" required onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+                                    <input type="password" required value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
                                 </div>
                             )}
                             <div className="form-group">
@@ -110,15 +138,19 @@ function UserManagement() {
                                 <input type="text" value={formData.fullName} required onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} />
                             </div>
                             <div className="form-group">
+                                <label>Email</label>
+                                <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                            </div>
+                            <div className="form-group">
                                 <label>Số điện thoại</label>
                                 <input type="text" value={formData.phone} required onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                             </div>
                             <div className="form-group">
                                 <label>Quyền hạn</label>
-                                <select value={formData.roleId} onChange={(e) => setFormData({ ...formData, roleId: e.target.value })}>
-                                    <option value="1">MANAGER</option>
-                                    <option value="2">WAITER</option>
-                                    <option value="3">CUSTOMER</option>
+                                <select value={formData.roleId} onChange={(e) => setFormData({ ...formData, roleId: Number(e.target.value) })}>
+                                    {roleOptions.map((role) => (
+                                        <option key={role.id} value={role.id}>{role.label}</option>
+                                    ))}
                                 </select>
                             </div>
                             {editingUser && (

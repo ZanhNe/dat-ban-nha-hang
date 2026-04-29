@@ -1,9 +1,19 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import apiClient from '../../services/apiClient';
+import { restaurantService } from '../../services/restaurantService';
 import './RegisterRestaurant.css';
+import PageHeader from '../../components/ui/PageHeader';
 
-const USE_MOCK = true;
+const CUISINE_OPTIONS = [
+    { id: 1, name: "Vietnamese" },
+    { id: 2, name: "Chinese" },
+    { id: 3, name: "Japanese" },
+    { id: 4, name: "Korean" },
+    { id: 5, name: "Thai" },
+    { id: 6, name: "Hotpot" },
+    { id: 7, name: "Seafood" },
+    { id: 8, name: "BBQ" }
+];
 
 function RegisterRestaurant() {
     const [form, setForm] = useState({
@@ -17,18 +27,9 @@ function RegisterRestaurant() {
 
     const [logo, setLogo] = useState(null);
     const [legalDocs, setLegalDocs] = useState([]);
-    
+
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-
-    // Mock danh mục ẩm thực
-    const CUISINE_OPTIONS = [
-        { id: 1, name: "Lẩu" },
-        { id: 2, name: "Nướng BBQ" },
-        { id: 3, name: "Hải sản" },
-        { id: 4, name: "Món Á" },
-        { id: 5, name: "Món Âu" }
-    ];
 
     const handleChange = (e) => {
         setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -57,37 +58,30 @@ function RegisterRestaurant() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            if (USE_MOCK) {
-                await new Promise(r => setTimeout(r, 1000));
-            } else {
-                const formData = new FormData();
-                formData.append('name', form.name);
-                formData.append('description', form.description);
-                formData.append('address', form.address);
-                
-                // Giả lập tọa độ HCM
-                formData.append('latitude', 10.762622);
-                formData.append('longitude', 106.660172);
-                
-                formData.append('baseDepositValue', form.baseDepositValue);
-                formData.append('depositPolicy', form.depositPolicy);
-                
-                form.cuisineIds.forEach(id => {
-                    formData.append('cuisineIds', id);
-                });
+            const formData = new FormData();
+            formData.append('name', form.name);
+            formData.append('description', form.description);
+            formData.append('address', form.address);
+            formData.append('latitude', 10.762622);
+            formData.append('longitude', 106.660172);
+            formData.append('baseDepositValue', form.baseDepositValue);
+            formData.append('depositPolicy', form.depositPolicy);
 
-                if (logo) {
-                    formData.append('logo', logo);
-                }
+            form.cuisineIds.forEach(id => {
+                formData.append('cuisineIds', id);
+            });
 
-                if (legalDocs && legalDocs.length > 0) {
-                    legalDocs.forEach(doc => {
-                        formData.append('legalDocs', doc);
-                    });
-                }
-
-                await apiClient.post('/customer/restaurants/register', formData);
+            if (logo) {
+                formData.append('logo', logo);
             }
+
+            if (legalDocs && legalDocs.length > 0) {
+                legalDocs.forEach(doc => {
+                    formData.append('legalDocs', doc);
+                });
+            }
+
+            await restaurantService.registerRestaurant(formData);
             setSubmitted(true);
         } catch (err) {
             console.error('Lỗi đăng ký:', err);
@@ -115,9 +109,11 @@ function RegisterRestaurant() {
 
     return (
         <div className="register-restaurant-page">
-            <Link to="/customer" className="btn-back-link" style={{ color: '#1565c0', textDecoration: 'none', fontWeight: 600 }}>← Quay lại</Link>
-            <h2>Đăng ký mở nhà hàng</h2>
-            <p className="subtitle">Điền thông tin và đính kèm giấy tờ pháp lý để gửi yêu cầu đăng ký</p>
+            <PageHeader
+                title="Đăng ký mở nhà hàng"
+                subtitle="Điền thông tin và đính kèm giấy tờ pháp lý để gửi yêu cầu đăng ký"
+                rightSlot={<Link to="/customer" className="ui-btn">Quay lại</Link>}
+            />
 
             <div className="register-card">
                 <form onSubmit={handleSubmit}>
@@ -166,11 +162,11 @@ function RegisterRestaurant() {
 
                     <div className="form-group">
                         <label>Danh mục ẩm thực *</label>
-                        <div className="cuisine-checkboxes" style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                        <div className="cuisine-checkboxes flex gap-4 flex-wrap">
                             {CUISINE_OPTIONS.map(c => (
-                                <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    <input 
-                                        type="checkbox" 
+                                <label key={c.id} className="flex items-center gap-1">
+                                    <input
+                                        type="checkbox"
                                         checked={form.cuisineIds.includes(c.id)}
                                         onChange={() => handleCuisineToggle(c.id)}
                                     />

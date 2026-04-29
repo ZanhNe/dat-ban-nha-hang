@@ -3,7 +3,7 @@ import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import { radiusAtom, cuisineAtom, pageAtom, searchTriggerAtom, loadingAtom } from '../../store/mapStore';
 import { Search, Loader2 } from 'lucide-react';
 
-const CUISINES = ["Tất cả", "Lẩu", "Món Trung", "Món Thái", "Hàn Quốc", "Món Việt", "BBQ"];
+const CUISINES = ["All", "Vietnamese", "Chinese", "Japanese", "Korean", "Thai", "Hotpot", "Seafood", "BBQ"]
 
 export default function SearchFilter() {
   const [radius, setRadius] = useAtom(radiusAtom);
@@ -17,7 +17,7 @@ export default function SearchFilter() {
   };
 
   const handleCuisineSelect = (c) => {
-    setCuisine(c === "Tất cả" ? "" : c);
+    setCuisine(c === "All" ? "" : c);
   };
 
   const handleSearchClick = () => {
@@ -31,11 +31,11 @@ export default function SearchFilter() {
         <label className="text-sm font-semibold text-gray-700 block mb-2">
           Bán kính tìm kiếm: <span className="text-primary-600 font-bold">{radius} km</span>
         </label>
-        <input 
-          type="range" 
-          min="1" 
-          max="20" 
-          value={radius} 
+        <input
+          type="range"
+          min="1"
+          max="20"
+          value={radius}
           onChange={handleRadiusChange}
           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
         />
@@ -52,11 +52,10 @@ export default function SearchFilter() {
             <button
               key={c}
               onClick={() => handleCuisineSelect(c)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                (cuisine === c || (cuisine === "" && c === "Tất cả"))
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${(cuisine === c || (cuisine === "" && c === "Tất cả"))
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
               {c}
             </button>

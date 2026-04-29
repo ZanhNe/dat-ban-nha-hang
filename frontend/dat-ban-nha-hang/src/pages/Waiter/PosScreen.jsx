@@ -8,6 +8,7 @@ function PosScreen() {
     const navigate = useNavigate();
     const {
         menuGroups, cart, isLoading, isSubmitting,
+        error,
         addToCart, updateQuantity, removeFromCart, calculateTotal, handleSendToKitchen
     } = usePos(sessionId);
 
@@ -22,7 +23,7 @@ function PosScreen() {
     }, [menuGroups, activeGroupId]);
 
     const handleFoodClick = (food) => {
-        if (food.options && food.options.length > 0) {
+        if (food.optionGroups && food.optionGroups.length > 0) {
             // Có tùy chọn -> Mở popup
             setOptionModal({ isOpen: true, food, selectedOpts: [] });
         } else {
@@ -57,6 +58,7 @@ function PosScreen() {
                     <button className="btn-back" onClick={() => navigate('/waiter')}> Quay lại</button>
                     <h2>Ghi món (Phiên #{sessionId})</h2>
                 </div>
+                {error && <div className="pos-error" style={{ marginBottom: 10, color: '#b91c1c' }}>{error}</div>}
 
                 {/* Tabs Nhóm món */}
                 <div className="menu-tabs">
@@ -136,19 +138,24 @@ function PosScreen() {
                     <div className="modal-content pos-modal">
                         <h3>Tùy chọn: {optionModal.food.name}</h3>
                         <div className="options-list">
-                            {optionModal.food.options.map(opt => {
-                                const isSelected = optionModal.selectedOpts.find(o => o.optionId === opt.optionId);
-                                return (
-                                    <div
-                                        key={opt.optionId}
-                                        className={`option-item ${isSelected ? 'selected' : ''}`}
-                                        onClick={() => toggleOption(opt)}
-                                    >
-                                        <span>{opt.name}</span>
-                                        {opt.price > 0 && <span>+{opt.price.toLocaleString('vi-VN')} ₫</span>}
-                                    </div>
-                                );
-                            })}
+                            {(optionModal.food.optionGroups || []).map((group) => (
+                                <div key={group.optionGroupId} style={{ marginBottom: 10 }}>
+                                    <div style={{ fontWeight: 700, marginBottom: 6 }}>{group.name}</div>
+                                    {(group.options || []).map((opt) => {
+                                        const isSelected = optionModal.selectedOpts.find(o => o.optionId === opt.optionId);
+                                        return (
+                                            <div
+                                                key={opt.optionId}
+                                                className={`option-item ${isSelected ? 'selected' : ''}`}
+                                                onClick={() => toggleOption(opt)}
+                                            >
+                                                <span>{opt.name}</span>
+                                                {opt.price > 0 && <span>+{opt.price.toLocaleString('vi-VN')} ₫</span>}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ))}
                         </div>
                         <div className="modal-actions">
                             <button className="btn-save" onClick={confirmOptionsAndAddToCart}>Xong & Thêm vào giỏ</button>

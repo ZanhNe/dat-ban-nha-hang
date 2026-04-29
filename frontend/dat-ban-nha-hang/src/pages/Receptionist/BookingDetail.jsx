@@ -1,42 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import apiClient from '../../services/apiClient';
+import { receptionistService } from '../../services/receptionistService';
+import { formatApiError } from '../../services/apiShape';
+import { formatDateTime } from '../../utils/dateTime';
 import './BookingDetail.css';
 
-const USE_MOCK = true;
+const statusLabelMap = {
+    AWAITING_CONFIRMATION: 'Chờ xác nhận',
+    PENDING_PAYMENT: 'Chờ thanh toán',
+    CONFIRMED: 'Đã xác nhận',
+    CUSTOMER_ARRIVED: 'Khách đã đến',
+    SERVING: 'Đang phục vụ',
+    SERVED: 'Đã phục vụ',
+    COMPLETED: 'Hoàn tất',
+    REJECTED: 'Đã từ chối',
+    EXPIRED: 'Hết hạn',
+    CANCELLED: 'Đã hủy',
+    FAILED: 'Thất bại'
+};
 
 function BookingDetail() {
     const { bookingId } = useParams();
     const navigate = useNavigate();
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [cancelReason, setCancelReason] = useState('');
     const [cancelling, setCancelling] = useState(false);
+    const [checkingIn, setCheckingIn] = useState(false);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchDetail = async () => {
             try {
-                if (USE_MOCK) {
-                    await new Promise(r => setTimeout(r, 400));
-                    setBooking({
-                        bookingId: Number(bookingId),
-                        customerName: "Nguyễn Văn A",
-                        customerPhone: "0901234567",
-                        bookingTime: "2026-04-28T19:00:00",
-                        numberOfPeople: 4,
-                        status: "CONFIRMED",
-                        tables: [
-                            { tableId: 1, label: "Bàn 01" },
-                            { tableId: 2, label: "Bàn 02" }
-                        ],
-                        note: "Bàn gần cửa sổ, có ghế trẻ em"
-                    });
-                } else {
-                    const result = await apiClient.get(`/receptionist/bookings/${bookingId}`);
-                    setBooking(result.data);
-                }
+                const result = await receptionistService.getBookingDetail(bookingId);
+                setBooking(result.data);
             } catch (err) {
-                console.error('Lỗi tải chi tiết:', err);
+                setError(formatApiError(err, 'Không thể tải chi tiết booking.').displayMessage);
             } finally {
                 setLoading(false);
             }
@@ -45,53 +43,62 @@ function BookingDetail() {
     }, [bookingId]);
 
     const handleCancel = async () => {
-        if (!cancelReason.trim()) return alert('Vui lòng nhập lý do hủy');
         setCancelling(true);
+        setError('');
         try {
-            if (USE_MOCK) {
-                await new Promise(r => setTimeout(r, 600));
-            } else {
-                await apiClient.patch(`/receptionist/bookings/${bookingId}/cancel`, { reason: cancelReason });
-            }
+            await receptionistService.cancelBooking(bookingId);
             setBooking(prev => ({ ...prev, status: 'CANCELLED' }));
         } catch (err) {
-            console.error('Lỗi hủy booking:', err);
+            setError(formatApiError(err, 'Không thể hủy booking.').displayMessage);
         } finally {
             setCancelling(false);
         }
     };
 
-    const formatDateTime = (dateStr) => {
-        const d = new Date(dateStr);
-        return `${d.toLocaleDateString('vi-VN')} — ${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+    const handleCheckIn = async () => {
+        setCheckingIn(true);
+        setError('');
+        try {
+            await receptionistService.checkInBooking(bookingId);
+            setBooking((prev) => ({ ...prev, status: 'CUSTOMER_ARRIVED' }));
+        } catch (err) {
+            setError(formatApiError(err, 'Không thể xác nhận khách đến.').displayMessage);
+        } finally {
+            setCheckingIn(false);
+        }
     };
 
     if (loading) return <div className="loading-state">Đang tải...</div>;
     if (!booking) return <div className="empty-state">Không tìm thấy booking</div>;
 
+    const dateTime = formatDateTime(booking.bookingTime);
+    const isCancellable = ['AWAITING_CONFIRMATION', 'PENDING_PAYMENT', 'CONFIRMED'].includes(booking.status);
+    const isCheckInAllowed = booking.status === 'CONFIRMED';
+
     return (
         <div className="booking-detail">
             <button className="btn-back" onClick={() => navigate('/receptionist')}>← Quay lại</button>
+            {error ? <p className="status-error mb-4">{error}</p> : null}
 
             <div className="detail-card">
                 <div className="detail-header">
                     <h2>Booking #{booking.bookingId}</h2>
-                    <span className="status-badge">{booking.status}</span>
+                    <span className="status-badge">{statusLabelMap[booking.status] || booking.status}</span>
                 </div>
 
                 <div className="detail-body">
                     <div className="info-grid">
                         <div className="info-item">
                             Khách hàng
-                            <strong>{booking.customerName}</strong>
+                            <strong>{booking.customer?.fullName}</strong>
                         </div>
                         <div className="info-item">
                             Số điện thoại
-                            <strong>{booking.customerPhone}</strong>
+                            <strong>{booking.customer?.phone}</strong>
                         </div>
                         <div className="info-item">
                             Thời gian
-                            <strong>{formatDateTime(booking.bookingTime)}</strong>
+                            <strong>{dateTime.date} - {dateTime.time}</strong>
                         </div>
                         <div className="info-item">
                             Số khách
@@ -100,28 +107,34 @@ function BookingDetail() {
                     </div>
 
                     {booking.note && (
-                        <div className="info-item" style={{ marginBottom: 16 }}>
+                        <div className="info-item mb-4">
                             Ghi chú: <strong>{booking.note}</strong>
                         </div>
                     )}
 
-                    {booking.tables && booking.tables.length > 0 && (
+                    {booking.assignedTables?.length > 0 && (
                         <div className="tables-info">
                             Bàn đã xếp:
-                            {booking.tables.map(t => (
+                            {booking.assignedTables.map(t => (
                                 <span key={t.tableId} className="table-tag">{t.label}</span>
                             ))}
                         </div>
                     )}
 
-                    {booking.status === 'CONFIRMED' && (
+                    {isCheckInAllowed && (
                         <div className="cancel-section">
-                            <h3>Hủy booking (khách không đến)</h3>
-                            <textarea
-                                placeholder="Nhập lý do hủy booking..."
-                                value={cancelReason}
-                                onChange={(e) => setCancelReason(e.target.value)}
-                            />
+                            <h3>Xác nhận khách đến</h3>
+                            <p>Kiểm tra thông tin booking trước khi chuyển trạng thái khách đã đến.</p>
+                            <button className="ui-btn ui-btn-primary" onClick={handleCheckIn} disabled={checkingIn}>
+                                {checkingIn ? 'Đang xử lý...' : 'XÁC NHẬN KHÁCH ĐẾN'}
+                            </button>
+                        </div>
+                    )}
+
+                    {isCancellable && (
+                        <div className="cancel-section">
+                            <h3>Hủy booking</h3>
+                            <p>Booking ở trạng thái này có thể bị hủy trực tiếp bởi lễ tân.</p>
                             <button className="btn-cancel-booking" onClick={handleCancel} disabled={cancelling}>
                                 {cancelling ? 'Đang xử lý...' : 'Xác nhận hủy booking'}
                             </button>
@@ -129,7 +142,7 @@ function BookingDetail() {
                     )}
 
                     {booking.status === 'CANCELLED' && (
-                        <div style={{ textAlign: 'center', color: '#c62828', fontWeight: 600, padding: 20 }}>
+                        <div className="text-center text-red-700 font-semibold p-5">
                             ❌ Booking đã bị hủy
                         </div>
                     )}

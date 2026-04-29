@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { User, LogOut, FileText, CreditCard, Loader2 } from 'lucide-react';
 import LocationPicker from '../components/map/LocationPicker';
@@ -8,6 +9,7 @@ import RestaurantCard from '../components/map/RestaurantCard';
 import RestaurantDetailPanel from '../components/map/RestaurantDetailPanel';
 import PaginationControl from '../components/map/PaginationControl';
 import { mapService } from '../services/mapService';
+import { formatApiError, unwrapData, unwrapMeta } from '../services/apiShape';
 
 import {
   originAtom,
@@ -29,6 +31,8 @@ export default function MapSearchPage() {
   const cuisine = useAtomValue(cuisineAtom);
   const page = useAtomValue(pageAtom);
   const limit = useAtomValue(limitAtom);
+  const setCuisine = useSetAtom(cuisineAtom);
+  const [searchParams] = useSearchParams();
 
   const setRestaurants = useSetAtom(restaurantsAtom);
   const setTotalItems = useSetAtom(totalItemsAtom);
@@ -40,13 +44,22 @@ export default function MapSearchPage() {
   const searchTrigger = useAtomValue(searchTriggerAtom);
 
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [error, setError] = useState('');
   const isLoggedIn = true;
+
+  useEffect(() => {
+    const initialCuisine = searchParams.get('cuisine');
+    if (initialCuisine) {
+      setCuisine(initialCuisine);
+    }
+  }, [searchParams, setCuisine]);
 
   useEffect(() => {
     if (!origin || searchTrigger === 0) return;
 
     const fetchRestaurants = async () => {
       setLoading(true);
+      setError('');
       try {
         const originStr = `${origin.latitude},${origin.longitude}`;
         const searchParams = {
@@ -58,15 +71,19 @@ export default function MapSearchPage() {
         };
         const res = await mapService.searchRestaurants(searchParams);
 
-        if (res?.data) {
-          setRestaurants(res.data);
-        }
-        if (res?.meta) {
-          setTotalItems(res.meta.totalItems || 0);
-          setTotalPages(res.meta.totalPages || 1);
+        const list = unwrapData(res) || [];
+        setRestaurants(Array.isArray(list) ? list : []);
+
+        const meta = unwrapMeta(res) || res?.meta;
+        if (meta) {
+          setTotalItems(meta.totalItems || 0);
+          setTotalPages(meta.totalPages || 1);
+        } else {
+          setTotalItems(0);
+          setTotalPages(1);
         }
       } catch (error) {
-        console.error("Lỗi fetch search data:", error);
+        setError(formatApiError(error, 'Không thể tìm nhà hàng với điều kiện hiện tại.').displayMessage);
       } finally {
         setLoading(false);
       }
@@ -74,7 +91,7 @@ export default function MapSearchPage() {
 
     fetchRestaurants();
 
-  }, [searchTrigger, page]);
+  }, [searchTrigger, page, origin, radius, cuisine, limit, setLoading, setRestaurants, setTotalItems, setTotalPages]);
 
   return (
     <div className="h-screen w-full flex flex-col md:flex-row overflow-hidden bg-gray-50 font-sans">
@@ -102,7 +119,7 @@ export default function MapSearchPage() {
 
               {!loading && origin && restaurants.length === 0 && searchTrigger > 0 && (
                 <div className="text-center mt-10 text-gray-500 bg-white rounded-xl p-6 shadow-sm">
-                  Không tìm thấy nhà hàng nào trong khu vực và điều kiện này.
+                  {error || 'Không tìm thấy nhà hàng nào trong khu vực và điều kiện này.'}
                 </div>
               )}
 
@@ -128,45 +145,6 @@ export default function MapSearchPage() {
           </div>
         )}
 
-        {/* User Status / Avatar Top Right */}
-        {isLoggedIn && (
-          <div className="absolute top-4 right-4 z-20">
-            <div className="relative">
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="w-10 h-10 rounded-full bg-white shadow-md border-2 border-primary-500 flex items-center justify-center overflow-hidden hover:shadow-lg transition"
-              >
-                <img src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" alt="Avatar" />
-              </button>
-
-              {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border py-2">
-                  <div className="px-4 py-3 border-b">
-                    <p className="font-semibold text-gray-800">Nguyen Van A</p>
-                    <p className="text-sm text-gray-500">nguyenvana@gmail.com</p>
-                    <p className="text-sm text-gray-500">0901234567</p>
-                  </div>
-                  <div className="py-2">
-                    <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center text-sm text-gray-700">
-                      <User className="w-4 h-4 mr-2" /> Xem thông tin cá nhân
-                    </button>
-                    <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center text-sm text-gray-700">
-                      <FileText className="w-4 h-4 mr-2" /> Lịch sử đặt bàn
-                    </button>
-                    <button className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center text-sm text-gray-700">
-                      <CreditCard className="w-4 h-4 mr-2" /> Thanh toán đặt cọc
-                    </button>
-                  </div>
-                  <div className="border-t py-1">
-                    <button className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center text-sm font-medium">
-                      <LogOut className="w-4 h-4 mr-2" /> Đăng xuất
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
     </div>

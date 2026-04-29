@@ -22,15 +22,9 @@ function Header() {
             <div className="container">
 
                 <div className="logo">
-                    <span>Logo</span>
+                    <Link to="/">Logo</Link>
                 </div>
 
-                <nav className="nav">
-                    <Link to="/">Home</Link>
-                    <Link to="/restaurants">Restaurants</Link>
-                    <Link to="/lists">Lists</Link>
-                    <Link to="/contact">Contact</Link>
-                </nav>
 
                 <div className="auth">
                     {user ? (

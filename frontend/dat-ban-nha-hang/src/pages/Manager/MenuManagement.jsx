@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useMenuManagement } from '../../hooks/manager/useMenuManagement';
 import './MenuManagement.css';
 
@@ -6,7 +6,7 @@ function MenuManagement() {
     const {
         menus, activeMenuId, setActiveMenuId,
         foodGroups, foodsByGroup, fetchFoodsForGroup,
-        isLoading, isActionLoading, handleSave, handleDelete
+        isLoading, isActionLoading, error, handleSave, handleDelete
     } = useMenuManagement();
 
 
@@ -50,6 +50,7 @@ function MenuManagement() {
                 <h1>Quản lý Thực đơn (Menu)</h1>
                 <p>Cấu hình thực đơn, nhóm món ăn và giá bán</p>
             </header>
+            {error && <p className="status-error">{error}</p>}
 
             <div className="menu-layout">
                 {/* CỘT TRÁI: DANH SÁCH MENU */}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSetAtom } from "jotai";
 import { authService } from "../services/authService";
+import { formatApiError } from "../services/apiShape";
 import { setAuthAtom } from "../store/authStore";
 
 const useLoginData = () => {
@@ -29,27 +30,28 @@ const useLoginData = () => {
 
         try {
             const res = await authService.login(username, password);
-
             const data = res.data;
-
-            // localStorage.setItem('user', JSON.stringify(data.user));
-            // localStorage.setItem('accessToken', data.accessToken);
-
             setAuth(data);
-            console.log('check', data);
 
             const roles = data.user?.roles || [];
 
-
             if (roles.includes("ADMIN")) {
                 navigate("/admin");
+            } else if (roles.includes("RECEPTIONIST")) {
+                navigate("/receptionist");
+            } else if (roles.includes("WAITER")) {
+                navigate("/waiter");
+            } else if (roles.includes("CASHIER")) {
+                navigate("/cashier");
             } else if (roles.includes("CUSTOMER")) {
                 navigate("/customer");
             } else if (roles.includes("MANAGER")) {
                 navigate("/manager");
+            } else {
+                navigate("/");
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Tên đăng nhập hoặc mật khẩu không đúng!');
+            setError(formatApiError(err, 'Tên đăng nhập hoặc mật khẩu không đúng!').displayMessage);
         } finally {
             setIsLoading(false);
         }

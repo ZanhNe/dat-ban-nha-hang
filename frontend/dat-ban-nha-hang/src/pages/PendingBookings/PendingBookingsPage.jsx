@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { paymentService } from '../../services/paymentService';
 import { Clock, Users, Calendar, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatApiError, unwrapData } from '../../services/apiShape';
+import { formatDateTime } from '../../utils/dateTime';
 
 const PendingBookingsPage = () => {
     const [bookings, setBookings] = useState([]);
@@ -11,38 +13,45 @@ const PendingBookingsPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
 
-    const fetchBookings = async () => {
+    const fetchBookings = useCallback(async () => {
         try {
             setLoading(true);
             const res = await paymentService.getPendingBookings();
-            const data = res.data;
+            const data = unwrapData(res) || [];
             setBookings(data);
         } catch (err) {
             if (err.response?.status === 401 || err.response?.status === 403) {
                 navigate('/login');
             }
-            setError('Không thể tải danh sách đặt bàn. Vui lòng thử lại.');
+            setError(formatApiError(err, 'Không thể tải danh sách đặt bàn.').displayMessage);
         } finally {
             setLoading(false);
         }
-    };
+    }, [navigate]);
 
     useEffect(() => {
+        const url = new URL(window.location.href);
+        const vnpResponseCode = url.searchParams.get('vnp_ResponseCode');
+        if (vnpResponseCode) {
+            if (vnpResponseCode === '00') setSuccessMessage('Thanh toán VNPay thành công.');
+            else setError('Thanh toán VNPay không thành công hoặc đã bị hủy.');
+        }
         fetchBookings();
-    }, []);
+    }, [fetchBookings]);
 
     const handlePaymentClick = async (booking) => {
         try {
             setIsProcessing(true);
             const res = await paymentService.initiatePayment(booking.bookingId);
-            if (res.data && res.data.paymentUrl) {
+            const payment = unwrapData(res);
+            if (payment?.url) {
                 // Redirect to VNPay
-                window.location.href = res.data.paymentUrl;
+                window.location.href = payment.url;
             } else {
                 setError('Không lấy được URL thanh toán VNPay.');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Có lỗi xảy ra khi khởi tạo thanh toán VNPay.');
+            setError(formatApiError(err, 'Có lỗi xảy ra khi khởi tạo thanh toán VNPay.').displayMessage);
         } finally {
             setIsProcessing(false);
         }
@@ -102,11 +111,11 @@ const PendingBookingsPage = () => {
                                         <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-sm text-gray-500 mt-3">
                                             <div className="flex items-center gap-1.5">
                                                 <Calendar className="w-4 h-4" />
-                                                <span>{new Date(booking.bookingTime).toLocaleDateString('vi-VN')}</span>
+                                                <span>{formatDateTime(booking.bookingTime).date}</span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <Clock className="w-4 h-4" />
-                                                <span>{new Date(booking.bookingTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                <span>{formatDateTime(booking.bookingTime).time}</span>
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <Users className="w-4 h-4" />

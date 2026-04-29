@@ -1,32 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import './HomeCustomer.css';
 import Header from '../../components/Header/Header'
 import { paymentService } from '../../services/paymentService';
+import { formatApiError, unwrapData } from '../../services/apiShape';
 
 function HomeCustomer() {
-    const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useState({ keyword: '', cuisine: '' });
     const [pendingCount, setPendingCount] = useState(0);
+    const [pendingError, setPendingError] = useState('');
 
     useEffect(() => {
         const fetchPendingCount = async () => {
             try {
                 const res = await paymentService.getPendingBookings();
-                if (res.data) {
-                    setPendingCount(res.data.length);
+                const pendingBookings = unwrapData(res) || [];
+                if (Array.isArray(pendingBookings)) {
+                    setPendingCount(pendingBookings.length);
                 }
             } catch (err) {
-                console.error("Không thể lấy danh sách chờ thanh toán", err);
+                setPendingError(formatApiError(err, 'Không thể tải danh sách chờ thanh toán.').displayMessage);
             }
         };
         fetchPendingCount();
     }, []);
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-        navigate(`/customer/map-search?keyword=${searchParams.keyword}&cuisine=${searchParams.cuisine}`);
-    };
 
     return (
         <>
@@ -41,38 +37,9 @@ function HomeCustomer() {
                         </Link>
                     </div>
                 )}
+                {pendingError && <div className="alert-banner" style={{ background: '#fdecea', color: '#c0392b' }}>{pendingError}</div>}
 
-                {/* Phần Tìm Kiếm Đơn Giản */}
-                <section className="search-section shadow-sm border border-gray-200">
-                    <h1 className="text-xl font-bold mb-4">Tìm Nhà Hàng Nhanh</h1>
-                    <form className="search-form" onSubmit={handleSearch}>
-                        <div className="search-inputs">
-                            <input
-                                type="text"
-                                placeholder="Nhập tên nhà hàng hoặc địa chỉ..."
-                                value={searchParams.keyword}
-                                onChange={(e) => setSearchParams({ ...searchParams, keyword: e.target.value })}
-                                className="form-control"
-                            />
-                            <select
-                                value={searchParams.cuisine}
-                                onChange={(e) => setSearchParams({ ...searchParams, cuisine: e.target.value })}
-                                className="form-control"
-                            >
-                                <option value="">Tất cả loại hình</option>
-                                <option value="Lẩu">Lẩu</option>
-                                <option value="Món Trung">Món Trung</option>
-                                <option value="BBQ">BBQ</option>
-                            </select>
-                        </div>
-                        <div className="search-actions mt-4 flex gap-2">
-                            <button type="submit" className="btn-primary">Tìm Kiếm</button>
-                            <Link to="/customer/map-search" className="btn-secondary">
-                                Xem trên Bản đồ
-                            </Link>
-                        </div>
-                    </form>
-                </section>
+
 
                 <section className="features-section mt-8">
                     <h2 className="text-lg font-semibold mb-4 border-b pb-2">Bảng điều khiển cá nhân</h2>
@@ -87,6 +54,11 @@ function HomeCustomer() {
                             <div className="card-icon">🕒</div>
                             <div className="card-title">Lịch sử đặt bàn</div>
                             <div className="card-desc">Xem lại các lần ăn uống</div>
+                        </Link>
+                        <Link to="/customer/register-restaurant" className="dashboard-card">
+                            <div className="card-icon">🏢</div>
+                            <div className="card-title">Đăng ký nhà hàng</div>
+                            <div className="card-desc">Đăng ký nhà hàng của bạn</div>
                         </Link>
                         <Link to="/customer/map-search" className="dashboard-card">
                             <div className="card-icon">📍</div>

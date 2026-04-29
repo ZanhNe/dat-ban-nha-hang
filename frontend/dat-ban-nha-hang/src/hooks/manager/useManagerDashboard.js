@@ -1,17 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { managerService } from '../../services/managerService';
-
-import { useAtomValue } from "jotai";
-import { userAtom } from "../../store/authStore";
+import { formatApiError } from '../../services/apiShape';
 
 export const useManagerDashboard = () => {
-    const user = useAtomValue(userAtom);
-    const restaurantId = user?.workplace?.restaurantId || 1; // Fallback ID = 1 nếu đang test
-
     const [overview, setOverview] = useState(null);
     const [chartData, setChartData] = useState([]);
     const [topFoods, setTopFoods] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
 
     const today = new Date();
     const lastWeek = new Date(today);
@@ -23,13 +19,15 @@ export const useManagerDashboard = () => {
         timeUnit: 'DAY'
     });
 
+
     const fetchDashboardData = useCallback(async () => {
         setIsLoading(true);
+        setError('');
         try {
             const [overviewRes, chartRes, foodsRes] = await Promise.all([
-                managerService.getOverview(restaurantId, filters.fromDate, filters.toDate),
-                managerService.getRevenueChart(restaurantId, filters.fromDate, filters.toDate, filters.timeUnit),
-                managerService.getTopFoods(restaurantId, filters.fromDate, filters.toDate, 5)
+                managerService.getOverview(filters.fromDate, filters.toDate),
+                managerService.getRevenueChart(filters.fromDate, filters.toDate, filters.timeUnit),
+                managerService.getTopFoods(filters.fromDate, filters.toDate, 5)
             ]);
 
             if (overviewRes.status === 200) setOverview(overviewRes.data);
@@ -38,10 +36,11 @@ export const useManagerDashboard = () => {
 
         } catch (error) {
             console.error("Lỗi khi lấy dữ liệu dashboard:", error);
+            setError(formatApiError(error, 'Không thể tải dữ liệu tổng quan nhà hàng.').displayMessage);
         } finally {
             setIsLoading(false);
         }
-    }, [restaurantId, filters]);
+    }, [filters]);
     useEffect(() => {
         if (filters.fromDate && filters.toDate) {
             fetchDashboardData();
@@ -54,6 +53,7 @@ export const useManagerDashboard = () => {
         chartData,
         topFoods,
         isLoading,
+        error,
         filters,
         setFilters
     };
