@@ -51,19 +51,11 @@ public class ManagerTableService implements IManagerTableService {
         }
 
         private TableArea.TableAreaStatus parseTableAreaStatus(String status) {
-                String s = status.toUpperCase();
-                if ("INACTIVE".equals(s)) {
-                        return TableArea.TableAreaStatus.CLOSED;
-                }
-                return TableArea.TableAreaStatus.valueOf(s);
+                return TableArea.TableAreaStatus.valueOf(status.toUpperCase());
         }
 
         private RestaurantTable.TableStatus parseTableStatus(String status) {
-                String s = status.toUpperCase();
-                if ("RESERVED".equals(s) || "CLEANING".equals(s)) {
-                        return RestaurantTable.TableStatus.MAINTENANCE;
-                }
-                return RestaurantTable.TableStatus.valueOf(s);
+                return RestaurantTable.TableStatus.valueOf(status.toUpperCase());
         }
 
         private Restaurant getRestaurantIfManager(Long restaurantId, Long managerId) {

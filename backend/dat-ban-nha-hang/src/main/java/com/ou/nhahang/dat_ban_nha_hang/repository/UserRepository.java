@@ -41,6 +41,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
                         """)
         long countCreatedInRange(@Param("from") LocalDateTime from, @Param("to") LocalDateTime toExclusive);
 
+        @Query("""
+                        SELECT COUNT(DISTINCT u) FROM User u
+                        JOIN u.roles r
+                        WHERE r.name = :roleName
+                          AND (:from IS NULL OR u.createdAt >= :from)
+                          AND (:to IS NULL OR u.createdAt < :to)
+                        """)
+        long countCreatedByRoleInRange(@Param("roleName") String roleName,
+                                       @Param("from") LocalDateTime from,
+                                       @Param("to") LocalDateTime toExclusive);
+
         @Query(value = """
                         SELECT DISTINCT u FROM User u
                         JOIN u.roles r

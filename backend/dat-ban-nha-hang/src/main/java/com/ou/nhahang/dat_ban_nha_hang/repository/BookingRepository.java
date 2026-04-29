@@ -73,6 +73,20 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
         List<Booking> findByBookingUser_IdAndStatus(Long userId, Booking.BookingStatus status);
 
+        @Query("""
+                        SELECT b FROM Booking b
+                        WHERE b.bookingUser.id = :userId
+                          AND (:status IS NULL OR b.status = :status)
+                          AND (:from IS NULL OR b.bookingTime.startTime >= :from)
+                          AND (:to IS NULL OR b.bookingTime.startTime < :to)
+                        """)
+        Page<Booking> findBookingHistoryByUser(
+                        @Param("userId") Long userId,
+                        @Param("status") Booking.BookingStatus status,
+                        @Param("from") LocalDateTime from,
+                        @Param("to") LocalDateTime toExclusive,
+                        Pageable pageable);
+
         Page<Booking> findByBookingUser_Id(Long userId, Pageable pageable);
 
         Page<Booking> findByRestaurant_IdAndStatus(Long restaurantId, Booking.BookingStatus status, Pageable pageable);

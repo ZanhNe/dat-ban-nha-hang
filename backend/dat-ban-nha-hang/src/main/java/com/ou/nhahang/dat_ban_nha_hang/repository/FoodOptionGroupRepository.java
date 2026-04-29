@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface FoodOptionGroupRepository extends JpaRepository<FoodOptionGroup, Long> {
     List<FoodOptionGroup> findByRestaurantId(Long restaurantId);
     Optional<FoodOptionGroup> findByIdAndRestaurantId(Long id, Long restaurantId);
+    List<FoodOptionGroup> findByIdInAndRestaurantId(List<Long> ids, Long restaurantId);
 }

@@ -41,20 +41,19 @@ public class VNPayGateway implements IVNPayGateway {
     private final TransactionRepository transactionRepository;
 
     @Override
-    public String createPaymentUrl(Long amount, Long transactionId, LocalDateTime expireTime, String currency,
+    public String createPaymentUrl(Long amount, String vnpTxnRef, LocalDateTime expireTime, String currency,
             String ipAddress) {
         String vnp_Version = vnpayConfig.getVersion();
         String vnp_Command = vnpayConfig.getCommand();
         String vnp_TmnCode = vnpayConfig.getTmnCode();
         String vnp_Amount = String.valueOf(amount * 100);
-        String vnp_IpAddr = ipAddress;
-        String vnp_CurrCode = currency;
+        String vnp_IpAddr = normalizeIpAddress(ipAddress);
+        String vnp_CurrCode = (currency == null || currency.isBlank()) ? "VND" : currency.toUpperCase();
         String vnp_ReturnUrl = vnpayConfig.getReturnUrl();
 
         String vnp_ExpireDate = expireTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
 
         // Tạo mã giao dịch duy nhất
-        String vnp_TxnRef = transactionId.toString();
 
         // Tạo URL params
         Map<String, String> vnpParams = new TreeMap<>();
@@ -67,9 +66,10 @@ public class VNPayGateway implements IVNPayGateway {
         vnpParams.put("vnp_CurrCode", vnp_CurrCode);
         vnpParams.put("vnp_IpAddr", vnp_IpAddr);
         vnpParams.put("vnp_Locale", "vn");
-        vnpParams.put("vnp_OrderInfo", "Thanh toan cho giao dich: " + transactionId);
+        vnpParams.put("vnp_OrderType", "other");
+        vnpParams.put("vnp_OrderInfo", "Thanh toan cho giao dich: " + vnpTxnRef);
         vnpParams.put("vnp_ReturnUrl", vnp_ReturnUrl);
-        vnpParams.put("vnp_TxnRef", vnp_TxnRef);
+        vnpParams.put("vnp_TxnRef", vnpTxnRef);
 
         // Sắp xếp và tạo chữ ký
         String sortedQueryString = buildQueryString(vnpParams);
@@ -90,15 +90,19 @@ public class VNPayGateway implements IVNPayGateway {
         }
 
         // 2. Lấy dữ liệu và KHÓA bản ghi (Pessimistic Lock)
-        Long txnId = Long.parseLong(params.get("vnp_TxnRef"));
+        String rawTxnRef = params.get("vnp_TxnRef");
+
+        String realTxnId = rawTxnRef.split("_")[0];
+
+        Long txnId = Long.parseLong(realTxnId);
         Optional<Transaction> txnOptional = transactionRepository.findByIdForUpdate(txnId);
-        Booking booking = (Booking) txnOptional.get().getPaymentSource();
 
         if (txnOptional.isEmpty()) {
             return Map.of("RspCode", "01", "Message", "Order not found");
         }
 
         Transaction txn = txnOptional.get();
+        Booking booking = (Booking) txn.getPaymentSource();
 
         // 3. Kiểm tra số tiền (VNPay gửi amount * 100)
         long vnpAmount = Long.parseLong(params.get("vnp_Amount")) / 100;
@@ -114,9 +118,12 @@ public class VNPayGateway implements IVNPayGateway {
 
         String responseCode = params.get("vnp_ResponseCode");
         if ("00".equals(responseCode)) {
-            txn.setTransactionStatus(TransactionStatus.AUTHORIZED);
+            txn.setTransactionStatus(TransactionStatus.CAPTURED);
             booking.setStatus(BookingStatus.CONFIRMED);
             Payment payment = Payment.builder()
+                    .price(txn.getAmount())
+                    .paymentMethod(Payment.PaymentMethod.CREDIT_CARD)
+                    .paymentStatus(Payment.PaymentStatus.SUCCESS)
                     .transaction(txn)
                     .build();
             paymentRepository.save(payment);
@@ -154,5 +161,20 @@ public class VNPayGateway implements IVNPayGateway {
     private String formatDateTime(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         return formatter.format(date);
+    }
+
+    private String normalizeIpAddress(String ipAddress) {
+        if (ipAddress == null || ipAddress.isBlank()) {
+            return "127.0.0.1";
+        }
+
+        String normalized = ipAddress;
+        if (normalized.contains(",")) {
+            normalized = normalized.split(",")[0].trim();
+        }
+        if ("0:0:0:0:0:0:0:1".equals(normalized) || "::1".equals(normalized)) {
+            return "127.0.0.1";
+        }
+        return normalized;
     }
 }

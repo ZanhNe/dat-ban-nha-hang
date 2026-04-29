@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistCancelBookingRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistGetBookingsRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistGetAwaitingBookingsRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistBookingListResponseDTO;
@@ -153,11 +152,10 @@ public class ReceptionistBookingController {
         @PreAuthorize("hasAnyAuthority('ROLE_RECEPTIONIST')")
         public ResponseEntity<ApiResponse<ReceptionistCancelBookingResponseDTO>> cancelBooking(
                         @PathVariable("bookingId") Long bookingId,
-                        @RequestBody @Valid ReceptionistCancelBookingRequestDTO request,
                         Authentication authentication) {
                 Long userId = (Long) authentication.getCredentials();
                 ReceptionistCancelBookingResponseDTO data = receptionistBookingService.cancelBooking(userId,
-                                bookingId, request);
+                                bookingId);
                 return ResponseEntity.ok(ApiResponse.<ReceptionistCancelBookingResponseDTO>builder()
                                 .status(200)
                                 .message("Đã hủy booking thành công")

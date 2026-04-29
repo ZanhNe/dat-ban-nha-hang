@@ -33,6 +33,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     );
 
     long countByRestaurantId(Long restaurantId);
+    long countByRestaurantIdAndRating(Long restaurantId, Integer rating);
 
     boolean existsByRestaurantIdAndUserId(Long restaurantId, Long userId);
 }

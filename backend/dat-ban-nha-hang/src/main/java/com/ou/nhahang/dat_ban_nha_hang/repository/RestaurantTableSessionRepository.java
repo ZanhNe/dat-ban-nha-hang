@@ -4,10 +4,12 @@ import com.ou.nhahang.dat_ban_nha_hang.entity.RestaurantTableSession;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType;
 import java.util.Optional;
 
 @Repository
@@ -44,6 +46,17 @@ public interface RestaurantTableSessionRepository extends JpaRepository<Restaura
             AND s.id = :sessionId
             """)
     Optional<RestaurantTableSession> findByIdAndRestaurantId(
+            @Param("sessionId") Long sessionId,
+            @Param("restaurantId") Long restaurantId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT s FROM RestaurantTableSession s
+            JOIN s.booking b
+            WHERE b.restaurant.id = :restaurantId
+            AND s.id = :sessionId
+            """)
+    Optional<RestaurantTableSession> findByIdAndRestaurantIdForUpdate(
             @Param("sessionId") Long sessionId,
             @Param("restaurantId") Long restaurantId);
 

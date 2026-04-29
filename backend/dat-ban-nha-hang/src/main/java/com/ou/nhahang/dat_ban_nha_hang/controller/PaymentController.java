@@ -14,6 +14,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -71,9 +73,22 @@ public class PaymentController {
         // return ResponseEntity.status(HttpStatus.CREATED).body(response);
         // }
 
-        @PostMapping("/transactions/webhook")
-        public ResponseEntity<Map<String, String>> handleWebhook(@RequestParam Map<String, String> params) {
-                Map<String, String> result = paymentService.handleWebhook(params);
+        @GetMapping("/transactions/webhook")
+        public ResponseEntity<Map<String, String>> handleWebhook(HttpServletRequest request) {
+                System.out.println("1. RAW QUERY STRING: " + request.getQueryString());
+                Map<String, String> fields = new HashMap<>();
+
+                // Lấy chính xác các tham số nguyên bản từ Request
+                for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
+                        String fieldName = params.nextElement();
+                        String fieldValue = request.getParameter(fieldName);
+
+                        if (fieldValue != null && fieldValue.length() > 0) {
+                                fields.put(fieldName, fieldValue);
+                        }
+                }
+
+                Map<String, String> result = paymentService.handleWebhook(fields);
                 return ResponseEntity.status(HttpStatus.OK).body(result);
         }
 

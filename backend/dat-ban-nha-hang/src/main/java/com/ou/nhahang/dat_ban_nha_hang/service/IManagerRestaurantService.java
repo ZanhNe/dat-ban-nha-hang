@@ -8,6 +8,4 @@ public interface IManagerRestaurantService {
 
     ManagerRestaurantResponseDTO updateRestaurant(Long managerId,
             ManagerRestaurantRequestDTO.UpdateRestaurant requestDTO);
-
-    void deleteRestaurant(Long managerId);
 }

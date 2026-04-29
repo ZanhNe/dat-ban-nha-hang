@@ -73,17 +73,4 @@ public class ManagerRestaurantService implements IManagerRestaurantService {
         return mapToDTO(updatedRestaurant);
     }
 
-    @Override
-    @Transactional
-    public void deleteRestaurant(Long managerId) {
-        User manager = userRepository.findById(managerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Manager không tồn tại"));
-        Restaurant restaurant = manager.getWorkplace();
-        if (restaurant == null) {
-            throw new BusinessException("Manager này chưa được phân công nhà hàng nào");
-        }
-
-        restaurant.setStatus(Restaurant.RestaurantStatus.CLOSED);
-        restaurantRepository.save(restaurant);
-    }
 }

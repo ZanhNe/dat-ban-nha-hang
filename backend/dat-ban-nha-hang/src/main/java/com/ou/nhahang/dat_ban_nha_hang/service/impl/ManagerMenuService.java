@@ -3,6 +3,7 @@ package com.ou.nhahang.dat_ban_nha_hang.service.impl;
 import com.ou.nhahang.dat_ban_nha_hang.dto.request.*;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.*;
 import com.ou.nhahang.dat_ban_nha_hang.entity.*;
+import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
 import com.ou.nhahang.dat_ban_nha_hang.exception.ResourceNotFoundException;
 import com.ou.nhahang.dat_ban_nha_hang.repository.*;
 import com.ou.nhahang.dat_ban_nha_hang.service.IManagerMenuService;
@@ -17,20 +18,30 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ManagerMenuService implements IManagerMenuService {
-
-        private final RestaurantRepository restaurantRepository;
         private final MenuRepository menuRepository;
         private final FoodGroupRepository foodGroupRepository;
         private final FoodDescriptionRepository foodDescriptionRepository;
         private final FoodOptionGroupRepository foodOptionGroupRepository;
         private final FoodOptionRepository foodOptionRepository;
+        private final UserRepository userRepository;
 
         private Restaurant getMenuRestaurant(Long managerId) {
-                return restaurantRepository.findAll().stream()
-                                .filter(r -> r.getManager() != null && r.getManager().getId().equals(managerId))
-                                .findFirst()
-                                .orElseThrow(
-                                                () -> new ResourceNotFoundException("Bạn không quản lý nhà hàng nào."));
+                User manager = userRepository.findById(managerId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Manager"));
+                Restaurant restaurant = manager.getWorkplace();
+                if (restaurant == null) {
+                        throw new ResourceNotFoundException("Bạn không quản lý nhà hàng nào.");
+                }
+                return restaurant;
+        }
+
+        private List<FoodOptionGroup> getOwnedOptionGroupsOrThrow(List<Long> optionGroupIds, Long restaurantId) {
+                List<FoodOptionGroup> optionGroups = foodOptionGroupRepository.findByIdInAndRestaurantId(optionGroupIds,
+                                restaurantId);
+                if (optionGroups.size() != optionGroupIds.size()) {
+                        throw new BusinessException("Có nhóm tùy chọn không thuộc nhà hàng của bạn");
+                }
+                return optionGroups;
         }
 
         // Menu chính
@@ -200,8 +211,8 @@ public class ManagerMenuService implements IManagerMenuService {
                 food.setFoodGroup(fg);
 
                 if (requestDTO.optionGroupIds() != null && !requestDTO.optionGroupIds().isEmpty()) {
-                        List<FoodOptionGroup> optionGroups = foodOptionGroupRepository
-                                        .findAllById(requestDTO.optionGroupIds());
+                        List<FoodOptionGroup> optionGroups = getOwnedOptionGroupsOrThrow(requestDTO.optionGroupIds(),
+                                        restaurant.getId());
                         food.setOptionGroups(optionGroups);
                 }
 
@@ -227,8 +238,8 @@ public class ManagerMenuService implements IManagerMenuService {
                 food.setStatus(DescriptionStatus.valueOf(requestDTO.status().toUpperCase()));
 
                 if (requestDTO.optionGroupIds() != null) {
-                        List<FoodOptionGroup> optionGroups = foodOptionGroupRepository
-                                        .findAllById(requestDTO.optionGroupIds());
+                        List<FoodOptionGroup> optionGroups = getOwnedOptionGroupsOrThrow(requestDTO.optionGroupIds(),
+                                        restaurant.getId());
                         food.setOptionGroups(optionGroups);
                 } else {
                         food.getOptionGroups().clear();

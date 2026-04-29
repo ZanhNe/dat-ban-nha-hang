@@ -83,7 +83,7 @@ public class Restaurant extends Base {
     private List<User> employees = new ArrayList<>();
 
     @ManyToOne
-    @JoinColumn(name = "manager_id", nullable = false)
+    @JoinColumn(name = "manager_id", nullable = true)
     private User manager;
 
     @OneToMany(mappedBy = "restaurant")

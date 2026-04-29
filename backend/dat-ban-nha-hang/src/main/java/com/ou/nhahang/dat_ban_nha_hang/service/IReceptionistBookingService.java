@@ -4,7 +4,6 @@ import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistRejectBookingRequ
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistConfirmBookingResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistRejectBookingResponseDTO;
 
-import com.ou.nhahang.dat_ban_nha_hang.dto.request.ReceptionistCancelBookingRequestDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistBookingListResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistBookingDetailResponseDTO;
 import com.ou.nhahang.dat_ban_nha_hang.dto.response.ReceptionistCancelBookingResponseDTO;
@@ -27,6 +26,5 @@ public interface IReceptionistBookingService {
 
     ReceptionistCheckInResponseDTO checkInBooking(Long userId, Long bookingId);
 
-    ReceptionistCancelBookingResponseDTO cancelBooking(Long userId, Long bookingId,
-            ReceptionistCancelBookingRequestDTO request);
+    ReceptionistCancelBookingResponseDTO cancelBooking(Long userId, Long bookingId);
 }

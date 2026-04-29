@@ -1,9 +1,9 @@
 package com.ou.nhahang.dat_ban_nha_hang.service.impl;
 
-import java.time.LocalTime;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -82,6 +82,15 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
         private final IFileStorageService fileStorageService;
         private final CuisineRepository cuisineRepository;
         private final LegalDocRepository legalDocRepository;
+
+        private LocalDateTime toExclusiveDateTime(LocalDateTime value) {
+                if (value == null) {
+                        return null;
+                }
+                return value.toLocalTime().equals(LocalTime.MIDNIGHT)
+                                ? value.toLocalDate().plusDays(1).atStartOfDay()
+                                : value.plusNanos(1);
+        }
 
         private GetBookingHistoryResponseDTO mapToBookingHistoryDTO(Booking b) {
                 return GetBookingHistoryResponseDTO.builder()
@@ -200,7 +209,12 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
 
                 Pageable pageable = PageRequest.of(requestDTO.page(), requestDTO.limit(),
                                 Sort.by("createdAt").descending());
-                Page<Booking> results = bookingRepository.findByBookingUser_Id(userId, pageable);
+                Page<Booking> results = bookingRepository.findBookingHistoryByUser(
+                                userId,
+                                requestDTO.status(),
+                                requestDTO.fromDate(),
+                                toExclusiveDateTime(requestDTO.toDate()),
+                                pageable);
 
                 return results.map(this::mapToBookingHistoryDTO);
 
@@ -212,11 +226,12 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
 
                 String pointWkt = String.format("POINT(%f %f)", userLocation.getY(), userLocation.getX());
 
-                System.out.println(pointWkt);
-
                 Pageable pageable = PageRequest.of(requestDTO.page(), requestDTO.limit());
 
-                Page<Restaurant> restaurants = restaurantRepository.findNearByRestaurant(pointWkt, requestDTO.radius(),
+                Page<Restaurant> restaurants = restaurantRepository.findNearByRestaurant(
+                                pointWkt,
+                                requestDTO.radius(),
+                                requestDTO.cuisine(),
                                 pageable);
 
                 return restaurants.map(r -> mapToSearchRestaurantDTO(r, userLocation));
@@ -224,6 +239,7 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
         }
 
         @Override
+        @Transactional(readOnly = true)
         public TableSearchResponseDTO searchTablesExecute(Long restaurantId, TableSearchRequestDTO requestDTO) {
                 if (!restaurantRepository.existsById(restaurantId)) {
                         throw new ResourceNotFoundException("Không tìm thấy nhà hàng với ID: " + restaurantId);
@@ -311,9 +327,45 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
                                         "Bạn đang có một lịch đặt bàn khác trong khoảng thời gian này có thể thuộc nhà hàng này hoặc nhà hàng khác. Vui lòng chọn thời gian khác (các lịch đặt phải cách nhau ít nhất 2 tiếng).");
                 }
 
-                List<RestaurantTable> tables = restaurantTableRepository.findAllById(requestDTO.tableIds());
+                List<Long> requestedTableIds = requestDTO.tableIds().stream().distinct().toList();
+                List<RestaurantTable> tables = restaurantTableRepository.findAllById(requestedTableIds);
                 if (tables.isEmpty()) {
                         throw new BusinessException("Bạn chưa chọn bàn nào hợp lệ, hoặc bàn không tồn tại.");
+                }
+                if (tables.size() != requestedTableIds.size()) {
+                        throw new BusinessException("Có bàn không tồn tại hoặc không hợp lệ trong lựa chọn của bạn.");
+                }
+
+                boolean hasWrongRestaurantTable = tables.stream()
+                                .anyMatch(table -> !table.getTableArea().getRestaurant().getId().equals(restaurantId));
+                if (hasWrongRestaurantTable) {
+                        throw new BusinessException("Có bàn không thuộc nhà hàng này.");
+                }
+
+                boolean hasUnavailableTable = tables.stream()
+                                .anyMatch(table -> table.getStatus() != RestaurantTable.TableStatus.AVAILABLE);
+                if (hasUnavailableTable) {
+                        throw new BusinessException("Có bàn hiện không sẵn sàng để đặt.");
+                }
+
+                List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(
+                                restaurantId, requestedStartTime, requestedEndTime);
+                Set<Long> bookedTableIds = overlappingBookings.stream()
+                                .map(Booking::getTables)
+                                .flatMap(existingTables -> existingTables != null ? existingTables.stream()
+                                                : Stream.empty())
+                                .map(RestaurantTable::getId)
+                                .collect(Collectors.toSet());
+                boolean hasBookedTable = requestedTableIds.stream().anyMatch(bookedTableIds::contains);
+                if (hasBookedTable) {
+                        throw new BusinessException("Có bàn đã được đặt trong khung giờ này, vui lòng chọn lại.");
+                }
+
+                long totalCapacity = tables.stream()
+                                .mapToLong(table -> table.getCapacity() != null ? table.getCapacity() : 0L)
+                                .sum();
+                if (totalCapacity < requestDTO.quantity()) {
+                        throw new BusinessException("Tổng sức chứa của các bàn đã chọn không đủ cho số lượng khách.");
                 }
 
                 Booking booking = restaurant.makeBooking(
@@ -337,21 +389,24 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
         }
 
         @Override
+        @Transactional(readOnly = true)
         public GetRestaurantDetailResponseDTO getRestaurantDetailExecute(
                         GetRestaurantDetailRequestDTO requestDto) {
                 Restaurant restaurant = restaurantRepository.findById(requestDto.restaurantId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Không tìm thấy nhà hàng với ID: " + requestDto.restaurantId()));
 
+                if (restaurant.getStatus() != Restaurant.RestaurantStatus.OPENING) {
+                        throw new ResourceNotFoundException(
+                                        "Không tìm thấy nhà hàng với ID: " + requestDto.restaurantId());
+                }
+
                 Point userLocation = requestDto.extractLocation();
                 Point resLocation = restaurant.getLocation();
 
                 GeoDirectionResponseDTO directions = null;
                 if (userLocation != null && resLocation != null) {
-                        try {
-                                directions = geolocationService.getDirection(userLocation, resLocation);
-                        } catch (Exception e) {
-                        }
+                        directions = geolocationService.getDirection(userLocation, resLocation);
                 }
 
                 List<String> cuisines = restaurant.getCuisines() != null
@@ -410,7 +465,6 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
                 return GetRestaurantDetailResponseDTO.builder()
                                 .restaurantId(restaurant.getId())
                                 .restaurantName(restaurant.getName())
-                                .restaurantImage(restaurant.getLogo())
                                 .restaurantLogo(restaurant.getLogo())
                                 .restaurantDescription(restaurant.getDescription())
                                 .restaurantAddress(restaurant.getAddress())
@@ -438,6 +492,10 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
                                                 "Không tìm thấy nhà hàng với ID: " + restaurantId));
 
                 List<GetRestaurantMenuResponseDTO.MenuDTO> menuDTOs = new ArrayList<>();
+
+                if (restaurant.getStatus() != Restaurant.RestaurantStatus.OPENING) {
+                        throw new ResourceNotFoundException("Không tìm thấy nhà hàng với ID: " + restaurantId);
+                }
 
                 if (restaurant.getMenus() != null) {
                         menuDTOs = restaurant.getMenus().stream()
@@ -499,7 +557,9 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
                         throw new ResourceNotFoundException("Không tìm thấy nhà hàng với ID: " + restaurantId);
                 }
 
-                long totalElements = reviewRepository.countByRestaurantId(restaurantId);
+                long totalElements = request.rating() != null
+                                ? reviewRepository.countByRestaurantIdAndRating(restaurantId, request.rating())
+                                : reviewRepository.countByRestaurantId(restaurantId);
 
                 int fetchLimit = request.limit() + 1;
                 Pageable pageable = PageRequest.of(0, fetchLimit);
@@ -613,13 +673,15 @@ public class CustomerRestaurantService implements ICustomerRestaurantService {
                                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
                 GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-                Point location = geometryFactory.createPoint(new Coordinate(requestDTO.getLongitude(), requestDTO.getLatitude()));
+                Point location = geometryFactory
+                                .createPoint(new Coordinate(requestDTO.getLongitude(), requestDTO.getLatitude()));
 
                 Set<Cuisine> cuisines = new HashSet<>();
                 if (requestDTO.getCuisineIds() != null && !requestDTO.getCuisineIds().isEmpty()) {
                         for (Long cuisineId : requestDTO.getCuisineIds()) {
                                 Cuisine cuisine = cuisineRepository.findById(cuisineId)
-                                                .orElseThrow(() -> new BusinessException("Không tìm thấy danh mục ẩm thực ID: " + cuisineId));
+                                                .orElseThrow(() -> new BusinessException(
+                                                                "Không tìm thấy danh mục ẩm thực ID: " + cuisineId));
                                 cuisines.add(cuisine);
                         }
                 }

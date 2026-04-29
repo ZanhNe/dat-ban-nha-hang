@@ -16,7 +16,7 @@ public record ManagerTableRequestDTO() {
             Integer capacity,
 
             @NotBlank(message = "Trạng thái bàn ăn không được để trống")
-            @Pattern(regexp = "^(AVAILABLE|OCCUPIED|MAINTENANCE|RESERVED|CLEANING)$", message = "Trạng thái không hợp lệ")
+            @Pattern(regexp = "^(AVAILABLE|OCCUPIED|MAINTENANCE)$", message = "Trạng thái không hợp lệ")
             String status
     ) {}
 }

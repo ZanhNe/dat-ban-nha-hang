@@ -6,6 +6,7 @@ import com.ou.nhahang.dat_ban_nha_hang.entity.Cuisine;
 import com.ou.nhahang.dat_ban_nha_hang.exception.BusinessException;
 import com.ou.nhahang.dat_ban_nha_hang.exception.ResourceNotFoundException;
 import com.ou.nhahang.dat_ban_nha_hang.repository.CuisineRepository;
+import com.ou.nhahang.dat_ban_nha_hang.repository.RestaurantRepository;
 import com.ou.nhahang.dat_ban_nha_hang.service.IAdminCuisineService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.List;
 public class AdminCuisineService implements IAdminCuisineService {
 
     private final CuisineRepository cuisineRepository;
+    private final RestaurantRepository restaurantRepository;
 
     private AdminCuisineResponseDTO mapToDTO(Cuisine c) {
         return AdminCuisineResponseDTO.builder()
@@ -65,6 +67,10 @@ public class AdminCuisineService implements IAdminCuisineService {
     public void delete(Long cuisineId) {
         Cuisine cuisine = cuisineRepository.findById(cuisineId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy danh mục"));
+        long restaurantCount = restaurantRepository.countByCuisines_Id(cuisineId);
+        if (restaurantCount > 0) {
+            throw new BusinessException("Không thể xóa danh mục đang được sử dụng bởi nhà hàng.");
+        }
         cuisineRepository.delete(cuisine);
     }
 }

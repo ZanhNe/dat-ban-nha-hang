@@ -10,9 +10,14 @@ import lombok.Data;
 @Data
 public class VNPayConfig {
     private String payUrl;
+    private String url;
     private String tmnCode;
     private String hashSecret;
     private String returnUrl;
     private String version;
     private String command;
+
+    public String getPayUrl() {
+        return (payUrl != null && !payUrl.isBlank()) ? payUrl : url;
+    }
 }
